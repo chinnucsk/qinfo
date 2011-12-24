@@ -6,7 +6,9 @@
 
 -define(plaza2_port_dll, "plaza2_port").
 
--record(state, {drv_port}).
+-include("protocol.hrl").
+
+-record(state, {drv_port, instr_proc = 'rts.instruments', bba_proc = 'rts.bba', trades_proc = 'rts.trades'}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, isin_id, short_isin, isin, name, instr_term, code_vbc}).
 
 %% ========= public ============
@@ -63,8 +65,8 @@ connect(DrvPort, IniFile, Host, Port, AppName, Password, LogLevel, Streams) ->
 disconnect(DrvPort) ->
    erlang:port_command(DrvPort, term_to_binary({disconnect})).
 
-processInfo(#'FORTS_FUTINFO_REPL.fut_sess_contents'{isin = Isin}) ->
-   io:format("~ts~n", [Isin]),
-   ok;
+processInfo(#'FORTS_FUTINFO_REPL.fut_sess_contents'{name = Name, isin = Isin, instr_term}, #state{instr_proc = InstrProc}) ->
+   InstrProc ! #instrument{exchange = 'RTS', class_code = 'SPBFUT', name = Name, isin = isin, issuer = ""};
+
 processInfo(_Msg) ->
    ok.
