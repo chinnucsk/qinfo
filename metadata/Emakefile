@@ -1,1 +1,10 @@
-{'src/*', [debug_info, {i, "../common/include"}, {outdir, "ebin"}]}.
+{
+	'src/*',
+	[
+		debug_info,
+		{i, "../common/include"},
+		{outdir, "ebin"},
+		{nowarn_unused_function, {register_service, 2}},
+		{nowarn_unused_function, {get_settings, 1}}
+	]
+}.
