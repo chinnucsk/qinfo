@@ -7,28 +7,34 @@
 -define(plaza2_port_dll, "plaza2_port").
 
 -include("protocol.hrl").
+-include("public.hrl").
 
--record(state, {drv_port, instr_proc = 'rts.instruments', bba_proc = 'rts.bba', trades_proc = 'rts.trades'}).
+-record(settings, {ini_file, host, port, app_name, passwd, log_level}).
+-record(state, {drv_port, settings}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, isin_id, short_isin, isin, name, instr_term, code_vbc}).
 
 %% ========= public ============
 
 start() ->
-   gen_server:start_link({global, plaza2_srv}, ?MODULE, [], []).
+   gen_server:start_link({global, ?qinfo_plaza2}, ?MODULE, [], []).
 
 init(_Args) ->
-   DrvPort = open("P2ClientGate.ini", "osmds.ru", 4001, "Application1", "123", log_debug,
+   {ok, #service{settings = Settings}} = register_service(
+      ?qinfo_plaza2, [{ini_file, "P2ClientGate.ini"}, {host, "localhost"}, {port, 4001}, {app_name, "plaza2"}, {passwd, "123"}, {log_level, debug}]),
+   DrvPort = open(Settings#settings.ini_file, Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
+      Settings#settings.passwd, Settings#settings.log_level,
       [
          {"FORTS_FUTINFO_REPL", "fut_info.ini", 'RT_COMBINED_DYNAMIC'}
-      ],
-   {ok, #state{drv_port = DrvPort}}.
+      ]
+   ),
+   {ok, #state{drv_port = DrvPort, settings = Settings}}.
 
 handle_call(Request, _From, State) ->
    io:format("~p~n", [Request]),
    {reply, undef, State}.
 
-handle_cast(Request, State) ->
-   io:format("~p~n", [Request]),
+handle_cast(Msg, State) ->
+   error_logger:warning_msg("Unexpected message: ~p", [Msg]),
    {noreply, State}.
 
 handle_info(Info, State) ->
@@ -36,7 +42,7 @@ handle_info(Info, State) ->
    {noreply, State}.
 
 terminate(Reason, _State) ->
-   io:format("~p~n", [Reason]),
+   error_logger:info_msg("Terminate. Reason = ~p", [Reason]),
    ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -52,7 +58,7 @@ open(IniFile, RouterHost, RouterPort, AppName, Password, LogLevel, Streams) ->
          {ok, Port};
       Res ->
          Res
-   end,
+   end.
 
 close(DrvPort) ->
    disconnect(DrvPort),
@@ -65,8 +71,21 @@ connect(DrvPort, IniFile, Host, Port, AppName, Password, LogLevel, Streams) ->
 disconnect(DrvPort) ->
    erlang:port_command(DrvPort, term_to_binary({disconnect})).
 
-processInfo(#'FORTS_FUTINFO_REPL.fut_sess_contents'{name = Name, isin = Isin, instr_term}, #state{instr_proc = InstrProc}) ->
-   InstrProc ! #instrument{exchange = 'RTS', class_code = 'SPBFUT', name = Name, isin = isin, issuer = ""};
+processInfo(Msg) ->
+   io:format("~p~n", [Msg]);
+
+%processInfo(#'FORTS_FUTINFO_REPL.fut_sess_contents'{name = Name, isin = Isin, instr_term}, #state{instr_proc = InstrProc}) ->
+%   InstrProc ! #instrument{exch = 'RTS', class_code = 'SPBFUT', name = Name, isin = isin, issuer = ""};
 
 processInfo(_Msg) ->
    ok.
+
+extract_settings(SLst) ->
+   #settings{
+      ini_file = lists:keyfind(ini_file, 1, SLst),
+      host     = lists:keyfind(host, 1, SLst),
+      port     = lists:keyfind(port, 1, SLst),
+      app_name = lists:keyfind(app_name, 1, SLst),
+      passwd   = lists:keyfind(passwd, 1, SLst),
+      log_level = lists:keyfind(log_level, 1, SLst)
+   }.
