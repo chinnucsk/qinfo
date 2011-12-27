@@ -25,12 +25,11 @@ handle_call({register, ServiceName, Settings}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
          mnesia:dirty_write(#m_service{service = ServiceName, settings = Settings}),
-         error_logger:info_msg("Service ~p has been registered.", [ServiceName]),
+         error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
          Msg = #service{service = ServiceName, settings = Settings},
          {reply, {ok, Msg}, State};
       [#m_service{service = Service, settings = Settings}] ->
          Msg = #service{service = Service, settings = Settings},
-         error_logger:debug_msg("Settings ~p has been sent to ~p.", [Msg]),
          {reply, {ok, Msg}, State}
    end;
 
@@ -44,15 +43,15 @@ handle_call({get_settings, ServiceName}, _From, State) ->
    end.
 
 handle_cast(Msg, State) ->
-   error_logger:warning_msg("Unexpected message: ~p", [Msg]),
+   error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
    {noreply, State}.
 
 handle_info(Msg, State) ->
-   error_logger:warning_msg("Unexpected message: ~p", [Msg]),
+   error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
    {noreply, State}.
 
 terminate(Reason, _State) ->
-   error_logger:info_msg("Terminate. Reason = ~p", [Reason]),
+   error_logger:info_msg("Terminate. Reason = ~p.~n", [Reason]),
    ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -76,5 +75,6 @@ create_db() ->
          ?create_table(m_instrument, set),
          ?create_table(m_service, set);
       {error, {_, {already_exists, _}}} ->
+         mnesia:start(),
          ok
    end.

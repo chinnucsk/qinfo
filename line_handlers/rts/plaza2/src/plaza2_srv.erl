@@ -22,10 +22,12 @@ init(_Args) ->
    {ok, #service{settings = SList}} = register_service(
       ?qinfo_plaza2, [{ini_file, "P2ClientGate.ini"}, {host, "192.168.1.99"}, {port, 4001}, {app_name, "qinfo"}, {passwd, "123"}, {log_level, debug}]),
    Settings = extract_settings(SList),
+   error_logger:info_msg("~p settings: ~p.~n", [?qinfo_plaza2, Settings]),
+   ok = erl_ddll:load_driver(".", ?plaza2_port_dll),
    DrvPort = open(Settings#settings.ini_file, Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
       Settings#settings.passwd, Settings#settings.log_level,
       [
-         {"FORTS_FUTINFO_REPL", "fut_info.ini", 'RT_COMBINED_DYNAMIC'}
+         {"FORTS_FUTINFO_REPL", "fut_info.ini", 'RT_COMBINED_SNAPSHOT'}
       ]
    ),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.
@@ -35,15 +37,15 @@ handle_call(Request, _From, State) ->
    {reply, undef, State}.
 
 handle_cast(Msg, State) ->
-   error_logger:warning_msg("Unexpected message: ~p", [Msg]),
+   error_logger:warning_msg("Unexpected message: ~p~n", [Msg]),
    {noreply, State}.
 
 handle_info(Info, State) ->
    processInfo(Info),
    {noreply, State}.
 
-terminate(Reason, _State) ->
-   error_logger:info_msg("Terminate. Reason = ~p", [Reason]),
+terminate(Reason, #state{drv_port = DrvPort}) ->
+   error_logger:info_msg("Terminate. Reason = ~p.~n", [Reason]),
    ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -51,42 +53,30 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% ========= private ===========
 
-open(IniFile, RouterHost, RouterPort, AppName, Password, LogLevel, Streams) ->
-   case erl_ddll:load_driver("../priv", ?plaza2_port_dll)  of
-      ok ->
-         Port = open_port({spawn, ?plaza2_port_dll}, [binary]),
-         connect(Port, IniFile, RouterHost, RouterPort, AppName, Password, LogLevel, Streams),
-         {ok, Port};
-      Res ->
-         Res
-   end.
+open(IniFile, Host, Port, AppName, Password, LogLevel, Streams) ->
+   DrvPort = erlang:open_port({spawn, ?plaza2_port_dll}, [binary]),
+   erlang:port_command(DrvPort, term_to_binary({connect, IniFile, Host, Port, AppName, Password, LogLevel, Streams})),
+   DrvPort.
 
 close(DrvPort) ->
-   disconnect(DrvPort),
-   port_close(DrvPort),
-   erl_ddll:unload(?plaza2_port_dll).
+   erlang:port_command(DrvPort, term_to_binary({disconnect})),
+   port_close(DrvPort).
 
-connect(DrvPort, IniFile, Host, Port, AppName, Password, LogLevel, Streams) ->
-   erlang:port_command(DrvPort, term_to_binary({connect, IniFile, Host, Port, AppName, Password, LogLevel, Streams})).
-
-disconnect(DrvPort) ->
-   erlang:port_command(DrvPort, term_to_binary({disconnect})).
-
-processInfo(Msg) ->
-   io:format("~p~n", [Msg]);
+processInfo({_Port, {data, Msg}}) ->
+   error_logger:info_msg("~p: Msg = ~p.~n", [?qinfo_plaza2, binary_to_term(Msg)]);
 
 %processInfo(#'FORTS_FUTINFO_REPL.fut_sess_contents'{name = Name, isin = Isin, instr_term}, #state{instr_proc = InstrProc}) ->
 %   InstrProc ! #instrument{exch = 'RTS', class_code = 'SPBFUT', name = Name, isin = isin, issuer = ""};
 
-processInfo(_Msg) ->
-   ok.
+processInfo(Msg) ->
+   error_logger:error_msg("Unexpected msg: ~p.~n", [Msg]).
 
 extract_settings(SLst) ->
    #settings{
-      ini_file = lists:keyfind(ini_file, 1, SLst),
-      host     = lists:keyfind(host, 1, SLst),
-      port     = lists:keyfind(port, 1, SLst),
-      app_name = lists:keyfind(app_name, 1, SLst),
-      passwd   = lists:keyfind(passwd, 1, SLst),
-      log_level = lists:keyfind(log_level, 1, SLst)
+      ini_file = element(2, lists:keyfind(ini_file, 1, SLst)),
+      host     = element(2, lists:keyfind(host, 1, SLst)),
+      port     = element(2, lists:keyfind(port, 1, SLst)),
+      app_name = element(2, lists:keyfind(app_name, 1, SLst)),
+      passwd   = element(2, lists:keyfind(passwd, 1, SLst)),
+      log_level = element(2, lists:keyfind(log_level, 1, SLst))
    }.

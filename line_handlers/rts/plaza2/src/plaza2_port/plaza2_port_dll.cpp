@@ -75,6 +75,7 @@ PLAZA2_PORT_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
 
 PLAZA2_PORT_DLL_API void stop(ErlDrvData handle)
 {
+   Connection::instance()->disconnect();
    driver_free((char*)handle);
    g_port = NULL;
 }
@@ -123,9 +124,14 @@ PLAZA2_PORT_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
    {
       sendError(err.what());
    }
+   catch(_com_error const& err)
+   {
+      LOG_ERROR(g_port,
+         "received(): COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
+   }
 }
 
-// {connect, iniFile, "host", port, "app_name", "password", [{FUT_TRADE_REPL, iniFile, StreamType}]}.
+// {connect, iniFile, "host", port, "app_name", "password", log_level, [{FUT_TRADE_REPL, iniFile, StreamType}]}.
 void process_connect(ei_cxx::ITuple& t)
 {
    using namespace ei_cxx;
@@ -180,5 +186,16 @@ PLAZA2_PORT_DLL_API ErlDrvEntry plaza2_port_entry =
    NULL,               /* handle  */
    NULL,               /* F_PTR control, port_command callback */
    NULL,               /* F_PTR timeout, reserved */
-   received            /* F_PTR outputv, reserved */
+   received,           /* F_PTR outputv, reserved */
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   ERL_DRV_EXTENDED_MARKER,
+   ERL_DRV_EXTENDED_MAJOR_VERSION,
+   ERL_DRV_EXTENDED_MINOR_VERSION,
+   0,
+   NULL,
+   NULL,
+   NULL
 };
