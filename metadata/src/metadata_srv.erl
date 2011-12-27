@@ -26,11 +26,11 @@ handle_call({register, ServiceName, Settings}, _From, State) ->
       [] ->
          mnesia:dirty_write(#m_service{service = ServiceName, settings = Settings}),
          error_logger:info_msg("Service ~p has been registered.", [ServiceName]),
-         Msg = #service{service = Service, settings = Settings},
+         Msg = #service{service = ServiceName, settings = Settings},
          {reply, {ok, Msg}, State};
       [#m_service{service = Service, settings = Settings}] ->
          Msg = #service{service = Service, settings = Settings},
-         error_logger:debug_msg("Settings ~p has been sent to ~p.", [Msg])
+         error_logger:debug_msg("Settings ~p has been sent to ~p.", [Msg]),
          {reply, {ok, Msg}, State}
    end;
 
