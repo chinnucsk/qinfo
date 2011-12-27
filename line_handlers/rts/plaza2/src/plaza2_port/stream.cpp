@@ -92,7 +92,7 @@ void Stream::processStream(std::string const& eventName, IP2DataStreamPtr stream
    {
       using namespace ei_cxx;
 
-      std::ostirngstream ost;
+      std::ostringstream ost;
       ost << (char*)stream->StreamName;
       if (tableName.length() > 0)
       {
@@ -101,7 +101,7 @@ void Stream::processStream(std::string const& eventName, IP2DataStreamPtr stream
 
       OTuple t(rec->Count + 2);
       t << Atom(ost.str())
-      t << Atom(eventName);
+        << Atom(eventName);
 
       for(size_t i = 0; i < rec->Count; ++i)
       {

@@ -19,8 +19,9 @@ start() ->
    gen_server:start_link({global, ?qinfo_plaza2}, ?MODULE, [], []).
 
 init(_Args) ->
-   {ok, #service{settings = Settings}} = register_service(
-      ?qinfo_plaza2, [{ini_file, "P2ClientGate.ini"}, {host, "localhost"}, {port, 4001}, {app_name, "plaza2"}, {passwd, "123"}, {log_level, debug}]),
+   {ok, #service{settings = SList}} = register_service(
+      ?qinfo_plaza2, [{ini_file, "P2ClientGate.ini"}, {host, "192.168.1.99"}, {port, 4001}, {app_name, "qinfo"}, {passwd, "123"}, {log_level, debug}]),
+   Settings = extract_settings(SList),
    DrvPort = open(Settings#settings.ini_file, Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
       Settings#settings.passwd, Settings#settings.log_level,
       [

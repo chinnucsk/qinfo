@@ -10,11 +10,17 @@ devenv.exe Project.sln /build Release /Out %LogFile%
 popd
 
 mkdir rel\ebin rel\priv
-copy build\Release\plaza2_port.dll rel\priv
+copy build\Release\plaza2_port.dll %ROOT%\rel\ebin
 xcopy line_handlers\rts\plaza2\priv\*.dll rel\priv
 
-pushd line_handlers\rts\plaza2\src
+pushd line_handlers\rts\plaza2
 erl -make
-copy plaza2.app %ROOT%\rel\ebin
-xcopy ..\ebin\*.beam %ROOT%\rel\ebin\ /Y
+copy src\plaza2.app %ROOT%\rel\ebin
+xcopy ebin\*.beam %ROOT%\rel\ebin\ /Y
+popd
+
+pushd metadata
+erl -make
+copy src\metadata.app %ROOT%\rel\ebin
+xcopy ebin\*.beam %ROOT%\rel\ebin\ /Y
 popd
