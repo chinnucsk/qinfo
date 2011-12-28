@@ -34,9 +34,9 @@ void Stream::open(IP2ConnectionPtr conn)
 {
    if (m_dataStream->State == StreamState::Error)
    {
-      m_dataStream->Close();
+      close();
    }
-   if (m_dataStream->State == StreamState::Close || m_dataStream->State == StreamState::CloseComplete)
+   if (m_dataStream->State == StreamState::Close /* || m_dataStream->State == StreamState::CloseComplete */)
    {
       m_dataStream->Open(conn);
       DispEventAdvise(m_dataStream);

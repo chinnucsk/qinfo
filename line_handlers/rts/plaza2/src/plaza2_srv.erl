@@ -27,7 +27,7 @@ init(_Args) ->
    DrvPort = open(Settings#settings.ini_file, Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
       Settings#settings.passwd, Settings#settings.log_level,
       [
-         {"FORTS_FUTINFO_REPL", "fut_info.ini", 'RT_COMBINED_SNAPSHOT'}
+         {"FORTS_FUTINFO_REPL", "fut_info.ini", 'RT_COMBINED_DYNAMIC'}
       ]
    ),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.

@@ -18,6 +18,7 @@ pushd line_handlers\rts\plaza2
 erl -make
 copy src\plaza2.app %ROOT%\rel\ebin
 xcopy ebin\*.beam %ROOT%\rel\ebin\ /Y
+xcopy cfg\*.ini %ROOT%\rel\ebin\ /Y
 popd
 
 pushd metadata
