@@ -7,8 +7,9 @@
 -include("protocol.hrl").
 -include("public.hrl").
 
--record(m_instrument, {isin, short_isin, name, exch, class_code, expiration = undef, commodity, limit_up, limit_down,
+-record(m_instrument, {isin, short_isin, full_name, exch, class_code, expiration = undef, commodity, limit_up, limit_down,
       lot_size, type, signs, enabled = false}).
+-record(m_commodity, {key, alias = undef}).
 -record(m_service, {service, settings = []}).
 
 %% ========= public ============
@@ -47,11 +48,46 @@ handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
    {noreply, State}.
 
-handle_info({pg_message, _, _, #new_instrument{name = Name, exch = Exch, class_code = ClassCode, short_isin = ShortIsin, isin = Isin,
-         expiration = Expiration, commodity = Commodity, limit_up = LUp, limit_down = LDown, lot_size = LSize, type = Type, signs = Signs}}, State) ->
-   ok = mnesia:dirty_write(#m_instrument{isin = Isin, short_isin = ShortIsin, name = Name, exch = Exch, class_code =
-         ClassCode, expiration = Expiration, commodity = Commodity, limit_up = LUp, limit_down = LDown, lot_size =
-         LSize, type = Type, signs = Signs}),
+handle_info({pg_message, _, _, #new_instrument{
+         name = Name,
+         exch = Exch,
+         class_code = ClassCode,
+         short_isin = ShortIsin,
+         isin = Isin,
+         expiration = Expiration,
+         commodity = Commodity,
+         limit_up = LUp,
+         limit_down = LDown,
+         lot_size = LSize,
+         type = Type,
+         signs = Signs}}, State) ->
+   {atomic, ok} = mnesia:transaction(fun() ->
+            Res = mnesia:read(m_commodity, {Exch, Commodity}),
+            mnesia:write(
+               #m_instrument{
+                  isin = Isin,
+                  short_isin = ShortIsin,
+                  full_name = Name,
+                  exch = Exch,
+                  class_code = ClassCode,
+                  expiration = Expiration,
+                  commodity = Commodity,
+                  limit_up = LUp,
+                  limit_down = LDown,
+                  lot_size = LSize,
+                  type = Type,
+                  signs = Signs}),
+            case Res of
+               [] ->
+                  mnesia:write(
+                     #m_commodity{
+                     key = {Exch, Commodity},
+                     alias = Commodity
+                 });
+               [#m_commodity{key = {Exch, Commodity}}] -> % already exists, nothing to do
+                  ok
+            end
+      end),
    {noreply, State};
 
 handle_info(Msg, State) ->
@@ -81,6 +117,7 @@ create_db() ->
       ok ->
          mnesia:start(),
          ?create_table(m_instrument, set),
+         ?create_table(m_commodity, set),
          ?create_table(m_service, set);
       {error, {_, {already_exists, _}}} ->
          mnesia:start(),
