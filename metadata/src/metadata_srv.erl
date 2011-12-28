@@ -7,7 +7,8 @@
 -include("protocol.hrl").
 -include("public.hrl").
 
--record(m_instrument, {exch, class_code, name, full_name, isin, issuer, expired = undef}).
+-record(m_instrument, {isin, short_isin, name, exch, class_code, expiration = undef, commodity, limit_up, limit_down,
+      lot_size, type, signs, enabled = false}).
 -record(m_service, {service, settings = []}).
 
 %% ========= public ============
@@ -46,8 +47,15 @@ handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
    {noreply, State}.
 
+handle_info({pg_message, _, _, #new_instrument{name = Name, exch = Exch, class_code = ClassCode, short_isin = ShortIsin, isin = Isin,
+         expiration = Expiration, commodity = Commodity, limit_up = LUp, limit_down = LDown, lot_size = LSize, type = Type, signs = Signs}}, State) ->
+   ok = mnesia:dirty_write(#m_instrument{isin = Isin, short_isin = ShortIsin, name = Name, exch = Exch, class_code =
+         ClassCode, expiration = Expiration, commodity = Commodity, limit_up = LUp, limit_down = LDown, lot_size =
+         LSize, type = Type, signs = Signs}),
+   {noreply, State};
+
 handle_info(Msg, State) ->
-   error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
+   error_logger:error_msg("Unexpected message: ~p.~n", [Msg]),
    {noreply, State}.
 
 terminate(Reason, _State) ->

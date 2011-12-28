@@ -10,18 +10,19 @@ cmake -G "Visual Studio 10" ..\
 devenv.exe Project.sln /build %BuildType% /Out %LogFile%
 popd
 
-mkdir rel\ebin rel\priv
+mkdir rel\ebin
 copy build\%BuildType%\plaza2_port.dll %ROOT%\rel\ebin
-xcopy line_handlers\rts\plaza2\priv\*.dll rel\priv
 
 pushd line_handlers\rts\plaza2
+mkdir ebin
 erl -make
 copy src\plaza2.app %ROOT%\rel\ebin
 xcopy ebin\*.beam %ROOT%\rel\ebin\ /Y
-xcopy cfg\*.ini %ROOT%\rel\ebin\ /Y
+xcopy plaza2_ini\*.ini %ROOT%\rel\ebin\ /Y
 popd
 
 pushd metadata
+mkdir ebin
 erl -make
 copy src\metadata.app %ROOT%\rel\ebin
 xcopy ebin\*.beam %ROOT%\rel\ebin\ /Y
