@@ -1,1 +1,5 @@
 3rd_party/boost*
+*.beam
+build/*
+rel/*
+*.log
