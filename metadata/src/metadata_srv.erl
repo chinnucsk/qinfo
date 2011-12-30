@@ -8,9 +8,9 @@
 -include("public.hrl").
 
 -record(m_instrument, {isin, short_isin, full_name, exch, class_code, expiration = undef, commodity, limit_up, limit_down,
-      lot_size, type, signs, enabled = false}).
--record(m_commodity, {key, alias = undef}).
--record(m_service, {service, settings = []}).
+      lot_size, type, enabled}).
+-record(m_commodity, {key, enabled = false, alias = undef}).
+-record(m_service, {service, settings = [], schedule = []}).
 
 %% ========= public ============
 
@@ -23,10 +23,10 @@ init(_Args) ->
    pg:join(?group_rts_instruments, self()),
    {ok, undef}.
 
-handle_call({register, ServiceName, Settings}, _From, State) ->
+handle_call({register, ServiceName, Settings, Schedule}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
-         mnesia:dirty_write(#m_service{service = ServiceName, settings = Settings}),
+         mnesia:dirty_write(#m_service{service = ServiceName, settings = Settings, schedule = Schedule}),
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
          Msg = #service{service = ServiceName, settings = Settings},
          {reply, {ok, Msg}, State};
@@ -42,7 +42,14 @@ handle_call({get_settings, ServiceName}, _From, State) ->
       [#m_service{service = Service, settings = Settings}] ->
          Msg = #service{service = Service, settings = Settings},
          {reply, Msg, State}
-   end.
+   end;
+
+handle_call({get_instruments, Exchange, OnlyEnabled}, _From, State) ->
+   {reply, ok, State};
+
+handle_call(Msg, From, State) ->
+   error_logger:warning_msg("Unexpected message ~p from ~p.~n", [Msg, From]),
+   {reply, unexpected, State}.
 
 handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
@@ -59,10 +66,16 @@ handle_info({pg_message, _, _, #new_instrument{
          limit_up = LUp,
          limit_down = LDown,
          lot_size = LSize,
-         type = Type,
-         signs = Signs}}, State) ->
+         type = Type}}, State) ->
    {atomic, ok} = mnesia:transaction(fun() ->
             Res = mnesia:read(m_commodity, {Exch, Commodity}),
+            Enabled = case Res of
+                        [] ->
+                           mnesia:write(#m_commodity{ key = {Exch, Commodity}, alias = Commodity}),
+                           false;
+                        [#m_commodity{key = {Exch, Commodity}, enabled = E}] -> % already exists, nothing to do
+                           E
+            end,
             mnesia:write(
                #m_instrument{
                   isin = Isin,
@@ -76,17 +89,7 @@ handle_info({pg_message, _, _, #new_instrument{
                   limit_down = LDown,
                   lot_size = LSize,
                   type = Type,
-                  signs = Signs}),
-            case Res of
-               [] ->
-                  mnesia:write(
-                     #m_commodity{
-                     key = {Exch, Commodity},
-                     alias = Commodity
-                 });
-               [#m_commodity{key = {Exch, Commodity}}] -> % already exists, nothing to do
-                  ok
-            end
+                  enabled = Enabled})
       end),
    {noreply, State};
 

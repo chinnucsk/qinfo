@@ -9,6 +9,19 @@
 -include("protocol.hrl").
 -include("public.hrl").
 
+-define(def_settings, [{ini_file, "P2ClientGate.ini"}, {host, "192.168.1.99"}, {port, 4001}, {app_name, "qinfo"},
+      {passwd, "123"}, {log_level, info}]).
+-define(def_schedule,
+   [
+      {mon, {10, 0, 0}, {23, 00, 00}},
+      {tue, {10, 0, 0}, {23, 00, 00}},
+      {wed, all_day},
+      {thu, {10, 0, 0}, {23, 00, 00}},
+      {fri, all_day},
+      {sat, not_working},
+      {sun, not_working}
+   ]).
+
 -record(settings, {ini_file, host, port, app_name, passwd, log_level}).
 -record(state, {drv_port, settings}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
@@ -21,7 +34,7 @@ start() ->
 
 init(_Args) ->
    {ok, #service{settings = SList}} = register_service(
-      ?qinfo_plaza2, [{ini_file, "P2ClientGate.ini"}, {host, "192.168.1.99"}, {port, 4001}, {app_name, "qinfo"}, {passwd, "123"}, {log_level, info}]),
+      ?qinfo_plaza2, ?def_settings, ?def_schedule),
    Settings = extract_settings(SList),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_plaza2, Settings]),
    ok = erl_ddll:load_driver(".", ?plaza2_port_dll),
@@ -77,7 +90,8 @@ processInfo(
       signs = Signs,
       limit_up = LUp,
       limit_down = LDown,
-      lot_size = LSize}) ->
+      lot_size = LSize}) when (Signs band 16#4 == 0) and (Signs band 16#8 == 0) and (Signs band 16#100 == 0) and (Signs
+   band 16#800 == 0) and (Signs band 16#1000 == 0) ->
    Instr = #new_instrument{
       exch = 'RTS',
       class_code = 'SPBFUT',
@@ -87,14 +101,13 @@ processInfo(
       expiration = format_datetime(Expiration),
       commodity = Commodity,
       type = future,
-      signs = Signs,
       limit_up = LUp,
       limit_down = LDown,
       lot_size = LSize},
    pg:send(?group_rts_instruments, Instr);
 
 processInfo(Msg) ->
-   error_logger:info_msg("~p ~p.~n", [?qinfo_plaza2, Msg]).
+   ok.
 
 format_datetime(DateTime) ->
    Year = DateTime div 10000000000000,

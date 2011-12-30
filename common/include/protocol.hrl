@@ -1,3 +1,3 @@
--record(new_instrument, {name, exch, class_code, short_isin, isin, type, commodity, limit_up, limit_down, lot_size, expiration, signs}).
+-record(new_instrument, {name, exch, class_code, short_isin, isin, type, commodity, limit_up, limit_down, lot_size, expiration}).
 -record(trade, {price, qty}).
--record(service, {service, settings = []}).
+-record(service, {service, settings = [], schedule = []}).
