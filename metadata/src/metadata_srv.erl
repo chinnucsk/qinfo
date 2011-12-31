@@ -7,7 +7,7 @@
 -include("protocol.hrl").
 -include("public.hrl").
 
--record(m_instrument, {isin, short_isin, full_name, exch, class_code, expiration = undef, commodity, limit_up, limit_down,
+-record(m_instrument, {name, full_name, exch, expiration = undef, commodity, limit_up, limit_down,
       lot_size, type, enabled}).
 -record(m_commodity, {key, enabled = false, alias = undef}).
 -record(m_service, {service, settings = [], schedule = []}).
@@ -58,9 +58,8 @@ handle_cast(Msg, State) ->
 handle_info({pg_message, _, _, #new_instrument{
          name = Name,
          exch = Exch,
+         full_name = FullName,
          class_code = ClassCode,
-         short_isin = ShortIsin,
-         isin = Isin,
          expiration = Expiration,
          commodity = Commodity,
          limit_up = LUp,
@@ -78,11 +77,9 @@ handle_info({pg_message, _, _, #new_instrument{
             end,
             mnesia:write(
                #m_instrument{
-                  isin = Isin,
-                  short_isin = ShortIsin,
-                  full_name = Name,
+                  name = {Name, ClassCode},
+                  full_name = FullName,
                   exch = Exch,
-                  class_code = ClassCode,
                   expiration = Expiration,
                   commodity = Commodity,
                   limit_up = LUp,

@@ -82,24 +82,23 @@ close(DrvPort) ->
 processInfo(
    #'FORTS_FUTINFO_REPL.fut_sess_contents'{
       event_name = 'StreamDataInserted',
-      short_isin = ShortIsin,
       isin = Isin,
-      name = Name,
+      name = FullName,
       expiration = Expiration,
       commodity = Commodity,
       signs = Signs,
       limit_up = LUp,
       limit_down = LDown,
-      lot_size = LSize}) when (Signs band 16#100 == 0) and (Signs band 16#800 == 0) and (Signs band 16#1000 == 0) ->
+      lot_size = LSize}) when (Signs band 16#100 == 0) and (Signs band 16#800 == 0) and (Signs band 16#1000 == 0)
+                               and ((Signs band 16#8 =/= 0) or (Signs band 16#4 == 0))->
    Instr = #new_instrument{
       exch = 'RTS',
-      class_code = if (Signs band 16#4 == 0) or (Signs band 16#8 == 0) -> 'STD'; true -> 'SPBFUT' end,
-      short_isin = ShortIsin,
-      isin = Isin,
-      name = Name,
+      class_code = if (Signs band 16#8 =/= 0) -> 'RTS_STD'; true -> 'RTS_FUT' end,
+      name = if (Signs band 16#8 =/= 0) -> Commodity; true -> Isin end,
+      full_name = FullName,
       expiration = format_datetime(Expiration),
       commodity = Commodity,
-      type = if (Signs band 16#4 == 0) or (Signs band 16#8 == 0) -> standard; true -> future end,
+      type = if (Signs band 16#8 =/= 0) -> standard; true -> future end,
       limit_up = LUp,
       limit_down = LDown,
       lot_size = LSize},
