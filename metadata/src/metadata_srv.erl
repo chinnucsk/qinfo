@@ -101,7 +101,7 @@ terminate(Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
    {ok, State}.
 
-%% ========= private ============
+%% ========= private ============}
 
 -define(create_table(Table, Type),
    case (catch mnesia:table_info(Table, version)) of
@@ -123,3 +123,32 @@ create_db() ->
          mnesia:start(),
          ok
    end.
+
+type_to_symbol(future) -> $F;
+type_to_symbol(standard) -> $S;
+type_to_symbol(equity) -> $E.
+
+month_to_symbol(1) -> $F;
+month_to_symbol(2) -> $G;
+month_to_symbol(3) -> $H;
+month_to_symbol(4) -> $J;
+month_to_symbol(5) -> $K;
+month_to_symbol(6) -> $M;
+month_to_symbol(7) -> $N;
+month_to_symbol(8) -> $Q;
+month_to_symbol(9) -> $U;
+month_to_symbol(10) -> $V;
+month_to_symbol(11) -> $X;
+month_to_symbol(12) -> $Z.
+
+get_expiration({{Year, Month, _Day}, _}) ->
+   Y = Year - (Year div 10 * 10),
+   integer_to_list(Y) ++ month_to_symbol(Month).
+
+create_internal_symbol(#m_instrument{exch = Exchange, type = Type = future, expiration = Expiration},
+   #m_commodity{alias = Alias}) ->
+   io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(Type), Alias, get_expiration(Expiration)]);
+
+create_internal_symbol(#m_instrument{exch = Exchange, type = Type, expiration = Expiration},
+   #m_commodity{alias = Alias}) ->
+   io_lib:format("~s.~c.~s", [Exchange, type_to_symbol(Type), Alias]).
