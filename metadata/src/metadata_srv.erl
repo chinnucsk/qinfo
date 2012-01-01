@@ -67,14 +67,13 @@ handle_info({pg_message, _, _, #new_instrument{
          lot_size = LSize,
          type = Type}}, State) ->
    {atomic, ok} = mnesia:transaction(fun() ->
-            Res = mnesia:read(m_commodity, {Exch, ClassCode, Commodity}),
-            Enabled = case Res of
-                        [] ->
-                           mnesia:write(#m_commodity{ key = {Exch, ClassCode, Commodity}, alias = Commodity}),
-                           false;
-                        [#m_commodity{key = {Exch, ClassCode, Commodity}, enabled = E}] -> % already exists, nothing to do
-                           E
-            end,
+            Enabled = case mnesia:read(m_commodity, {Exch, ClassCode, Commodity}) of
+                         [] ->
+                            mnesia:write(#m_commodity{ key = {Exch, ClassCode, Commodity}, alias = Commodity}),
+                            false;
+                         [#m_commodity{key = {Exch, ClassCode, Commodity}, enabled = E}] -> % already exists, nothing to do
+                            E
+                      end,
             mnesia:write(
                #m_instrument{
                   name = {Name, ClassCode},
