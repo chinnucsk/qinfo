@@ -5,7 +5,7 @@
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("protocol.hrl").
--include("public.hrl").
+-include("names.hrl").
 
 -record(m_instrument, {name, full_name, exch, expiration = undef, commodity, limit_up, limit_down,
       lot_size, type, enabled}).
@@ -142,12 +142,35 @@ month_to_symbol(12) -> $Z.
 
 get_expiration({{Year, Month, _Day}, _}) ->
    Y = Year - (Year div 10 * 10),
-   integer_to_list(Y) ++ month_to_symbol(Month).
+   [month_to_symbol(Month)] ++ integer_to_list(Y).
 
 create_internal_symbol(#m_instrument{exch = Exchange, type = Type = future, expiration = Expiration},
    #m_commodity{alias = Alias}) ->
-   io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(Type), Alias, get_expiration(Expiration)]);
+   lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(Type), Alias, get_expiration(Expiration)]));
 
 create_internal_symbol(#m_instrument{exch = Exchange, type = Type, expiration = Expiration},
    #m_commodity{alias = Alias}) ->
-   io_lib:format("~s.~c.~s", [Exchange, type_to_symbol(Type), Alias]).
+   lists:flatten(io_lib:format("~s.~c.~s", [Exchange, type_to_symbol(Type), Alias])).
+
+
+%=======================================================================================================================
+%  unit testing
+%=======================================================================================================================
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+get_expiration_test() ->
+   ?assertEqual("F2", get_expiration({{2012, 1, 0}, {10, 10, 0}})),
+   ?assertEqual("M5", get_expiration({{2015, 6, 0}, {10, 10, 0}})).
+
+create_internal_symbol_test() ->
+   ?assertEqual("RTS.S.SBER",
+      create_internal_symbol(
+         #m_instrument{exch = 'RTS', type = standard, expiration = {{2012, 1, 1}, {10, 0, 0}}},
+         #m_commodity{alias = "SBER"})),
+   ?assertEqual("RTS.F.LKOH.F2",
+      create_internal_symbol(
+         #m_instrument{exch = 'RTS', type = future, expiration = {{2012, 1, 1}, {10, 0, 0}}},
+         #m_commodity{alias = "LKOH"})).
+
+-endif.

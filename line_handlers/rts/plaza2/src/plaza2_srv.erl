@@ -7,7 +7,8 @@
 -define(plaza2_port_dll, "plaza2_port").
 
 -include("protocol.hrl").
--include("public.hrl").
+-include("names.hrl").
+-include("metadata.hrl")
 
 -define(def_settings, [{ini_file, "P2ClientGate.ini"}, {host, "192.168.1.99"}, {port, 4001}, {app_name, "qinfo"},
       {passwd, "123"}, {log_level, info}]).
