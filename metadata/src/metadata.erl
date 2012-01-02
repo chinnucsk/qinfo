@@ -1,4 +1,8 @@
--include("names.hrl")
+-module(metadata).
+
+-include("names.hrl").
+
+-export([register_service/3, get_settings/1, get_instruments/2]).
 
 register_service(ServiceName, Settings, Schedule) ->
    gen_server:call({global, ?qinfo_metadata}, {register, ServiceName, Settings, Schedule}).
