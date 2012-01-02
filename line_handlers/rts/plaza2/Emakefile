@@ -1,1 +1,8 @@
-{'src/*', [debug_info, {i, "../../../common/include"}, {outdir, "ebin"}]}.
+{'src/*',
+	[
+		debug_info,
+		{i, "../../../common/include"},
+		{i, "../../../metadata/include"},
+		{outdir, "ebin"}
+	]
+}.

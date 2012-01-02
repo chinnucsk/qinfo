@@ -1,10 +1,3 @@
--include("names.hrl")
-
-register_service(ServiceName, Settings, Schedule) ->
-   gen_server:call({global, ?qinfo_metadata}, {register, ServiceName, Settings, Schedule}).
-
-get_settings(ServiceName) ->
-   gen_server:call({global, ?qinfo_metadata}, {get_settings, ServiceName}).
-
-get_instruments(Exchange, OnlyEnabled) ->
-   gen_server:call({global, ?qinfo_metadata}, {get_instruments, Exchange, OnlyEnabled}).
+-record(new_instrument, {name, exch, class_code, full_name, type, commodity, limit_up, limit_down, lot_size, expiration}).
+-record(trade, {price, qty}).
+-record(service, {service, settings = [], schedule = []}).

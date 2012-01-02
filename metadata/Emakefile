@@ -3,6 +3,7 @@
 	[
 		debug_info,
 		{i, "../common/include"},
+		{i, "include"},
 		{outdir, "ebin"},
 		{d, 'TEST'},
 		{nowarn_unused_function, {register_service, 2}},

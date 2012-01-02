@@ -4,11 +4,11 @@
 
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--include("protocol.hrl").
+-include("metadata.hrl").
 -include("names.hrl").
 
 -record(m_instrument, {name, full_name, exch, expiration = undef, commodity, limit_up, limit_down,
-      lot_size, type, enabled}).
+      lot_size, type, enabled, ref}).
 -record(m_commodity, {key, enabled = false, alias = undef}).
 -record(m_service, {service, settings = [], schedule = []}).
 
@@ -65,7 +65,8 @@ handle_info({pg_message, _, _, #new_instrument{
          limit_up = LUp,
          limit_down = LDown,
          lot_size = LSize,
-         type = Type}}, State) ->
+         type = Type,
+         ref = Ref}}, State) ->
    {atomic, ok} = mnesia:transaction(fun() ->
             Enabled = case mnesia:read(m_commodity, {Exch, ClassCode, Commodity}) of
                          [] ->
@@ -85,7 +86,8 @@ handle_info({pg_message, _, _, #new_instrument{
                   limit_down = LDown,
                   lot_size = LSize,
                   type = Type,
-                  enabled = Enabled})
+                  enabled = Enabled,
+                  ref = Ref})
       end),
    {noreply, State};
 

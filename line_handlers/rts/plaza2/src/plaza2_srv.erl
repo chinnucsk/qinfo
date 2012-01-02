@@ -6,9 +6,8 @@
 
 -define(plaza2_port_dll, "plaza2_port").
 
--include("protocol.hrl").
 -include("names.hrl").
--include("metadata.hrl")
+-include("metadata.hrl").
 
 -define(def_settings, [{ini_file, "P2ClientGate.ini"}, {host, "192.168.1.99"}, {port, 4001}, {app_name, "qinfo"},
       {passwd, "123"}, {log_level, info}]).
@@ -34,7 +33,7 @@ start() ->
    gen_server:start_link({global, ?qinfo_plaza2}, ?MODULE, [], []).
 
 init(_Args) ->
-   {ok, #service{settings = SList}} = register_service(
+   {ok, #service{settings = SList}} = metadata:register_service(
       ?qinfo_plaza2, ?def_settings, ?def_schedule),
    Settings = extract_settings(SList),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_plaza2, Settings]),
@@ -90,6 +89,8 @@ processInfo(
       signs = Signs,
       limit_up = LUp,
       limit_down = LDown,
+      sess_id = SessId,
+      isin_id = IsinId,
       lot_size = LSize}) when (Signs band 16#100 == 0) and (Signs band 16#800 == 0) and (Signs band 16#1000 == 0)
                                and ((Signs band 16#8 =/= 0) or (Signs band 16#4 == 0))->
    Instr = #new_instrument{
@@ -102,7 +103,8 @@ processInfo(
       type = if (Signs band 16#8 =/= 0) -> standard; true -> future end,
       limit_up = LUp,
       limit_down = LDown,
-      lot_size = LSize},
+      lot_size = LSize,
+      ref = SessId * 1000000000 + IsinId},
    pg:send(?group_rts_instruments, Instr);
 
 processInfo(Msg) ->

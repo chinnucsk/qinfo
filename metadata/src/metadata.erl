@@ -1,11 +1,10 @@
--module(metadata).
+-include("names.hrl")
 
--behaviour(application).
+register_service(ServiceName, Settings, Schedule) ->
+   gen_server:call({global, ?qinfo_metadata}, {register, ServiceName, Settings, Schedule}).
 
--export([start/2, stop/1]).
+get_settings(ServiceName) ->
+   gen_server:call({global, ?qinfo_metadata}, {get_settings, ServiceName}).
 
-start(_Type, Args) ->
-   metadata_sup:start_link(Args).
-
-stop(_) ->
-   ok.
+get_instruments(Exchange, OnlyEnabled) ->
+   gen_server:call({global, ?qinfo_metadata}, {get_instruments, Exchange, OnlyEnabled}).
