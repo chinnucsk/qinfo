@@ -1,4 +1,4 @@
--module(plaza2).
+-module(plaza2_app).
 
 -behaviour(application).
 
