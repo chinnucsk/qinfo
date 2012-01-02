@@ -45,7 +45,13 @@ handle_call({get_settings, ServiceName}, _From, State) ->
    end;
 
 handle_call({get_instruments, Exchange, OnlyEnabled}, _From, State) ->
-   {reply, ok, State};
+   {atomic, Res} = mnesia:transaction
+   (
+      fun() ->
+         mnesia:select(m_instrument, [{#m_instrument{exch = '$1', _='_'}, [{'==', '$1', 'RTS'}], ['$_']}])
+      end
+   ),
+   {reply, Res, State};
 
 handle_call(Msg, From, State) ->
    error_logger:warning_msg("Unexpected message ~p from ~p.~n", [Msg, From]),
