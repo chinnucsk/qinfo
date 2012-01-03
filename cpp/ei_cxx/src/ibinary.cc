@@ -4,9 +4,9 @@
 
 #include "../include/ei_cxx/ibinary.h"
 #include "../include/ei_cxx/atom.h"
-#include "../include/ei_cxx/exception.h"
 #include "../include/ei_cxx/tuple.h"
 #include "../include/ei_cxx/list.h"
+#include <common/exception.h>
 
 #include <boost/cstdint.hpp>
 

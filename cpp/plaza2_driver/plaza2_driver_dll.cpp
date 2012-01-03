@@ -2,14 +2,14 @@
 //
 
 #include "precomp.h"
-#include "common.h"
-#include "plaza2_port_dll.h"
+#include "application.h"
+#include "connection.h"
+#include "plaza2_driver_dll.h"
+
 #include <ei_cxx/tuple.h>
 #include <ei_cxx/port.h>
 #include <ei_cxx/atom.h>
 #include <ei_cxx/list.h>
-#include "application.h"
-#include "connection.h"
 
 #include <erl_driver.h>
 #include <ei.h>
@@ -62,7 +62,7 @@ struct PortData
 	ErlDrvPort port;
 };
 
-PLAZA2_PORT_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
+PLAZA2_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
 {
 	PortData* d = (PortData*)driver_alloc(sizeof(PortData));
     d->port = port;
@@ -73,7 +73,7 @@ PLAZA2_PORT_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
     return (ErlDrvData)d;
 }
 
-PLAZA2_PORT_DLL_API void stop(ErlDrvData handle)
+PLAZA2_DRIVER_DLL_API void stop(ErlDrvData handle)
 {
    Connection::instance()->disconnect();
    driver_free((char*)handle);
@@ -81,7 +81,7 @@ PLAZA2_PORT_DLL_API void stop(ErlDrvData handle)
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
-PLAZA2_PORT_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
+PLAZA2_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 {
    try
    {
@@ -170,7 +170,7 @@ void process_disconnect()
    Connection::instance()->disconnect();
 }
 
-PLAZA2_PORT_DLL_API ErlDrvEntry plaza2_port_entry =
+PLAZA2_DRIVER_DLL_API ErlDrvEntry plaza2_driver_entry =
 {
    NULL,               /* F_PTR init, N/A */
    start,              /* L_PTR start, called when port is opened */
@@ -181,7 +181,7 @@ PLAZA2_PORT_DLL_API ErlDrvEntry plaza2_port_entry =
                         called when input descriptor ready to read*/
    NULL,               /* F_PTR ready_output,
                         called when output descriptor ready to write */
-   "plaza2_port",      /* char *driver_name, the argument to open_port */
+   "plaza2_driver",    /* char *driver_name, the argument to open_port */
    NULL,               /* F_PTR finish, called when unloaded */
    NULL,               /* handle  */
    NULL,               /* F_PTR control, port_command callback */

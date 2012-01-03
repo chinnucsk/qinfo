@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-set(BOOST_HOME    C:/dev/qinfo/3rd_party/boost_1_48_0/)
+set(BOOST_HOME    C:/dev/qinfo/cpp/3rd_party/boost_1_48_0/)
 set(BOOST_LIB     ${BOOST_HOME}stage/lib)
 
 set(ERL_HOME      C:/Program\ Files/erl5.9/)

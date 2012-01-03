@@ -1,4 +1,4 @@
-3rd_party/boost*
+cpp/3rd_party/boost*
 *.beam
 build/*
 rel/*

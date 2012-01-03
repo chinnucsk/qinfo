@@ -1,9 +1,8 @@
 #include "precomp.h"
 #include "stream.h"
-#include "common.h"
-#include "utf8_encode.h"
-#include <ei_cxx/list.h>
 
+#include <common/utf8_encode.h>
+#include <ei_cxx/list.h>
 #include <ei_cxx/tuple.h>
 #include <ei_cxx/atom.h>
 

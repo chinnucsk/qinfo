@@ -3,7 +3,7 @@
 /// @date   Created on: 03/26/2011 01:48:31 PM
 
 #include "../include/ei_cxx/port.h"
-#include "../include/ei_cxx/exception.h"
+#include <common/exception.h>
 
 namespace ei_cxx
 {

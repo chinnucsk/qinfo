@@ -7,20 +7,20 @@
 
 #include <erl_driver.h>
 
-#ifdef PLAZA2_PORT_DLL_EXPORTS
-#define PLAZA2_PORT_DLL_API __declspec(dllexport)
+#ifdef PLAZA2_DRIVER_DLL_EXPORTS
+#define PLAZA2_DRIVER_DLL_API __declspec(dllexport)
 #else
-#define PLAZA2_PORT_DLL_API __declspec(dllimport)
+#define PLAZA2_DRIVER_DLL_API __declspec(dllimport)
 #endif
 
 extern "C"
 {
 
-extern PLAZA2_PORT_DLL_API ErlDrvEntry plaza2_port_entry;
+extern PLAZA2_DRIVER_DLL_API ErlDrvEntry plaza2_driver_entry;
 
-PLAZA2_PORT_DLL_API DRIVER_INIT(plaza2_port) /* must match name in driver_entry */
+PLAZA2_DRIVER_DLL_API DRIVER_INIT(plaza2_driver) /* must match name in driver_entry */
 {
-    return &plaza2_port_entry;
+    return &plaza2_driver_entry;
 }
 
 }

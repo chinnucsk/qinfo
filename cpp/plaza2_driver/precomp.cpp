@@ -1,5 +1,5 @@
 #include "precomp.h"
-#include "common.h"
+#include <ei_cxx/log_wrapper.h>
 
 #ifdef _ATL_STATIC_REGISTRY
 #include <statreg.h>

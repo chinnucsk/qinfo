@@ -1,10 +1,8 @@
-#ifndef PLAZA2_PORT_STREAM_H
-#define PLAZA2_PORT_STREAM_H
-
-#include "smart_enum.h"
-#include "common.h"
+#ifndef PLAZA2_DRIVER_STREAM_H
+#define PLAZA2_DRIVER_STREAM_H
 
 #include <ei_cxx/port.h>
+#include <common/smart_enum.h>
 #include <boost/shared_ptr.hpp>
 
 #include <string>
@@ -54,4 +52,4 @@ typedef boost::shared_ptr<Stream> StreamPtr;
 
 } // namespace Plaza2
 
-#endif // PLAZA2_PORT_STREAM_H
+#endif // PLAZA2_DRIVER_STREAM_H

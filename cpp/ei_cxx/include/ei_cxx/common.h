@@ -2,10 +2,10 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 04/17/2011 09:10:03 PM
 
-#ifndef EI_CXX_COMMON_H
-#define EI_CXX_COMMON_H
+#ifndef QINFO_COMMON_H
+#define QINFO_COMMON_H
 
-#include "exception.h"
+#include <common/exception.h>
 
 namespace ei_cxx
 {

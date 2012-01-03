@@ -1,9 +1,7 @@
-#ifndef PLAZA2_PORT_CONNECTION_H
-#define PLAZA2_PORT_CONNECTION_H
+#ifndef PLAZA2_DRIVER_CONNECTION_H
+#define PLAZA2_DRIVER_CONNECTION_H
 
-#include "smart_enum.h"
 #include "stream.h"
-#include "common.h"
 #include <ei_cxx/port.h>
 
 #include <boost/noncopyable.hpp>
@@ -53,4 +51,4 @@ private:
 
 } // namespace Plaza2
 
-#endif // PLAZA2_PORT_CONNECTION_H
+#endif // PLAZA2_DRIVER_CONNECTION_H

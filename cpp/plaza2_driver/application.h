@@ -1,5 +1,5 @@
-#ifndef PLAZA2_PORT_APPLICATION_H
-#define PLAZA2_PORT_APPLICATION_H
+#ifndef PLAZA2_DRIVER_APPLICATION_H
+#define PLAZA2_DRIVER_APPLICATION_H
 
 #include <boost/noncopyable.hpp>
 
@@ -15,7 +15,7 @@ class Application : private boost::noncopyable
 private:
 	Application();
 public:
-   static Application* instance(); 
+   static Application* instance();
    void init(std::string const& iniFile);
    operator bool () const;
 	~Application();
@@ -26,4 +26,4 @@ private:
 } // namespace Plaza2
 
 
-#endif // PLAZA2_PORT_APPLICATION_H
+#endif // PLAZA2_DRIVER_APPLICATION_H
