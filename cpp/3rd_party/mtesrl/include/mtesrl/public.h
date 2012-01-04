@@ -84,7 +84,7 @@ long WINAPI MTEConnectionStats(long clientIdx, ConnectionStats* stats);
 
 } // extern "C"
 
-#define MTE_OK   		        0
+#define MTE_OK               0
 #define MTE_CONFIG          -1
 #define MTE_SRVUNAVAIL      -2
 #define MTE_LOGERROR        -3
