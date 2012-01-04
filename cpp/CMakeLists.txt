@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 include(include.cmake NO_POLICY_SCOPE)
 
-add_definitions(-D__WIN32__ -DEI_CXX_ENABLE_INT64 -DPLAZA2_DRIVER_DLL_EXPORTS - DMICEX_DRIVER_DLL_EXPORTS)
+add_definitions(-D__WIN32__ -DEI_CXX_ENABLE_INT64 -DPLAZA2_DRIVER_DLL_EXPORTS -DMICEX_DRIVER_DLL_EXPORTS)
 include_directories(ei_cxx/include)
 include_directories(common/include)
 
