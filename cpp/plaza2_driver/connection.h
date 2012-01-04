@@ -1,3 +1,7 @@
+/// @file   connection.h
+/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @date   Created on: 01/04/2012 04:29:18 PM
+
 #ifndef PLAZA2_DRIVER_CONNECTION_H
 #define PLAZA2_DRIVER_CONNECTION_H
 

@@ -16,7 +16,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
-#define NOMINMAXm_bInfoAvailable
+#define NOMINMAX
 
 #include <Windows.h>
 

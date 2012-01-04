@@ -2,7 +2,8 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/03/2012 11:32:59 AM
 
-#ifndef MTESRL_H
+#ifndef MTESRL_PUBLIC_H
+#define MTESRL_PUBLIC_H
 
 #include <windows.h>
 
@@ -21,7 +22,7 @@ struct MTERow
    long  len;
    char* fieldNumbers;
    char* data;
-   size_t size() const { return sizeof(numFields) + sizeof(len) + numFields + len}
+   size_t size() const { return sizeof(numFields) + sizeof(len) + numFields + len; }
 };
 
 struct MTETable
@@ -36,7 +37,7 @@ struct MTETable
       for(int i = 0; i < numRows; ++i)
       {
          sz += row->size();
-         row = reinterpret_cast<MTERow const*>(reinterpret_cast<char const*>(row) + row->size())
+         row = reinterpret_cast<MTERow const*>(reinterpret_cast<char const*>(row) + row->size());
       }
    }
 };
@@ -83,4 +84,4 @@ long WINAPI MTEConnectionStats(long clientIdx, ConnectionStats* stats);
 
 } // extern "C"
 
-#endif // MTESRL_H
+#endif // MTESRL_PUBLIC_H

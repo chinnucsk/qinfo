@@ -1,9 +1,9 @@
-/// @file   mtesrl_driver_dll.cpp
+/// @file   micex_driver_dll.cpp
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/04/2012 08:50:51 AM
 
 #include "connection.h"
-#include "mtesrl_driver_dll.h"
+#include "micex_driver_dll.h"
 
 #include <ei_cxx/tuple.h>
 #include <ei_cxx/port.h>
@@ -13,7 +13,7 @@
 #include <erl_driver.h>
 #include <ei.h>
 
-using namespace mtesrl;
+using namespace micex;
 
 Connection g_conn;
 
@@ -61,7 +61,7 @@ struct PortData
 	ErlDrvPort port;
 };
 
-MTESRL_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
+MICEX_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
 {
 	PortData* d = (PortData*)driver_alloc(sizeof(PortData));
     d->port = port;
@@ -72,7 +72,7 @@ MTESRL_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
     return (ErlDrvData)d;
 }
 
-MTESRL_DRIVER_DLL_API void stop(ErlDrvData handle)
+MICEX_DRIVER_DLL_API void stop(ErlDrvData handle)
 {
    //Connection::instance()->disconnect();
    driver_free((char*)handle);
@@ -80,7 +80,7 @@ MTESRL_DRIVER_DLL_API void stop(ErlDrvData handle)
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
-MTESRL_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
+MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 {
    //try
    //{
@@ -169,7 +169,7 @@ MTESRL_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 //   Connection::instance()->disconnect();
 //}
 
-MTESRL_DRIVER_DLL_API ErlDrvEntry mtesrl_driver_entry =
+MICEX_DRIVER_DLL_API ErlDrvEntry micex_driver_entry =
 {
    NULL,               /* F_PTR init, N/A */
    start,              /* L_PTR start, called when port is opened */
@@ -180,7 +180,7 @@ MTESRL_DRIVER_DLL_API ErlDrvEntry mtesrl_driver_entry =
                         called when input descriptor ready to read*/
    NULL,               /* F_PTR ready_output,
                         called when output descriptor ready to write */
-   "mtesrl_driver",    /* char *driver_name, the argument to open_port */
+   "micex_driver",    /* char *driver_name, the argument to open_port */
    NULL,               /* F_PTR finish, called when unloaded */
    NULL,               /* handle  */
    NULL,               /* F_PTR control, port_command callback */

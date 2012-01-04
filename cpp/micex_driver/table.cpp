@@ -4,7 +4,7 @@
 
 #include "table.h"
 
-namespace mtesrl
+namespace micex
 {
 
 long Table::m_cookie = 0;
@@ -19,4 +19,4 @@ void Table::init(char const* buff)
 {
 }
 
-} // namespace mtesrl
+} // namespace micex

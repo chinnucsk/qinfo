@@ -2,18 +2,21 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/04/2012 08:35:49 AM
 
-#ifndef MTESRL_DRIVER_TABLE_H
-#define MTESRL_DRIVER_TABLE_H
+#ifndef MICEX_DRIVER_TABLE_H
+#define MICEX_DRIVER_TABLE_H
+
+#include <boost/shared_ptr.hpp>
 
 #include <string>
 
-namespace mtesrl
+namespace micex
 {
 
 class Table
 {
 public:
    Table(std::string const& name, bool completeLoad, bool refreshEnabled);
+   std::string const& name() const { return m_name; }
    void init(char const* buff);
 private:
    std::string const m_name;
@@ -23,9 +26,9 @@ private:
    static long m_cookie;
 };
 
-typedef boost::smart_ptr<Table> TablePtr;
+typedef boost::shared_ptr<Table> TablePtr;
 
 } // namespace
 
 
-#endif // MTESRL_DRIVER_TABLE_H
+#endif // MICEX_DRIVER_TABLE_H
