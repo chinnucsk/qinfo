@@ -98,7 +98,7 @@ long WINAPI MTEConnectionStats(long clientIdx, ConnectionStats* stats);
 #define MTE_PKTINPROGRESS  -11
 #define MTE_PKTNOTSTARTED  -12
 #define MTE_LOGON          -13
-#define MTE_FATALERROR		MTE_LOGON // not used because of cabalistic signification
+#define MTE_FATALERROR     MTE_LOGON // not used because of cabalistic signification
 #define MTE_INVALIDHANDLE  -14
 #define MTE_DSROFF         -15
 #define MTE_ERRUNKNOWN     -16
