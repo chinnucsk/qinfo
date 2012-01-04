@@ -88,14 +88,14 @@ long WINAPI MTEConnectionStats(long clientIdx, ConnectionStats* stats);
 #define MTE_CONFIG          -1
 #define MTE_SRVUNAVAIL      -2
 #define MTE_LOGERROR        -3
-#define MTE_INVALIDCONNECT	 -4
-#define MTE_NOTCONNECTED	 -5
-#define MTE_WRITE		       -6
+#define MTE_INVALIDCONNECT  -4
+#define MTE_NOTCONNECTED    -5
+#define MTE_WRITE           -6
 #define MTE_READ            -7
 #define MTE_TSMR            -8
 #define MTE_NOMEMORY        -9
 #define MTE_ZLIB           -10
-#define MTE_PKTINPROGRESS	-11
+#define MTE_PKTINPROGRESS  -11
 #define MTE_PKTNOTSTARTED  -12
 #define MTE_LOGON          -13
 #define MTE_FATALERROR		MTE_LOGON // not used because of cabalistic signification
