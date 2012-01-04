@@ -5,6 +5,8 @@
 #ifndef MTESRL_CONNECTION_H
 #define MTESRL_CONNECTION_H
 
+#include <string>
+
 namespace mtesrl
 {
 
@@ -13,10 +15,13 @@ class Connection
 public:
    Connection();
    ~Connection();
-   void open();
+   void open(std::string const& connParams);
    void close();
+   void addTable(Table& table);
 private:
+   typedef std::list<TablePtr> Tables;
    long m_connDescr;
+   Tables m_tables;
 };
 
 };
