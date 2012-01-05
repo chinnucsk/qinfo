@@ -7,19 +7,21 @@
 
 #include <windows.h>
 
+#include <boost/cstdint.hpp>
+
 extern "C"
 {
 
 struct MTEMsg
 {
-   long len;
+   boost::int32_t len;
    char data[1];
 };
 
 struct MTERow
 {
    char numFields;
-   long  len;
+   boost::int32_t  len;
    char* fieldNumbers;
    char* data;
    size_t size() const { return sizeof(numFields) + sizeof(len) + numFields + len; }
@@ -27,8 +29,8 @@ struct MTERow
 
 struct MTETable
 {
-   long ref;
-   long numRows;
+   boost::int32_t ref;
+   boost::int32_t numRows;
    MTERow rows[1];
    size_t size() const
    {
@@ -44,7 +46,7 @@ struct MTETable
 
 struct MTETables
 {
-   long numTable;
+   boost::int32_t numTable;
    MTETable* tables;
 };
 
@@ -59,7 +61,7 @@ int const FlagSigningOn  = 0x4;
 
 struct ConnectionStats
 {
-   long size;
+   boost::int32_t size;
    DWORD properties;
    DWORD SendPacket;
    DWORD RecvPacket;
@@ -67,19 +69,19 @@ struct ConnectionStats
    DWORD RecvBytes;
 };
 
-long WINAPI MTEOpenTable(long clientIdx, char* tableName, char* params, long completeFlag, MTEMsg** msg);
-long WINAPI MTEAddTable(long clientIdx, long htable, long ref);
-long WINAPI MTEExecTrans(long clientIdx, char* tranName, char* params, char* resultMsg);
-long WINAPI MTEStructure(long idx, MTEMsg** msg);
-long WINAPI MTEConnect(char* params, char* errMsg);
-long WINAPI MTERefresh(long clientIdx, MTEMsg** msg);
-long WINAPI MTECloseTable(long clientIdx, long htable);
-long WINAPI MTEDisconnect(long clientIdx);
-char* WINAPI MTEErrorMsg(long errorCode);
-long WINAPI MTEFreeBuffer(long clientIdx);
-long WINAPI MTEGetShapshot(long clientIdx, char** snapshot, int* len);
-long WINAPI MTESetShapshot(long clientIdx, char* snapshot, int len, char* error);
-long WINAPI MTEConnectionStats(long clientIdx, ConnectionStats* stats);
+boost::int32_t WINAPI MTEOpenTable(boost::int32_t clientIdx, char* tableName, char* params, boost::int32_t completeFlag, MTEMsg** msg);
+boost::int32_t WINAPI MTEAddTable(boost::int32_t clientIdx, boost::int32_t htable, boost::int32_t ref);
+boost::int32_t WINAPI MTEExecTrans(boost::int32_t clientIdx, char* tranName, char* params, char* resultMsg);
+boost::int32_t WINAPI MTEStructure(boost::int32_t idx, MTEMsg** msg);
+boost::int32_t WINAPI MTEConnect(char* params, char* errMsg);
+boost::int32_t WINAPI MTERefresh(boost::int32_t clientIdx, MTEMsg** msg);
+boost::int32_t WINAPI MTECloseTable(boost::int32_t clientIdx, boost::int32_t htable);
+boost::int32_t WINAPI MTEDisconnect(boost::int32_t clientIdx);
+char* WINAPI MTEErrorMsg(boost::int32_t errorCode);
+boost::int32_t WINAPI MTEFreeBuffer(boost::int32_t clientIdx);
+boost::int32_t WINAPI MTEGetShapshot(boost::int32_t clientIdx, char** snapshot, int* len);
+boost::int32_t WINAPI MTESetShapshot(boost::int32_t clientIdx, char* snapshot, int len, char* error);
+boost::int32_t WINAPI MTEConnectionStats(boost::int32_t clientIdx, ConnectionStats* stats);
 
 
 } // extern "C"
@@ -107,7 +109,7 @@ long WINAPI MTEConnectionStats(long clientIdx, ConnectionStats* stats);
 #define MTE_TRANSREJECTED  -18
 #define MTE_REJECTION      MTE_TRANSREJECTED
 #define MTE_TOOSLOWCONNECT -19
-#define MTE_TEUNAVAIL      MTE_TOOSLOWCONNECT	
+#define MTE_TEUNAVAIL      MTE_TOOSLOWCONNECT
 #define MTE_CRYPTO_ERROR   -20
 
 
