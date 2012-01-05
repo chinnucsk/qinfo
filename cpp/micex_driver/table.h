@@ -5,6 +5,8 @@
 #ifndef MICEX_DRIVER_TABLE_H
 #define MICEX_DRIVER_TABLE_H
 
+#include "field.h"
+
 #include <boost/shared_ptr.hpp>
 
 #include <string>
@@ -18,6 +20,7 @@ public:
    Table(std::string const& name, bool completeLoad, bool refreshEnabled);
    std::string const& name() const { return m_name; }
    void init(char const* buff);
+   static void skip(char const*& buff);
 private:
    std::string const m_name;
    bool const m_completeLoad;

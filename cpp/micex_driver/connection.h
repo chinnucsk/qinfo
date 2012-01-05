@@ -7,6 +7,8 @@
 
 #include "table.h"
 
+#include <boost/thread.hpp>
+
 #include <list>
 #include <string>
 
@@ -20,11 +22,18 @@ public:
    ~Connection();
    void open(std::string const& connParams);
    void close();
-   void addTable(TablePtr table);
+   void addTable(
+         std::string const& name,
+         bool completeLoad,
+         bool refreshEnabled,
+         std::string const& requiredFields = "");
+private:
+   void initTables();
 private:
    typedef std::list<TablePtr> Tables;
-   long m_connDescr;
-   Tables m_tables;
+   long                          m_connDescr;
+   Tables                        m_tables;
+   std::auto_ptr<boost::thread>  m_worker;
 };
 
 } // namespace micex
