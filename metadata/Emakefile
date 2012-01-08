@@ -1,8 +1,9 @@
 {
-	'src/*',
+	['src/*', 'src/web_ui/*'],
 	[
 		debug_info,
 		{i, "../common/include"},
+		{i, "../deps/nitrogen_core/include"},
 		{i, "include"},
 		{outdir, "ebin"},
 		{d, 'TEST'},

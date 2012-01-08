@@ -4,7 +4,7 @@
   'src/elements/heading/*',
   'src/elements/html/*',
   'src/elements/html5/*',
-  'src/elements/layout.*',
+  'src/elements/layout/*',
   'src/elements/other/*',
   'src/elements/table/*',
   'src/handlers/cache/cache_handler.erl',
