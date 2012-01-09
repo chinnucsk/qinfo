@@ -11,6 +11,8 @@
 #include <ei_cxx/atom.h>
 #include <ei_cxx/list.h>
 
+#include <boost/cstdint.hpp>
+
 #include <erl_driver.h>
 #include <ei.h>
 
@@ -67,22 +69,71 @@ public:
 private:
    virtual void onConnectionStatus(ConnectionStatus::type_t status)
    {
-
+      using namespace ei_cxx;
+      OTuple t(2);
+      t << Atom("connection_status") << ConnectionStatus::toString(status);
+      t.send(g_port);
    }
    virtual void onTableDataBegin(std::string const& tblName)
    {
-
+      using namespace ei_cxx;
+      Otuple t(2);
+      t << Atom("data_begin") << tblName;
+      t.send(g_port);
    }
    virtual void onTableData(std::string const& tblName, OutRow const& row)
    {
-
+      using namespace ei_cxx;
+      if (tblName == "SECURITIES")
+      {
+         std::string key = row.getField("SECBOARD")->getAsString() + '_' + row.getField("SECCODE")->getAsString();
+         if (m_decimals.end() == m_decimals.find(key))
+         {
+            m_decimals.insert(std::make_pair(key, row.getField("DECIMALS")->getAsInt64()));
+         }
+      }
+      OTuple erlRow(row.size() + 1);
+      erlRow << Atom(tblName);
+      OutFieldPtr fld = row.first();
+      while(fld)
+      {
+         if (fld.type() == FieldType::charType || fld.type() == FieldType::timeType || fld.type() == FieldType::dateType)
+         {
+            erlRow << fld->getAsString();
+         }
+         else if (fld.type() == FieldType::intType)
+         {
+            erlRow << fld->getAsInt64();
+         }
+         else if (fld.type() == FieldType::fixedType)
+         {
+            erlRow << fld->getAsFloat(FixedPrec);
+         }
+         else if (fld.type() == FieldType::floatType)
+         {
+            std::string key = row.getField("SECBOARD")->getAsString() + '_' + row.getField("SECCODE")->getAsString();
+            Decimals::const_iterator it = m_decimals.find(key);
+            if (it == m_decimals.end())
+            {
+               THROW(std::runtime_error, FMT("Key %1% not found in decimals table", key));
+            }
+            erlRow << fld->getAsFloat(it->second);
+         }
+         fld = row.next();
+      }
+      erlRow.send(g_port);
    }
    virtual void onTableDataEnd(std::string const& tblName)
    {
-
+      using namespace ei_cxx;
+      Otuple t(2);
+      t << Atom("data_end") << tblName;
+      t.send(g_port);
    }
 private:
-   Connection m_conn;
+   typedef std::map<std::string, boost::int64_t> Decimals;
+   Connection  m_conn;
+   Decimals    m_decimals;
 };
 
 BOOL APIENTRY DllMain( HANDLE hModule,
