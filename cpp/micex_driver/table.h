@@ -38,6 +38,8 @@ public:
    static void skip(char const*& data);
    void parse(char const*& data);
 private:
+   std::string constructParams();
+private:
    typedef std::list<InFieldPtr> InFields;
    typedef std::vector<OutFieldPtr> OutFields;
    static long         m_refCounter;
