@@ -47,7 +47,7 @@ public:
       else if (tblName == "ORDERS")
       {
          Decimals::iterator it = m_decimals.find(*row.getField("SECBOARD")->getAsString() +
-               *row.getField("SECCODE")->AsString());
+               *row.getField("SECCODE")->getAsString());
          std::cout << "ORDERNO = " << *row.getField("ORDERNO")->getAsInt64()
                    << ", PRICE = " << *row.getField("PRICE")->getAsFloat(it->second)
                    << std::endl;
