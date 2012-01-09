@@ -189,10 +189,4 @@ boost::optional<std::string> OutField::getAsString() const
    return boost::trim_copy(m_value, ruLocale);
 }
 
-//---------------------------------------------------------------------------------------------------------------------//
-void OutRow::addField(std::string const& name, std::string const& value)
-{
-   m_fields.insert(std::make_pair(name, value));
-}
-
 } // namespace micex
