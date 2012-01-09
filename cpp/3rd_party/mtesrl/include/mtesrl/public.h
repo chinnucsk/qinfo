@@ -44,6 +44,7 @@ struct MTETable
          sz += row->size();
          row = reinterpret_cast<MTERow const*>(reinterpret_cast<char const*>(row) + row->size());
       }
+      return sz;
    }
 };
 
