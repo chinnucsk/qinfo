@@ -44,7 +44,7 @@ private:
    std::string const   m_name;
    ConnectionCallback& m_cback;
    bool const          m_completeLoad;
-   bool const          m_refreshEnabled;
+   bool                m_refreshEnabled;
    long                m_ref;
    boost::int32_t      m_descriptor;
    InFields            m_inFields;
