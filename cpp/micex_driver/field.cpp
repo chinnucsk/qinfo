@@ -14,7 +14,7 @@ namespace micex
 namespace
 {
 
-std::string string2micex(std::string const& val, boost::int32_t size)
+std::string string2micex(std::string val, boost::int32_t size)
 {
    for(boost::int32_t i = val.length(); i < size; ++i)
    {
@@ -40,7 +40,7 @@ std::string float2micex(std::string const& val, boost::int32_t size, unsigned in
    ost << std::setw(size + 1)
        << std::setfill('0')
        << std::fixed
-       << std::setprecision(precison)
+       << std::setprecision(precision)
        << boost::lexical_cast<float>(val);
    std::string tmp = ost.str();
    boost::erase_all(tmp, ".");
@@ -127,7 +127,7 @@ void OutField::skip(char const*& data)
 }
 
 //---------------------------------------------------------------------------------------------------------------------/
-OutField::parse(char const*& data)
+std::string OutField::parse(char const*& data)
 {
    std::string val(data, size());
    data += size();
