@@ -33,8 +33,8 @@ inline std::string get_string(char const*& buff)
 
 inline boost::int32_t get_int32(char const*& buff)
 {
-   boost::int32_t res *(boost::int32_t*)buff;
-   buff += sizeof(boost::int32);
+   boost::int32_t res = *(boost::int32_t*)buff;
+   buff += sizeof(boost::int32_t);
    return res;
 }
 
@@ -46,7 +46,7 @@ public:
    }
    int error() const { return m_error; }
    virtual char const* what() const { return m_what.c_str(); }
-priate:
+private:
    int m_error;
    std::string m_what;
 };
