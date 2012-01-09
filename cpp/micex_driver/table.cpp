@@ -8,6 +8,8 @@
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>
 
+extern ei_cxx:Port g_port;
+
 namespace micex
 {
 
@@ -63,7 +65,7 @@ void Table::open(long connDescr)
    memcpy(name.get(), m_name.c_str(), m_name.length());
    name[m_name.length()] = '\0';
 
-   std::string tmp = constructParams();
+   std::string const tmp = constructParams();
    boost::scoped_array<char> params(new char[tmp.length() + 1]);
    memcpy(params.get(), tmp.c_str(), tmp.length());
    params[tmp.length()] = '\0';
@@ -76,18 +78,17 @@ void Table::open(long connDescr)
       if (msg)
       {
          errDescr = std::string(reinterpret_cast<char const*>(msg->data), msg->len);
-         throw MteError(
-               m_descriptor,
-               FMT("Unable to open table %1%. Error = %2%, Description = %3%", m_name, m_descriptor % errDescr)
-               );
       }
+      throw MteError(
+         m_descriptor,
+         FMT("Unable to open table %1%. Error = %2%, Description = %3%", m_name, m_descriptor % errDescr);
    }
    char const* data = msg->data;
    parse(data);
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-void Tab;e::close(long connDescr)
+void Table::close(long connDescr)
 {
    if (m_descriptor < 0)
    {
