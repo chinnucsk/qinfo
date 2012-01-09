@@ -17,16 +17,13 @@
 
 #include <Windows.h>
 
-namespace
-{
-
 int const MTE_ERRMSG_SIZE = 256 + 1;
 
 typedef std::map<std::string, std::string> InValues;
 
 void setLogLevel(LogLevel::type_t llevel);
 
-std::string get_string(char const*& buff)
+inline std::string get_string(char const*& buff)
 {
    boost::int32_t sz = *(boost::int32_t*)buff;
    std::string res(buff + sizeof(boost::int32_t), sz);
@@ -34,7 +31,7 @@ std::string get_string(char const*& buff)
    return res;
 }
 
-boost::int32_t get_int32(char const*& buff)
+inline boost::int32_t get_int32(char const*& buff)
 {
    boost::int32_t res *(boost::int32_t*)buff;
    buff += sizeof(boost::int32);
@@ -44,7 +41,7 @@ boost::int32_t get_int32(char const*& buff)
 class MteError : public std::exception
 {
 public:
-   MteError(int err, std::sring const& descr) : m_error(err), m_what(descr)
+   MteError(int err, std::string const& descr) : m_error(err), m_what(descr)
    {
    }
    int error() const { return m_error; }
@@ -53,7 +50,5 @@ priate:
    int m_error;
    std::string m_what;
 };
-
-} // namespace
 
 #endif // MICEX_DRIVER_PRECOMP_H
