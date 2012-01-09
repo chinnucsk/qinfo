@@ -26,7 +26,8 @@ public:
          ConnectionCallback& cback,
          bool completeLoad,
          bool refreshEnabled,
-         InValues const& inValues = InValues());
+         InValues const& inValues = InValues(),
+         RequiredOutFields const& reqOutFields = RequiredOutFields());
    std::string const& name() const { return m_name; }
    bool refreshEnabled() const { return m_refreshEnabled; }
    bool completeLoad() const { return m_completeLoad; }
@@ -47,7 +48,8 @@ private:
    ConnectionCallback& m_cback;
    bool const          m_completeLoad;
    bool                m_refreshEnabled;
-   InValues const&     m_inValues;
+   InValues            m_inValues;
+   RequiredOutFields   m_reqOutFields;
    long                m_ref;
    boost::int32_t      m_descriptor;
    InFields            m_inFields;

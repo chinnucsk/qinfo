@@ -4,86 +4,45 @@
 
 #include "connection_callback.h"
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <locale>
-
 namespace micex
 {
 
-namespace
+OutFieldPtr OutRow::getField(std::string const& fieldName) const
 {
-
-std::locale ruLocale("Russian");
-
-boost::int64_t pow10(int p)
-{
-   boost::int64_t arr[13] = 
-   {
-      1,
-      10,
-      100,
-      1000,
-      10000,
-      100000,
-      1000000,
-      10000000,
-      100000000,
-      1000000000,
-      10000000000,
-      100000000000,
-      1000000000000
-   };
-   return arr[p];
-}
-
-} // namespace
-
-//---------------------------------------------------------------------------------------------------------------------//
-boost::optional<boost::int64_t> OutRow::getAsInt64(std::string const& fieldName) const
-{
-   Fields::const_iterator it = m_fields.find(fieldName);
+   OutFields::const_iterator it = m_fields.find(fieldName);
    if (it == m_fields.end())
    {
-      return boost::none;
+      return OutFields();
    }
-   std::string tmp = boost::trim_left_copy_if(it->second, boost::lambda::_1 == '0');
-   if (tmp.empty())
-   {
-      tmp = "0";
-   }
-   return boost::optional<boost::int64_t>(boost::lexical_cast<boost::int64_t>(tmp));
+   return it->second;
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-boost::optional<float> OutRow::getAsFloat(std::string const& fieldName, unsigned int precision) const
+OutFieldPtr OutRow::first()
 {
-   Fields::const_iterator it = m_fields.find(fieldName);
-   if (it == m_fields.end())
+   if (m_fields.empty())
    {
-      return boost::none;
+      return OutFieldPtr();
    }
-   float const tmp = boost::lexical_cast<float>(boost::trim_left_copy_if(it->second, boost::lambda::_1 == '0'));
-   return boost::optional<float>(tmp / pow10(precision));
+   m_cursor = m_fields.begin();
+   return m_cursor->second;
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-boost::optional<std::string> OutRow::getAsString(std::string const& fieldName) const
+OutFieldPtr OutRow::next()
 {
-   Fields::const_iterator it = m_fields.find(fieldName);
-   if (it == m_fields.end())
+   if (++m_cursor == m_fields.end())
    {
-      return boost::none;
+      return OutFieldPtr();
    }
-   return boost::trim_copy(it->second, ruLocale);
+   return m_cursor->second;
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-void OutRow::addField(std::string const& name, std::string const& value)
+void OutRow::addField(OutFieldPtr field)
 {
-   m_fields.insert(std::make_pair(name, value));
+   m_fields.insert(std::make_pair(field->name(), field));
 }
+
 
 } // namespace micex

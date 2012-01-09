@@ -5,6 +5,8 @@
 #ifndef MICEX_DRIVER_CONNECTION_CALLBACK_H
 #define MICEX_DRIVER_CONNECTION_CALLBACK_H
 
+#include "field.h"
+
 #include <common/smart_enum.h>
 
 #include <boost/optional.hpp>
@@ -20,14 +22,16 @@ class OutRow
 {
    friend class Table;
 public:
-   boost::optional<boost::int64_t> getAsInt64(std::string const& fieldName) const;
-   boost::optional<float> getAsFloat(std::string const& fieldName, unsigned int precision) const;
-   boost::optional<std::string> getAsString(std::string const& fieldName) const;
+   OutField();
+   OutFieldPtr getField(std::string const& fieldName) const;
+   OutFieldPtr first();
+   OutFieldPtr next();
 private:
-   void addField(std::string const& name, std::string const& value);
+   void addField(OutFieldPtr outField);
 private:
-   typedef std::map<std::string, std::string> Fields;
-   Fields m_fields;
+   typedef std::map<std::string, OutFieldPtr> OutFields;
+   OutFields m_fields;
+   OutFields::const_iterator m_cursor;
 };
 
 

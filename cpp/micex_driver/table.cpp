@@ -20,12 +20,14 @@ Table::Table(
       ConnectionCallback& cback,
       bool completeLoad,
       bool refreshEnabled,
-      InValues const& inValues)
+      InValues const& inValues,
+      RequiredOutFields const& reqOutFields)
    :  m_name(name),
       m_cback(cback),
       m_completeLoad(completeLoad),
       m_refreshEnabled(refreshEnabled),
       m_inValues(inValues),
+      m_reqOutFields(reqOutFields),
       m_ref(++m_refCounter),
       m_descriptor(-1)
 {
@@ -50,7 +52,7 @@ void Table::init(char const*& data)
    numFields = get_int32(data);
    for(int32_t i = 0; i < numFields; ++i)
    {
-      m_outFields.push_back(OutFieldPtr(new OutField(data)));
+      m_outFields.push_back(OutFieldPtr(new OutField(data, m_reqOutFields)));
    }
 }
 
@@ -145,7 +147,11 @@ void Table::parse(char const*& data)
       for(int32_t j = 0; j < numFields; ++j)
       {
          OutFieldPtr field = m_outFields[row->numFields == 0 ? j : row->fieldNumbers[j]];
-         outRow.addField(field->name(), field->parse(data));
+         field->parse(data);
+         if (field->required())
+         {
+            outRow.addField(field);
+         }
       }
       row = reinterpret_cast<MTERow const*>(data);
       m_cback.onTableData(m_name, outRow);

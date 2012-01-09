@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 
+#include <common/smart_enum.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/optional.hpp>
@@ -23,15 +24,19 @@ unsigned int const FixedPrec = 2;
 
 } // namespace
 
+DECLARE_ENUM
+(
+   FieldType, int,
+   ENTRY(charType,   0)
+   ENTRY(intType,    1)
+   ENTRY(fixedType,  2)
+   ENTRY(floatType,  3)
+   ENTRY(dateType,   4)
+   ENTRY(timeType,   5)
+)
+
 class Field
 {
-public:
-   static int const charType  = 0;
-   static int const intType   = 1;
-   static int const fixedType = 2;
-   static int const floatType = 3;
-   static int const dateType  = 4;
-   static int const timeType  = 5;
 public:
    Field(char const*& data);
    static void skip(char const*& data);
@@ -58,9 +63,17 @@ private:
 class OutField : public Field
 {
 public:
-   OutField(char const*& data);
+   OutField(char const*& data, RequiredOutFields const& reqOutFields);
+public:
+   boost::optional<boost::int64_t> getAsInt64(std::string const& fieldName) const;
+   boost::optional<float> getAsFloat(std::string const& fieldName, unsigned int precision) const;
+   boost::optional<std::string> getAsString(std::string const& fieldName) const;
    static void skip(char const*& data);
-   std::string parse(char const*& data);
+   void parse(char const*& data);
+   bool required() const { return m_required; }
+private:
+   std::string m_value;
+   bool        m_required;
 };
 
 typedef boost::shared_ptr<InField> InFieldPtr;

@@ -8,6 +8,8 @@
 #include <ei_cxx/log_wrapper.h>
 
 #include <list>
+#include <map>
+#include <set>
 #include <string>
 #include <exception>
 
@@ -20,6 +22,7 @@
 int const MTE_ERRMSG_SIZE = 256 + 1;
 
 typedef std::map<std::string, std::string> InValues;
+typedef std::set<std::string< RequiredOutFields;
 
 void setLogLevel(LogLevel::type_t llevel);
 

@@ -28,7 +28,8 @@ public:
          std::string const& name,
          bool completeLoad,
          bool refreshEnabled,
-         InValues const& inValues = InValues());
+         InValues const& inValues = InValues(),
+         RequiredOutFields const& reqOutFields = RequiredOutFields());
 private:
    void run(std::string const& connParams);
    void initTables();

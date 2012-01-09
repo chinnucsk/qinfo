@@ -5,7 +5,11 @@
 #include "field.h"
 
 #include <boost/algorithm/string/erase.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
 
+#include <locale>
 #include <sstream>
 
 namespace micex
@@ -13,6 +17,29 @@ namespace micex
 
 namespace
 {
+
+std::locale ruLocale("Russian");
+
+boost::int64_t pow10(int p)
+{
+   boost::int64_t arr[13] =
+   {
+      1,
+      10,
+      100,
+      1000,
+      10000,
+      100000,
+      1000000,
+      10000000,
+      100000000,
+      1000000000,
+      10000000000,
+      100000000000,
+      1000000000000
+   };
+   return arr[p];
+}
 
 std::string string2micex(std::string val, boost::int32_t size)
 {
@@ -49,19 +76,19 @@ std::string float2micex(std::string const& val, boost::int32_t size, unsigned in
 
 std::string value2micex(std::string const& val, int type, boost::int32_t size, unsigned int precision)
 {
-   if (type == Field::charType || type == Field::dateType || type == Field::timeType)
+   if (type == FieldType::charType || type == FieldType::dateType || type == FieldType::timeType)
    {
       return string2micex(val, size);
    }
-   else if (type == Field::intType)
+   else if (type == FieldType::intType)
    {
       return int2micex(val, size);
    }
-   else if (type == Field::floatType)
+   else if (type == FieldType::floatType)
    {
       return float2micex(val, size, precision);
    }
-   else if (type == Field::fixedType)
+   else if (type == FieldType::fixedType)
    {
       return float2micex(val, size, FixedPrec);
    }
@@ -116,8 +143,13 @@ void InField::skip(char const*& data)
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutField::OutField(char const*& data) : Field(data)
+OutField::OutField(char const*& data, RequiredOutFields const& reqOutFields)
+   :   Field(data), m_required(reqOutFields.empty())
 {
+   if (!reqOutFields.empty())
+   {
+      m_required = reqOutFields.end() != reqOutFields.find(name());
+   }
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -127,10 +159,40 @@ void OutField::skip(char const*& data)
 }
 
 //---------------------------------------------------------------------------------------------------------------------/
-std::string OutField::parse(char const*& data)
+void OutField::parse(char const*& data)
 {
-   std::string val(data, size());
+   m_value = std::string(data, size());
    data += size();
-   return val;
 }
+
+//---------------------------------------------------------------------------------------------------------------------//
+boost::optional<boost::int64_t> OutField::getAsInt64() const
+{
+   std::string tmp = boost::trim_left_copy_if(m_value, boost::lambda::_1 == '0');
+   if (tmp.empty())
+   {
+      tmp = "0";
+   }
+   return boost::optional<boost::int64_t>(boost::lexical_cast<boost::int64_t>(tmp));
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+boost::optional<float> OutField::getAsFloat(unsigned int precision) const
+{
+   float const tmp = boost::lexical_cast<float>(boost::trim_left_copy_if(m_value, boost::lambda::_1 == '0'));
+   return boost::optional<float>(tmp / pow10(precision));
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+boost::optional<std::string> OutField::getAsString(std::string const& fieldName) const
+{
+   return boost::trim_copy(m_value, ruLocale);
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+void OutRow::addField(std::string const& name, std::string const& value)
+{
+   m_fields.insert(std::make_pair(name, value));
+}
+
 } // namespace micex

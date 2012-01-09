@@ -163,7 +163,8 @@ void Connection::addTable(
          std::string const& name,
          bool completeLoad,
          bool refreshEnabled,
-         InValues const& inValues)
+         InValues const& inValues,
+         RequiredOutFields const& reqOutFields)
 {
    if (m_connDescr > 0)
    {
@@ -176,7 +177,7 @@ void Connection::addTable(
          THROW(std::runtime_error, FMT("Table %1% already added", name));
       }
    }
-   m_tables.push_back(TablePtr(new Table(name, m_cback, completeLoad, refreshEnabled, inValues)));
+   m_tables.push_back(TablePtr(new Table(name, m_cback, completeLoad, refreshEnabled, inValues, reqOutFields)));
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
