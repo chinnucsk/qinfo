@@ -3,6 +3,7 @@
 /// @date   Created on: 01/04/2012 08:50:51 AM
 
 #include "connection.h"
+#include "connection_callback.h"
 #include "micex_driver_dll.h"
 
 #include <ei_cxx/tuple.h>
@@ -15,12 +16,12 @@
 
 using namespace micex;
 
-//Connection g_conn;
-
 ei_cxx::Port g_port;
 
-void process_connect(ei_cxx::ITuple&);
-void process_disconnect();
+class MicexApplication;
+
+void process_connect(MicexApplication**, ei_cxx::ITuple&);
+void process_disconnect(MicexApplication*);
 
 void sendError(std::string const& err)
 {
@@ -39,6 +40,50 @@ void sendOk(std::string const& text)
    t.send(g_port);
 }
 
+class MicexApplication : public ConnectionCallback
+{
+public:
+   MicexApplication(std::string const& fileName, LogLevel::type_t llevel)
+      : m_conn(fileName, *this, llevel)
+   {
+   }
+   void addTable(
+         std::string const& name,
+         bool completeLoad,
+         bool refreshEnabled,
+         InValues const& inValues,
+         RequiredOutFields const& reqOutFields)
+   {
+      m_conn.addTable(name, completeLoad, refreshEnabled, inValues, reqOutFields);
+   }
+   void open(std::string const& connParams)
+   {
+      m_conn.open(connParams);
+   }
+   void close()
+   {
+      m_conn.close();
+   }
+private:
+   virtual void onConnectionStatus(ConnectionStatus::type_t status)
+   {
+
+   }
+   virtual void onTableDataBegin(std::string const& tblName)
+   {
+
+   }
+   virtual void onTableData(std::string const& tblName, OutRow const& row)
+   {
+
+   }
+   virtual void onTableDataEnd(std::string const& tblName)
+   {
+
+   }
+private:
+   Connection m_conn;
+};
 
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  ul_reason_for_call,
@@ -59,6 +104,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 struct PortData
 {
 	ErlDrvPort port;
+   MicexApplication* app;
 };
 
 MICEX_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
@@ -69,105 +115,123 @@ MICEX_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
     {
       g_port = port;
     }
+    d->app = NULL;
     return (ErlDrvData)d;
 }
 
 MICEX_DRIVER_DLL_API void stop(ErlDrvData handle)
 {
-   //Connection::instance()->disconnect();
-   driver_free((char*)handle);
+   PortData* d = (PortData*)handle;
+   if (d->app)
+   {
+      d->app->close();
+      delete d->app;
+      d->app = NULL;
+   }
    g_port = NULL;
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
 MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 {
-   //try
-   //{
-   //   using namespace ei_cxx;
-   //   for(size_t i = 1; i < ev->vsize; ++i)
-   //   {
-	//      IBinary bin(ev->binv[i]);
-	//      if (bin.get_type() == IBinary::ErlSmallTuple || bin.get_type() == IBinary::ErlLargeTuple)
-	//      {
-	//         ITuple tuple;
-	//         bin >> tuple;
-	//         Atom command_name;
-	//         tuple >> command_name;
-	//         if (command_name.get() == "disconnect")
-	//         {
-	//            process_disconnect();
-	//         }
-	//         else if (command_name.get() == "connect")
-	//         {
-	//            process_connect(tuple);
-	//         }
-	//         else if (command_name.get() == "log_level")
-	//         {
-   //            Atom llevel;
-   //            tuple >> llevel;
-   //            log_level = LogLevel::fromString(llevel.get());
-	//         }
-	//         else
-	//         {
-	//            THROW(std::runtime_error, "Unknown command");
-	//         }
-	//      }
-	//      else
-	//      {
-	//         THROW(std::runtime_error, "Unknown command");
-	//      }
-   //   }
-   //}
-   //catch(std::exception const& err)
-   //{
-   //   sendError(err.what());
-   //}
-   //catch(_com_error const& err)
-   //{
-   //   LOG_ERROR(g_port,
-   //      "received(): COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
-   //}
+   try
+   {
+      using namespace ei_cxx;
+      for(size_t i = 1; i < ev->vsize; ++i)
+      {
+	      IBinary bin(ev->binv[i]);
+	      if (bin.get_type() == IBinary::ErlSmallTuple || bin.get_type() == IBinary::ErlLargeTuple)
+	      {
+	         ITuple tuple;
+	         bin >> tuple;
+	         Atom command_name;
+	         tuple >> command_name;
+	         if (command_name.get() == "disconnect")
+	         {
+               PortData* pd = (PortData*)drv_data;
+               process_disconnect(pd->app);
+               delete pd->app;
+               pd->app = NULL;
+	         }
+	         else if (command_name.get() == "connect")
+	         {
+               PortData* pd = (PortData*)drv_data;
+	            process_connect(&pd->app, tuple);
+	         }
+	         else if (command_name.get() == "log_level")
+	         {
+               Atom llevel;
+               tuple >> llevel;
+               setLogLevel(LogLevel::fromString(llevel.get()));
+	         }
+	         else
+	         {
+	            THROW(std::runtime_error, "Unknown command");
+	         }
+	      }
+	      else
+	      {
+	         THROW(std::runtime_error, "Unknown command");
+	      }
+      }
+   }
+   catch(std::exception const& err)
+   {
+      sendError(err.what());
+   }
 }
 
-//// {connect, iniFile, "host", port, "app_name", "password", log_level, [{FUT_TRADE_REPL, iniFile, StreamType}]}.
-//void process_connect(ei_cxx::ITuple& t)
-//{
-//   using namespace ei_cxx;
-//   std::string iniFile;
-//   t >> iniFile;
-//   Application::instance()->init(iniFile);
+// {connect, LibraryFullName, LogLevel, ConnParams, Tables}.
+//    LibraryFullName = String()
+//    ConnParams = [ConnParam]
+//    ConnParam = {ParamName, Value}
+//    ParamName = String()
+//    Value     = String()
+//    LogLevel  = atom()
+//    Tables    = [Table]
+//    Table     = {TableName, CompleteLoad, RefreshEnabled, InValues, RequiredFields}
+//    TableName = String()
+//    CompleteLoad = boolean()
+//    RefreshEnabled = boolean()
+//    InValues  = [InValue]
+//    InValues  = {FieldName, FieldVal]
+//    FieldName = String()
+//    FieldVal  = String()
+//    RequiredFields = [ReqField]
+//    ReqField  = String()
+void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
+{
+   using namespace ei_cxx;
+   std::string libFullName;
+   t >> libFullName;
+   Atom logLevel;
+   t >> logLevel;
 
-//   std::string host;
-//   unsigned long port;
-//   std::string appName;
-//   std::string password;
-//   Atom llevel;
-//   t >> host >> port >> appName >> password >> llevel;
-//   log_level = LogLevel::fromString(llevel.get());
+   IList connParams;
+   t >> connParams;
+   size_t sz = connParams.size();
+   std::string connStr;
+   for(size_t i = 0; i < sz; ++i)
+   {
+      ITuple param;
+      connParams >> param;
+      std::string paramName;
+      std::string paramValue;
+      param >> paramName >> paramValue;
+      connStr += paramName + '=' + paramValue + "\r\n";
+   }
+   *app = new MicexApplication(libFullName, LogLevel::fromString(logLevel.get()));
 
-//   Connection::instance()->connect(host, port, appName, password);
+   // TODO:
 
-//   IList streams;
-//   t >> streams;
-//   size_t len = streams.size();
-//   for(size_t i = 0; i < len; ++i)
-//   {
-//      ITuple stream;
-//      streams >> stream;
-//      std::string streamName;
-//      std::string iniFile;
-//      Atom streamType;
-//      stream >> streamName >> iniFile >> streamType;
-//      Connection::instance()->addStream(streamName, iniFile, StreamType::fromString(streamType.get()));
-//   }
-//}
+   (*app)->open(connStr);
+}
 
-//// {disconnect}
-//void process_disconnect()
-//{
-//   Connection::instance()->disconnect();
-//}
+// {disconnect}
+void process_disconnect(MicexApplication* app)
+{
+   app->close();
+}
 
 MICEX_DRIVER_DLL_API ErlDrvEntry micex_driver_entry =
 {

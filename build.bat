@@ -10,6 +10,8 @@ cmake -G "Visual Studio 10" ..\cpp\
 devenv.exe Project.sln /build %BuildType% /Out %LogFile%
 popd
 
+goto :end
+
 mkdir rel\ebin
 
 copy build\%BuildType%\plaza2_port.dll %ROOT%\rel\ebin
@@ -51,3 +53,5 @@ mkdir ebin
 erl -pa ebin -make
 xcopy ebin\*.beam %ROOT\rel\ebin\simple_bridge /Y
 popd
+
+:end
