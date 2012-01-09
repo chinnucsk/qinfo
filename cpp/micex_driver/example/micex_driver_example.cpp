@@ -34,21 +34,22 @@ public:
    {
       if (tblName == "SECURITIES")
       {
-         std::string key = *row.getAsString("SECBOARD") + *row.getAsString("SECCODE");
+         std::string key = *row.getField("SECBOARD")->getAsString() + *row.getField("SECCODE")->getAsString();
          if (m_decimals.find(key) == m_decimals.end())
          {
-            std::cout << "Table data: SECBOARD = " << *row.getAsString("SECBOARD")
-                      << ", SECNAME = " << *row.getAsString("SECCODE")
-                      << ", DECIMALS = " << *row.getAsInt64("DECIMALS") << std::endl;
+            std::cout << "Table data: SECBOARD = " << *row.getField("SECBOARD")->getAsString()
+                      << ", SECNAME = " << *row.getField("SECCODE")->getAsString()
+                      << ", DECIMALS = " << *row.getField("DECIMALS")->getAsInt64() << std::endl;
 
-            m_decimals.insert(std::make_pair(key, *row.getAsInt64("DECIMALS")));
+            m_decimals.insert(std::make_pair(key, *row.getField("DECIMALS")->getAsInt64()));
          }
       }
       else if (tblName == "ORDERS")
       {
-         Decimals::iterator it = m_decimals.find(*row.getAsString("SECBOARD") + *row.getAsString("SECCODE"));
-         std::cout << "ORDERNO = " << *row.getAsInt64("ORDERNO")
-                   << ", PRICE = " << *row.getAsFloat("PRICE", it->second)
+         Decimals::iterator it = m_decimals.find(*row.getField("SECBOARD")->getAsString() +
+               *row.getField("SECCODE")->AsString());
+         std::cout << "ORDERNO = " << *row.getField("ORDERNO")->getAsInt64()
+                   << ", PRICE = " << *row.getField("PRICE")->getAsFloat(it->second)
                    << std::endl;
       }
    }
@@ -62,7 +63,8 @@ int _tmain(int argc, _TCHAR* argv[])
 {
    Data data;
    micex::Connection conn("mtesrl.dll", data);
-   conn.addTable("SECURITIES", true, false, boost::assign::map_list_of("BOARDID", "EQBR"));
+   conn.addTable("SECURITIES", true, false, boost::assign::map_list_of("BOARDID", "EQBR"),
+         boost::assign::list_of("SECBOARD")("SECCODE")("DECIMALS"));
    conn.addTable("ORDERS", false, true);
    conn.open("HOST=xxxx:3128\r\nSERVER=XXXX\r\nUSERID=xxxx\r\nPASSWORD=\r\nINTERFACE=IFCBroker_15\r\nFEEDBACK=info\r\n");
    Sleep(10000000);
