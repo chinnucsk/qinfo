@@ -4,6 +4,7 @@
 
 #include "precomp.h"
 #include "connection.h"
+#include "connection_callback.h"
 
 #include <mtesrl/public.h>
 #include <boost/bind.hpp>
@@ -14,9 +15,34 @@ extern ei_cxx::Port g_port;
 namespace micex
 {
 
-//---------------------------------------------------------------------------------------------------------------------//
-Connection::Connection()
+namespace
 {
+
+void skip_enums(char const*& data)
+{
+   using namespace boost;
+   int32_t numEnums = get_int32(data);
+   for(int32_t i = 0; i < numEnums; ++i)
+   {
+      get_string(data); // name
+      get_string(data); // description
+      get_int32(data);  // size
+      get_int32(buf);   // type
+      int32_t numVal = get_int32(data);
+      for(int32_t j = 0; j < numVal; ++j)
+      {
+         get_string(data);
+      }
+   }
+}
+
+} // namespace
+
+//---------------------------------------------------------------------------------------------------------------------//
+Connection::Connection(ConnectionCallback& cback, LogLevel::type_t llevel)
+   : m_cback(cback), m_connDescr(-1), m_stop(false)
+{
+   setLogLevel(llevel);
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -28,10 +54,10 @@ Connection::~Connection()
 //---------------------------------------------------------------------------------------------------------------------//
 void Connection::open(std::string const& connParams)
 {
-   if (!m_worker)
+   if (!m_worker.get())
    {
       m_stop = false;
-      m_worker.reset(new boost::thread(boost::bind(&Connection::run, this)));
+      m_worker.reset(new boost::thread(boost::bind(&Connection::run, this, connParams)));
    }
 }
 
@@ -39,43 +65,95 @@ void Connection::open(std::string const& connParams)
 void Connection::close()
 {
    m_stop = true;
-   m_worker.join();
+   m_worker->join();
+   m_worker.reset(NULL);
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-void Connection::run()
+void Connection::run(std::string const& connParams)
 {
-   try
+   boost::scoped_array<char> params(new char[connParams.length() + 1]);
+   memcpy(params.get(), connParams.c_str(), connParams.length());
+   params[connParams.length()] = '\0';
+   char err[MTE_ERRMSG_SIZE] = {};
+
+   while(!m_stop)
    {
-      char err[MTE_ERRMSG_SIZE] = {};
-      LOG_INFO(g_port, "Connecting <" << connParams << ">...");
-      char params[MTE_CONNPARAMS_SIZE] = {};
-      if (-1 == _snprintf_s(params, sizeof(params), sizeof(params) - 1, "%s", connParams.c_str()))
+      try
       {
-         THROW(std::runtime_error, "Params too long");
+         if (m_connDescr < MTE_OK)
+         {
+            m_connDescr = MTEConnect(params.get(), err);
+            if (m_connDescr < MTE_OK)
+            {
+               throw MteError(m_connDescr,
+                     FMT("Connection error. Error = %1%, Description = %2%", m_connDescr % err))
+            }
+            m_cback.onConnectionStatus(ConnectionStatus::Connected);
+            initTables();
+            openTables();
+         }
+         processTables();
       }
-      m_connDescr = MTEConnect(params, err);
-      if (m_connDescr < MTE_OK)
+      catch(MteError const& err)
       {
-         THROW(std::runtime_error, FMT("Connection error. Error=%1%, Description = %2%.", m_connDescr % err));
+         LOG_ERROR(g_port, err.what());
+         if (err.error() != MTE_SRVUNAVAIL && err.error() != MTE_INVALIDCONNECT && err.error() == MTE_NOTCONNECTED &&
+               err.error() != MRE_WRITE && err.error() != MTE_READ && err.error() != MTE_TSMR)
+         {
+            break;
+         }
+         else
+         {
+            closeMTEConnection();
+            Sleep(1000);
+         }
       }
-
-      initTables();
-
-      while(!m_stop)
+      catch(std::exception const& err)
       {
-         // TODO
-      }
-
-      if (m_connDescr > 0)
-      {
-         MTEDisconnect(m_connDescr);
-         m_connDescr = 0;
+         LOG_ERROR(g_port, err.what());
+         break;
       }
    }
-   catch(std::exception const& err)
+   closeTables();
+   closeMTEConnection();
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+void Connection::closeMTEConnection()
+{
+   if (m_connDescr > 0)
    {
-      LOG_ERROR(g_port, err.what());
+      MTEDisconnect(m_connDescr);
+      m_connDescr = -1;
+      m_cback.onConnectionStatus(ConnectionStatus::Disconnected);
+   }
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+void Connection::processTables()
+{
+   bool added = false;
+   for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
+   {
+      if ((*it)->refreshEnabled())
+      {
+         boost::int32_t err = MTEAddTable(m_connDescr, (*it)->description(), (*it)->ref());
+         if (err < MTE_OK)
+         {
+            throw MteError(err, FMT("Unable to add table %1%. Error = %2%", (*it)->name() % err));
+         }
+         added = true;
+      }
+   }
+   if (!added)
+   {
+      LOG_INFO(g_port, "Nothing to refresh. Will be stopped.");
+      m_stop = true;
+   }
+   else
+   {
+      refresh();
    }
 }
 
@@ -84,7 +162,7 @@ void Connection::addTable(
          std::string const& name,
          bool completeLoad,
          bool refreshEnabled,
-         std::string const& requiredFields = "");
+         InValues const& inValues)
 {
    if (m_connDescr > 0)
    {
@@ -97,7 +175,7 @@ void Connection::addTable(
          THROW(std::runtime_error, FMT("Table %1% already added", name));
       }
    }
-   m_tables.push_back(TablePtr(new Table(name, completeLoad, refreshEnabled, requiredFields)));
+   m_tables.push_back(TablePtr(new Table(name, m_cback, completeLoad, refreshEnabled, inValues)));
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -106,7 +184,7 @@ void Connection::initTables()
    using boost::int32_t;
 
    MTEMsg* msg;
-   int err = MTEStructure(m_connDescr, msg);
+   int err = MTEStructure(m_connDescr, &msg);
    if (err < 0)
    {
       THROW(
@@ -115,32 +193,94 @@ void Connection::initTables()
                err % std::string(msg->data, msg->len)));
    }
 
-   char const* buff = reinterpret_cast<char const*>(&msg->data);
+   char const* data = reinterpret_cast<char const*>(&msg->data);
 
-   LOG_INFO(g_port, "Interface name:" << get_string(buff));
-   LOG_INFO(g_port, "Interface description:" << get_string(buff));
+   LOG_INFO(g_port, "Interface name:" << get_string(data));
+   LOG_INFO(g_port, "Interface description:" << get_string(data));
 
-   int32_t tablesNum = get_int32(buff);
+   skip_enums(data);
+
+   int32_t tablesNum = get_int32(data);
 
    for(int32_t i = 0; i < tablesNum; ++i)
    {
-      std::string const tableName = boost::algorithm::trim_copy(get_string(buff));
+      std::string const tableName = boost::algorithm::trim_copy(get_string(data));
       bool found = false;
       for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
       {
          if ((*it)->name() == tableName)
          {
-            (*it)->init(buff);
+            (*it)->init(data);
             found = true;
-            LOG_INFO(g_port, FMT("Table %1% has been initialized."));
+            LOG_INFO(g_port, FMT("Table %1% has been initialized.", tableName));
             break;
+         }
+      }
+      if (!found)
+      {
+         //skip table structure
+         Table::skip(data);
+         LOG_INFO(g_port, FMT("Table %1% not found. Skipped."));
+      }
+   }
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+void Connection::openTables()
+{
+   for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
+   {
+      (*it)->open(m_connDescr);
+   }
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+void Connection::closeTables()
+{
+   for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
+   {
+      (*it)->close(m_connDescr);
+   }
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
+void Connection::refresh()
+{
+   using namespace boost;
+   MTEMsg* msg;
+   int32_t err = MTERefresh(m_connDescr, &msg);
+   if (err < MTE_OK)
+   {
+      std::string descr;
+      if (err == MTE_TSMR)
+      {
+         descr = std::string(reinterpret_cast<char const*>(&msg->data), msg->len);
+      }
+      throw MteError(err, FMT("Unable to refresh tables. Error = %1%, Description = %2%", err % descr));
+   }
+   MTETables* tables = reinterpret_cast<MTETables*>(&msg->data);
+   if (tables->numTables > 0)
+   {
+      char const* data = reinterpret_cast<char const*>(&tables->tables);
+      for(int32_t i = 0; i < tables->numTables; ++i)
+      {
+         MTETable const* table = reinterpret_cast<MTETable const*>(data);
+         LOG_DEBUG(g_port, "Table row = %1%, ref = %2%", table->numRows, % table->ref);
+         bool found = false;
+         for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
+         {
+            if ((*it)->ref() == table->ref)
+            {
+               (*it)->parse(data);
+               found = true;
+               break;
+            }
          }
          if (!found)
          {
-            //skip table structure
-            Table::skip(buff);
-            LOG_INFO(g_port, FMT("Table %1% not found. Skipped."));
+            LOG_ERROR(g_port, FMT("Table with ref %1% not found.", table-ref));
          }
+         data += table->size();
       }
    }
 }

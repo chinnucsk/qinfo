@@ -5,6 +5,9 @@
 #ifndef MTESRL_PUBLIC_H
 #define MTESRL_PUBLIC_H
 
+#pragma pack(push)
+#pragma pack(1)
+
 #include <windows.h>
 
 #include <boost/cstdint.hpp>
@@ -22,8 +25,8 @@ struct MTERow
 {
    char numFields;
    boost::int32_t  len;
-   char* fieldNumbers;
-   char* data;
+   char fieldNumbers[1];
+   char data[1];
    size_t size() const { return sizeof(numFields) + sizeof(len) + numFields + len; }
 };
 
@@ -47,11 +50,14 @@ struct MTETable
 struct MTETables
 {
    boost::int32_t numTable;
-   MTETable* tables;
+   MTETable tables[1];
 };
 
 namespace
 {
+
+int const MteTableUpdatable = 1;
+int const MteTableClearOnUpdate = 2;
 
 int const ZlibCompressed = 0x1;
 int const FlagEncrypted  = 0x2;
@@ -116,5 +122,6 @@ boost::int32_t WINAPI MTEConnectionStats(boost::int32_t clientIdx, ConnectionSta
 //Don't forget update this define
 #define _MTELastError       21
 
+#pragma pack(pop)
 
 #endif // MTESRL_PUBLIC_H

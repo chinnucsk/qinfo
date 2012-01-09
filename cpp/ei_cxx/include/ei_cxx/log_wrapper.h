@@ -11,6 +11,9 @@
 
 #include <common/smart_enum.h>
 
+#include <iostream>
+#include <sstream>
+
 DECLARE_ENUM
 (
    LogLevel, long,
@@ -22,6 +25,12 @@ DECLARE_ENUM
 
 extern LogLevel::type_t log_level;
 
+#ifdef EI_CXX_LOGGING_USE_STD_OUT
+#   define LOG_DEBUG(port, Str) std::cout << "DEBUG: " << Str << std::endl;
+#   define LOG_INFO(port, Str) std::cout   << "INFO: " << Str << std::endl;
+#   define LOG_WARN(port, Str) std::cout   << "WARN: " << Str << std::endl;
+#   define LOG_ERROR(port, Str) std::cout << "ERROR: " << Str << std::endl;
+#else
 #define LOG_DEBUG(port, Str)            \
 if (log_level >= LogLevel::debug)       \
 {                                       \
@@ -65,5 +74,6 @@ if (log_level >= LogLevel::error)       \
    t << Atom("log_error") << ost.str(); \
    t.send(port);                        \
 }
+#endif
 
 #endif // EI_CXX_LOG_WRAPPER_H
