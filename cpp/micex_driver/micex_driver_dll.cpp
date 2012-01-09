@@ -15,7 +15,7 @@
 
 using namespace micex;
 
-Connection g_conn;
+//Connection g_conn;
 
 ei_cxx::Port g_port;
 
