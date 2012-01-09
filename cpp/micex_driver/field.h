@@ -5,7 +5,7 @@
 #ifndef MICEX_DRIVER_FIELD_H
 #define MICEX_DRIVER_FIELD_H
 
-#include "precom.h"
+#include "precomp.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
