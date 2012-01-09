@@ -35,7 +35,6 @@ public:
    void init(char const*& data);
    void open(long connDescr);
    void close(long connDescr);
-   void init(char const* data);
    static void skip(char const*& data);
    void parse(char const*& data);
 private:
