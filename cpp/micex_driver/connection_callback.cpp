@@ -36,6 +36,7 @@ boost::int64_t pow10(int p)
       100000000000,
       1000000000000
    };
+   return arr[p];
 }
 
 } // namespace
@@ -57,7 +58,7 @@ boost::optional<boost::int64_t> OutRow::getAsInt64(std::string const& fieldName)
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-boost::optional<float> OutRow::getAsFloat(std::string const& fieldName, unsigned int precision)
+boost::optional<float> OutRow::getAsFloat(std::string const& fieldName, unsigned int precision) const
 {
    Fields::const_iterator it = m_fields.find(fieldName);
    if (it == m_fields.end())
@@ -69,14 +70,14 @@ boost::optional<float> OutRow::getAsFloat(std::string const& fieldName, unsigned
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-boost::optional<std::string> OutRow::getAsString(std::string const& fieldName)
+boost::optional<std::string> OutRow::getAsString(std::string const& fieldName) const
 {
    Fields::const_iterator it = m_fields.find(fieldName);
    if (it == m_fields.end())
    {
       return boost::none;
    }
-   return boost::trim_copy(it->second, ruLocal);
+   return boost::trim_copy(it->second, ruLocale);
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
