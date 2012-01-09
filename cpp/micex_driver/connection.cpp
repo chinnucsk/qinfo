@@ -27,7 +27,7 @@ void skip_enums(char const*& data)
       get_string(data); // name
       get_string(data); // description
       get_int32(data);  // size
-      get_int32(buf);   // type
+      get_int32(data);  // type
       int32_t numVal = get_int32(data);
       for(int32_t j = 0; j < numVal; ++j)
       {
@@ -87,7 +87,7 @@ void Connection::run(std::string const& connParams)
             if (m_connDescr < MTE_OK)
             {
                throw MteError(m_connDescr,
-                     FMT("Connection error. Error = %1%, Description = %2%", m_connDescr % err))
+                     FMT("Connection error. Error = %1%, Description = %2%", m_connDescr % err));
             }
             m_cback.onConnectionStatus(ConnectionStatus::Connected);
             initTables();
@@ -99,7 +99,7 @@ void Connection::run(std::string const& connParams)
       {
          LOG_ERROR(g_port, err.what());
          if (err.error() != MTE_SRVUNAVAIL && err.error() != MTE_INVALIDCONNECT && err.error() == MTE_NOTCONNECTED &&
-               err.error() != MRE_WRITE && err.error() != MTE_READ && err.error() != MTE_TSMR)
+               err.error() != MTE_WRITE && err.error() != MTE_READ && err.error() != MTE_TSMR)
          {
             break;
          }
@@ -220,7 +220,7 @@ void Connection::initTables()
       {
          //skip table structure
          Table::skip(data);
-         LOG_INFO(g_port, FMT("Table %1% not found. Skipped."));
+         LOG_INFO(g_port, FMT("Table %1% not found. Skipped.", tableName));
       }
    }
 }
@@ -265,7 +265,7 @@ void Connection::refresh()
       for(int32_t i = 0; i < tables->numTables; ++i)
       {
          MTETable const* table = reinterpret_cast<MTETable const*>(data);
-         LOG_DEBUG(g_port, FMT("Table row = %1%, ref = %2%", table->numRows, % table->ref));
+         LOG_DEBUG(g_port, FMT("Table row = %1%, ref = %2%", table->numRows % table->ref));
          bool found = false;
          for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
          {
@@ -278,7 +278,7 @@ void Connection::refresh()
          }
          if (!found)
          {
-            LOG_ERROR(g_port, FMT("Table with ref %1% not found. Skipped.", table-ref));
+            LOG_ERROR(g_port, FMT("Table with ref %1% not found. Skipped.", table->ref));
          }
          data += table->size();
       }

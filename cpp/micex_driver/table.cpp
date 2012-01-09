@@ -8,7 +8,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>
 
-extern ei_cxx:Port g_port;
+extern ei_cxx::Port g_port;
 
 namespace micex
 {
@@ -37,7 +37,7 @@ void Table::init(char const*& data)
    using namespace boost;
    get_string(data); // skip description
    int32_t flags = get_int32(data);
-   if (flags & MteTableUpdatable == 0)
+   if ((flags & MteTableUpdatable) == 0)
    {
       m_refreshEnabled = false;
       LOG_WARN(g_port, FMT("Table %1% doesn't support refreshes.", m_name));
@@ -81,7 +81,7 @@ void Table::open(long connDescr)
       }
       throw MteError(
          m_descriptor,
-         FMT("Unable to open table %1%. Error = %2%, Description = %3%", m_name, m_descriptor % errDescr);
+         FMT("Unable to open table %1%. Error = %2%, Description = %3%", m_name % m_descriptor % errDescr));
    }
    char const* data = msg->data;
    parse(data);

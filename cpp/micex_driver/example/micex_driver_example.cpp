@@ -9,7 +9,9 @@
 
 #include <boost/assign/list_of.hpp>
 
-ei_cxx:Port g_port;
+#include <tchar.h>
+
+ei_cxx::Port g_port;
 
 TWinDynDriverCallbacks WinDynDriverCallbacks;
 
@@ -20,11 +22,11 @@ public:
    {
       std::cout << "Connection status: " << micex::ConnectionStatus::toString(status) << std::endl;
    }
-   virtual void onTableDataBegin(std::string const& tlbName)
+   virtual void onTableDataBegin(std::string const& tblName)
    {
       std::cout << "Table data begin: " << tblName << std::endl;
    }
-   virtual void onTableDataEnd(std::string const& tlbName)
+   virtual void onTableDataEnd(std::string const& tblName)
    {
       std::cout << "Table data end: " << tblName << std::endl;
    }
