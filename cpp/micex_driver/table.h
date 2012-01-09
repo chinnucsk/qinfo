@@ -45,6 +45,7 @@ private:
    ConnectionCallback& m_cback;
    bool const          m_completeLoad;
    bool                m_refreshEnabled;
+   InValues const&     m_inValues;
    long                m_ref;
    boost::int32_t      m_descriptor;
    InFields            m_inFields;
