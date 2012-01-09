@@ -12,7 +12,7 @@ OutFieldPtr OutRow::getField(std::string const& fieldName) const
    OutFields::const_iterator it = m_fields.find(fieldName);
    if (it == m_fields.end())
    {
-      return OutFields();
+      return OutFieldPtr();
    }
    return it->second;
 }
