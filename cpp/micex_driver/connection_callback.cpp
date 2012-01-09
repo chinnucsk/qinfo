@@ -7,6 +7,12 @@
 namespace micex
 {
 
+//---------------------------------------------------------------------------------------------------------------------//
+OutRow::OutRow() : m_cursor(m_fields.end())
+{
+}
+
+//---------------------------------------------------------------------------------------------------------------------//
 OutFieldPtr OutRow::getField(std::string const& fieldName) const
 {
    OutFields::const_iterator it = m_fields.find(fieldName);
