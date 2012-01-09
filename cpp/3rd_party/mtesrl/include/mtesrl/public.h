@@ -49,14 +49,14 @@ struct MTETable
 
 struct MTETables
 {
-   boost::int32_t numTable;
+   boost::int32_t numTables;
    MTETable tables[1];
 };
 
 namespace
 {
 
-int const MteTableUpdatable = 1;
+int const MteTableUpdatable     = 1;
 int const MteTableClearOnUpdate = 2;
 
 int const ZlibCompressed = 0x1;
