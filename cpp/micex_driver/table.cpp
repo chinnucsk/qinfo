@@ -37,7 +37,7 @@ void Table::init(char const*& data)
    using namespace boost;
    get_string(data); // skip description
    int32_t flags = get_int32(data);
-   if (flags & MteTableUpdatable == 0)
+   if ((flags & MteTableUpdatable) == 0)
    {
       m_refreshEnabled = false;
       LOG_WARN(g_port, FMT("Table %1% doesn't support refreshes.", m_name));
