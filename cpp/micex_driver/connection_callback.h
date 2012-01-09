@@ -22,7 +22,7 @@ class OutRow
 {
    friend class Table;
 public:
-   OutField();
+   OutRow();
    OutFieldPtr getField(std::string const& fieldName) const;
    OutFieldPtr first();
    OutFieldPtr next();
