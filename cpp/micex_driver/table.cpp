@@ -8,7 +8,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>
 
-extern ei_cxx:Port g_port;
+extern ei_cxx::Port g_port;
 
 namespace micex
 {
