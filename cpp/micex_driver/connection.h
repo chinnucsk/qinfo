@@ -20,7 +20,7 @@ class ConnectionCallback;
 class Connection
 {
 public:
-   Connection(ConnectionCallback& cback, LogLevel::type_t llevel);
+   Connection(ConnectionCallback& cback, LogLevel::type_t llevel = LogLevel::info);
    ~Connection();
    void open(std::string const& connParams);
    void close();
