@@ -81,7 +81,7 @@ void Table::open(long connDescr)
       }
       throw MteError(
          m_descriptor,
-         FMT("Unable to open table %1%. Error = %2%, Description = %3%", m_name, m_descriptor % errDescr);
+         FMT("Unable to open table %1%. Error = %2%, Description = %3%", m_name % m_descriptor % errDescr));
    }
    char const* data = msg->data;
    parse(data);
