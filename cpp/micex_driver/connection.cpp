@@ -39,9 +39,10 @@ void skip_enums(char const*& data)
 } // namespace
 
 //---------------------------------------------------------------------------------------------------------------------//
-Connection::Connection(ConnectionCallback& cback, LogLevel::type_t llevel)
+Connection::Connection(std::string const& fileName, ConnectionCallback& cback, LogLevel::type_t llevel)
    : m_cback(cback), m_connDescr(-1), m_stop(false)
 {
+   MTELoadLibrary(fileName);
    setLogLevel(llevel);
 }
 

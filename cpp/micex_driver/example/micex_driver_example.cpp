@@ -61,7 +61,7 @@ private:
 int _tmain(int argc, _TCHAR* argv[])
 {
    Data data;
-   micex::Connection conn(data);
+   micex::Connection conn("mtesrl.dll", data);
    conn.addTable("SECURITIES", true, false, boost::assign::map_list_of("BOARDID", "EQBR"));
    conn.addTable("ORDERS", false, true);
    conn.open("HOST=xxxx:3128\r\nSERVER=XXXX\r\nUSERID=xxxx\r\nPASSWORD=\r\nINTERFACE=IFCBroker_15\r\nFEEDBACK=info\r\n");
