@@ -2,18 +2,23 @@ cmake_minimum_required(VERSION 2.6)
 
 include(include.cmake NO_POLICY_SCOPE)
 
-add_definitions(-D__WIN32__ -DEI_CXX_ENABLE_INT64 -DPLAZA2_DRIVER_DLL_EXPORTS -DMICEX_DRIVER_DLL_EXPORTS)
+add_definitions(-D__WIN32__ -DEI_CXX_ENABLE_INT64 -DPLAZA2_DRIVER_DLL_EXPORTS -DMICEX_DRIVER_DLL_EXPORTS
+   -DEI_CXX_LOGGING_USE_STD_OUT)
+
 include_directories(ei_cxx/include)
 include_directories(common/include)
 
+aux_source_directory(3rd_party/mtesrl/src MTESRL_SRC)
 aux_source_directory(common/src COMMON_SRC)
 aux_source_directory(ei_cxx/src EI_CXX_SRC)
 aux_source_directory(plaza2_driver PLAZA2_DRIVER_SRC)
 aux_source_directory(micex_driver MICEX_DRIVER_SRC)
 
 set(MICEX_DRIVER_EXAMPLE_SRC micex_driver/example/micex_driver_example.cpp micex_driver/connection.cpp
-   micex_driver/table.cpp micex_driver/field.cpp micex_driver/field.cpp micex_driver/precomp.cpp)
+   micex_driver/table.cpp micex_driver/field.cpp micex_driver/field.cpp micex_driver/precomp.cpp
+   micex_driver/connection_callback.cpp)
 
+add_library(mtesrl STATIC ${MTESRL_SRC})
 add_library(common STATIC ${COMMON_SRC})
 add_library(ei_cxx STATIC ${EI_CXX_SRC})
 add_library(ei_cxx_test SHARED ei_cxx/test/ei_cxx_test.cc ${EI_CXX_SRC})
