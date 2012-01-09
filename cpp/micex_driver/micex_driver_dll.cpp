@@ -273,7 +273,21 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
    }
    *app = new MicexApplication(libFullName, LogLevel::fromString(logLevel.get()));
 
-   // TODO:
+   IList tables;
+   t >> tables;
+   sz = tables.size();
+   for(size_t i = 0; i < sz; ++i)
+   {
+      ITuple table;
+      tables >> table;
+      std::string tblName;
+      bool completeLoad;
+      bool refreshEnabled;
+      IList inValues;
+      IList reqOutFields;
+      table >> tblName >> completeLoad >> refreshEnabled >> inValues >> reqOutFields;
+
+   }
 
    (*app)->open(connStr);
 }
