@@ -138,7 +138,7 @@ void Connection::processTables()
    {
       if ((*it)->refreshEnabled())
       {
-         boost::int32_t err = MTEAddTable(m_connDescr, (*it)->description(), (*it)->ref());
+         boost::int32_t err = MTEAddTable(m_connDescr, (*it)->descriptor(), (*it)->ref());
          if (err < MTE_OK)
          {
             throw MteError(err, FMT("Unable to add table %1%. Error = %2%", (*it)->name() % err));
@@ -265,7 +265,7 @@ void Connection::refresh()
       for(int32_t i = 0; i < tables->numTables; ++i)
       {
          MTETable const* table = reinterpret_cast<MTETable const*>(data);
-         LOG_DEBUG(g_port, "Table row = %1%, ref = %2%", table->numRows, % table->ref);
+         LOG_DEBUG(g_port, FMT("Table row = %1%, ref = %2%", table->numRows, % table->ref));
          bool found = false;
          for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
          {
@@ -278,7 +278,7 @@ void Connection::refresh()
          }
          if (!found)
          {
-            LOG_ERROR(g_port, FMT("Table with ref %1% not found.", table-ref));
+            LOG_ERROR(g_port, FMT("Table with ref %1% not found. Skipped.", table-ref));
          }
          data += table->size();
       }
