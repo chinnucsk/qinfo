@@ -1,4 +1,4 @@
-/// @file   micex_drice_example.cpp
+/// @file   micex_driver_example.cpp
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/09/2012 10:29:33 AM
 
