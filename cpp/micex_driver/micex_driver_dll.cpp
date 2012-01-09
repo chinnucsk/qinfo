@@ -139,28 +139,28 @@ private:
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
-					 )
+                )
 {
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
-	}
+   switch (ul_reason_for_call)
+   {
+   case DLL_PROCESS_ATTACH:
+   case DLL_THREAD_ATTACH:
+   case DLL_THREAD_DETACH:
+   case DLL_PROCESS_DETACH:
+      break;
+   }
     return TRUE;
 }
 
 struct PortData
 {
-	ErlDrvPort port;
+   ErlDrvPort port;
    MicexApplication* app;
 };
 
 MICEX_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
 {
-	PortData* d = (PortData*)driver_alloc(sizeof(PortData));
+   PortData* d = (PortData*)driver_alloc(sizeof(PortData));
     d->port = port;
     if (!g_port)
     {
@@ -190,40 +190,40 @@ MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
       using namespace ei_cxx;
       for(size_t i = 1; i < ev->vsize; ++i)
       {
-	      IBinary bin(ev->binv[i]);
-	      if (bin.get_type() == IBinary::ErlSmallTuple || bin.get_type() == IBinary::ErlLargeTuple)
-	      {
-	         ITuple tuple;
-	         bin >> tuple;
-	         Atom command_name;
-	         tuple >> command_name;
-	         if (command_name.get() == "disconnect")
-	         {
+         IBinary bin(ev->binv[i]);
+         if (bin.get_type() == IBinary::ErlSmallTuple || bin.get_type() == IBinary::ErlLargeTuple)
+         {
+            ITuple tuple;
+            bin >> tuple;
+            Atom command_name;
+            tuple >> command_name;
+            if (command_name.get() == "disconnect")
+            {
                PortData* pd = (PortData*)drv_data;
                process_disconnect(pd->app);
                delete pd->app;
                pd->app = NULL;
-	         }
-	         else if (command_name.get() == "connect")
-	         {
+            }
+            else if (command_name.get() == "connect")
+            {
                PortData* pd = (PortData*)drv_data;
-	            process_connect(&pd->app, tuple);
-	         }
-	         else if (command_name.get() == "log_level")
-	         {
+               process_connect(&pd->app, tuple);
+            }
+            else if (command_name.get() == "log_level")
+            {
                Atom llevel;
                tuple >> llevel;
                setLogLevel(LogLevel::fromString(llevel.get()));
-	         }
-	         else
-	         {
-	            THROW(std::runtime_error, "Unknown command");
-	         }
-	      }
-	      else
-	      {
-	         THROW(std::runtime_error, "Unknown command");
-	      }
+            }
+            else
+            {
+               THROW(std::runtime_error, "Unknown command");
+            }
+         }
+         else
+         {
+            THROW(std::runtime_error, "Unknown command");
+         }
       }
    }
    catch(std::exception const& err)
