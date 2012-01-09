@@ -43,7 +43,7 @@ class ConnectionCallback
 public:
    virtual void onConnectionStatus(ConnectionStatus::type_t status) = 0;
    virtual void onTableDataBegin(std::string const& tblName) = 0;
-   virtual void onTableData(std::sring const& tblName, OutRow const& row) = 0;
+   virtual void onTableData(std::string const& tblName, OutRow const& row) = 0;
    virtual void onTableDataEnd(std::string const& tblName) = 0;
 };
 
