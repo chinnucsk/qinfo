@@ -184,7 +184,7 @@ boost::optional<float> OutField::getAsFloat(unsigned int precision) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-boost::optional<std::string> OutField::getAsString(std::string const& fieldName) const
+boost::optional<std::string> OutField::getAsString() const
 {
    return boost::trim_copy(m_value, ruLocale);
 }
