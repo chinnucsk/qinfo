@@ -17,31 +17,31 @@
 namespace
 {
 
-int const MTE_OK             =  0
-int const MTE_CONFIG         = -1
-int const MTE_SRVUNAVAIL     = -2
-int const MTE_LOGERROR       = -3
-int const MTE_INVALIDCONNECT = -4
-int const MTE_NOTCONNECTED   = -5
-int const MTE_WRITE          = -6
-int const MTE_READ           = -7
-int const MTE_TSMR           = -8
-int const MTE_NOMEMORY       = -9
-int const MTE_ZLIB           = -10
-int const MTE_PKTINPROGRESS  = -11
-int const MTE_PKTNOTSTARTED  = -12
-int const MTE_LOGON          = -13
-int const MTE_FATALERROR     = MTE_LOGON // not used because of cabalistic signification
-int const MTE_INVALIDHANDLE  = -14
-int const MTE_DSROFF         = -15
-int const MTE_ERRUNKNOWN     = -16
-int const MTE_BADPTR         = -17
-int const MTE_WRONGPARAM     = MTE_BADPTR
-int const MTE_TRANSREJECTED  = -18
-int const MTE_REJECTION      = MTE_TRANSREJECTED
-int const MTE_TOOSLOWCONNECT = -19
-int const MTE_TEUNAVAIL      = MTE_TOOSLOWCONNECT
-int const MTE_CRYPTO_ERROR   = -20
+int const MTE_OK             =  0;
+int const MTE_CONFIG         = -1;
+int const MTE_SRVUNAVAIL     = -2;
+int const MTE_LOGERROR       = -3;
+int const MTE_INVALIDCONNECT = -4;
+int const MTE_NOTCONNECTED   = -5;
+int const MTE_WRITE          = -6;
+int const MTE_READ           = -7;
+int const MTE_TSMR           = -8;
+int const MTE_NOMEMORY       = -9;
+int const MTE_ZLIB           = -10;
+int const MTE_PKTINPROGRESS  = -11;
+int const MTE_PKTNOTSTARTED  = -12;
+int const MTE_LOGON          = -13;
+int const MTE_FATALERROR     = MTE_LOGON; // not used because of cabalistic signification
+int const MTE_INVALIDHANDLE  = -14;
+int const MTE_DSROFF         = -15;
+int const MTE_ERRUNKNOWN     = -16;
+int const MTE_BADPTR         = -17;
+int const MTE_WRONGPARAM     = MTE_BADPTR;
+int const MTE_TRANSREJECTED  = -18;
+int const MTE_REJECTION      = MTE_TRANSREJECTED;
+int const MTE_TOOSLOWCONNECT = -19;
+int const MTE_TEUNAVAIL      = MTE_TOOSLOWCONNECT;
+int const MTE_CRYPTO_ERROR   = -20;
 
 //Don't forget update this define
 #define _MTELastError       21
