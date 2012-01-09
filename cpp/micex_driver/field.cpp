@@ -27,7 +27,7 @@ std::string int2micex(std::string const& val, boost::int32_t size)
 {
    std::ostringstream ost;
    ost << std::setw(size) << std::setfill('0') << val;
-   if (ost.str().length() < size)
+   if (ost.str().length() > size)
    {
       THROW(std::runtime_error, FMT("Value '%1%' has a length greater than %2%", val % size));
    }
@@ -53,15 +53,15 @@ std::string value2micex(std::string const& val, int type, boost::int32_t size, u
    {
       return string2micex(val, size);
    }
-   else if (type == Field::IntType)
+   else if (type == Field::intType)
    {
       return int2micex(val, size);
    }
-   else if (type == Field::FloatType)
+   else if (type == Field::floatType)
    {
       return float2micex(val, size, precision);
    }
-   else if (type == Field::FixedType)
+   else if (type == Field::fixedType)
    {
       return float2micex(val, size, FixedPrec);
    }
@@ -69,6 +69,7 @@ std::string value2micex(std::string const& val, int type, boost::int32_t size, u
    {
       THROW(std::runtime_error, FMT("Unknown type %1%", type));
    }
+   return "";
 }
 
 } // namespace
