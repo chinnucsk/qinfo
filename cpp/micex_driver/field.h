@@ -65,9 +65,9 @@ class OutField : public Field
 public:
    OutField(char const*& data, RequiredOutFields const& reqOutFields);
 public:
-   boost::optional<boost::int64_t> getAsInt64(std::string const& fieldName) const;
-   boost::optional<float> getAsFloat(std::string const& fieldName, unsigned int precision) const;
-   boost::optional<std::string> getAsString(std::string const& fieldName) const;
+   boost::optional<boost::int64_t> getAsInt64() const;
+   boost::optional<float> getAsFloat(unsigned int precision) const;
+   boost::optional<std::string> getAsString() const;
    static void skip(char const*& data);
    void parse(char const*& data);
    bool required() const { return m_required; }
