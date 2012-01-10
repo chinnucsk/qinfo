@@ -6,6 +6,7 @@
 #define MICEX_DRIVER_TABLE_H
 
 #include "field.h"
+#include "row.h"
 
 #include <mtesrl/public.h>
 #include <boost/shared_ptr.hpp>
@@ -54,6 +55,7 @@ private:
    boost::int32_t      m_descriptor;
    InFields            m_inFields;
    OutFields           m_outFields;
+   Row                 m_outRow;
 };
 
 typedef boost::shared_ptr<Table> TablePtr;

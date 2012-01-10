@@ -52,7 +52,24 @@ void Table::init(char const*& data)
    numFields = get_int32(data);
    for(int32_t i = 0; i < numFields; ++i)
    {
-      m_outFields.push_back(OutFieldPtr(new OutField(data, m_reqOutFields)));
+      m_outFields.push_back(OutFieldPtr(new OutField(data)));
+   }
+   // non-effective, but...
+   for(RequiredOutFields::const_iterator it = m_reqOutFields.begin(); it != m_reqOutFields.end(); ++it)
+   {
+      bool found = false;
+      for(OutFields::const_iterator jt = m_outFields.begin(); jt != m_outFields.end(); ++jt)
+      {
+         if ((*jt)->name() == *it)
+         {
+            m_outRow.addField(*jt);
+            found = true;
+         }
+      }
+      if (!found)
+      {
+         THROW(std::runtime_error, FMT("Required field %1% not found among table %2% fields", *it % m_name));
+      }
    }
 }
 
@@ -143,15 +160,11 @@ void Table::parse(char const*& data)
    {
       int32_t const numFields = row->numFields == 0 ? m_outFields.size() : row->numFields;
       data = row->data + row->numFields - 1;
-      OutRow outRow;
+      m_outRow.reset();
       for(int32_t j = 0; j < numFields; ++j)
       {
          OutFieldPtr field = m_outFields[row->numFields == 0 ? j : row->fieldNumbers[j]];
          field->parse(data);
-         if (field->required())
-         {
-            outRow.addField(field);
-         }
       }
       row = reinterpret_cast<MTERow const*>(data);
       m_cback.onTableData(m_name, outRow);

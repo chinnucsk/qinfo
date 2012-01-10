@@ -22,7 +22,7 @@
 int const MTE_ERRMSG_SIZE = 256 + 1;
 
 typedef std::map<std::string, std::string> InValues;
-typedef std::set<std::string> RequiredOutFields;
+typedef std::list<std::string> RequiredOutFields;
 
 void setLogLevel(LogLevel::type_t llevel);
 

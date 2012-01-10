@@ -63,17 +63,16 @@ private:
 class OutField : public Field
 {
 public:
-   OutField(char const*& data, RequiredOutFields const& reqOutFields);
+   explicit OutField(char const*& data);
 public:
    boost::optional<boost::int64_t> getAsInt64() const;
    boost::optional<float> getAsFloat(unsigned int precision) const;
    boost::optional<std::string> getAsString() const;
    static void skip(char const*& data);
    void parse(char const*& data);
-   bool required() const { return m_required; }
+   void reset();
 private:
-   std::string m_value;
-   bool        m_required;
+   boost::optional<std::string> m_value;
 };
 
 typedef boost::shared_ptr<InField> InFieldPtr;

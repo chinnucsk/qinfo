@@ -1,19 +1,19 @@
-/// @file   connection_callback.cpp
+/// @file   row.cpp
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
-/// @date   Created on: 01/09/2012 09:00:34 AM
+/// @date   Created on: 01/10/2012 10:40:28 PM
 
-#include "connection_callback.h"
+#include "row.h"
 
 namespace micex
 {
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutRow::OutRow() : m_cursor(m_fields.end())
+Row::OutRow() : m_cursor(m_fields.end())
 {
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutFieldPtr OutRow::getField(std::string const& fieldName) const
+OutFieldPtr Row::getField(std::string const& fieldName) const
 {
    OutFields::const_iterator it = m_fields.find(fieldName);
    if (it == m_fields.end())
@@ -24,7 +24,7 @@ OutFieldPtr OutRow::getField(std::string const& fieldName) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutFieldPtr OutRow::first() const
+OutFieldPtr Row::first() const
 {
    if (m_fields.empty())
    {
@@ -35,7 +35,7 @@ OutFieldPtr OutRow::first() const
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutFieldPtr OutRow::next() const
+OutFieldPtr Row::next() const
 {
    if (++m_cursor == m_fields.end())
    {
@@ -45,20 +45,19 @@ OutFieldPtr OutRow::next() const
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-void OutRow::addField(OutFieldPtr field)
+void Row::addField(OutFieldPtr field)
 {
    m_fields.push_back(field);
    m_fields.insert(std::make_pair(field->name(), field));
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
-void OutRow::reset()
+void Row::reset()
 {
    for(OutFields::iterator it = m_fields.begin(); it != m_fields.end(); ++it)
    {
       (*it)->reset();
    }
 }
-
 
 } // namespace micex

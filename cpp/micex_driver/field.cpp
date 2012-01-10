@@ -143,13 +143,8 @@ void InField::skip(char const*& data)
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutField::OutField(char const*& data, RequiredOutFields const& reqOutFields)
-   :   Field(data), m_required(reqOutFields.empty())
+OutField::OutField(char const*& data) : Field(data)
 {
-   if (!reqOutFields.empty())
-   {
-      m_required = reqOutFields.end() != reqOutFields.find(name());
-   }
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -168,6 +163,10 @@ void OutField::parse(char const*& data)
 //---------------------------------------------------------------------------------------------------------------------//
 boost::optional<boost::int64_t> OutField::getAsInt64() const
 {
+   if (!m_value)
+   {
+      return boost::none;
+   }
    std::string tmp = boost::trim_left_copy_if(m_value, boost::lambda::_1 == '0');
    if (tmp.empty())
    {
@@ -179,6 +178,10 @@ boost::optional<boost::int64_t> OutField::getAsInt64() const
 //---------------------------------------------------------------------------------------------------------------------//
 boost::optional<float> OutField::getAsFloat(unsigned int precision) const
 {
+   if (!m_value)
+   {
+      return boost::none;
+   }
    float const tmp = boost::lexical_cast<float>(boost::trim_left_copy_if(m_value, boost::lambda::_1 == '0'));
    return boost::optional<float>(tmp / pow10(precision));
 }
@@ -186,7 +189,17 @@ boost::optional<float> OutField::getAsFloat(unsigned int precision) const
 //---------------------------------------------------------------------------------------------------------------------//
 boost::optional<std::string> OutField::getAsString() const
 {
-   return boost::trim_copy(m_value, ruLocale);
+   if (!m_value)
+   {
+      return boost::none;
+   }
+   return boost::trim_copy(*m_value, ruLocale);
+}
+
+//------------------------------------------------------------------------------------------------------------------------//
+void OutField::reset()
+{
+   m_value = boost::none;
 }
 
 } // namespace micex

@@ -14,27 +14,12 @@
 
 #include <string>
 #include <map>
+#include <list>
 
 namespace micex
 {
 
-class OutRow
-{
-   friend class Table;
-public:
-   OutRow();
-   OutFieldPtr getField(std::string const& fieldName) const;
-   OutFieldPtr first() const;
-   OutFieldPtr next() const;
-   size_t size() const { return m_fields.size(); }
-private:
-   void addField(OutFieldPtr outField);
-private:
-   typedef std::map<std::string, OutFieldPtr> OutFields;
-   OutFields m_fields;
-   mutable OutFields::const_iterator m_cursor;
-};
-
+class Row;
 
 DECLARE_ENUM
 (
@@ -48,7 +33,7 @@ class ConnectionCallback
 public:
    virtual void onConnectionStatus(ConnectionStatus::type_t status) = 0;
    virtual void onTableDataBegin(std::string const& tblName) = 0;
-   virtual void onTableData(std::string const& tblName, OutRow const& row) = 0;
+   virtual void onTableData(std::string const& tblName, Row const& row) = 0;
    virtual void onTableDataEnd(std::string const& tblName) = 0;
 };
 
