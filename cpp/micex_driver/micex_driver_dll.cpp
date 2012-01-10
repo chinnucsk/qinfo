@@ -283,8 +283,39 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
       tables >> table;
       addTable(*app, table);
    }
-
    (*app)->open(connStr);
+}
+
+void addTable(MicexApplication* app, ei_cxx::ITuple& table)
+{
+   using namespace ei_cxx;
+   
+   std::string tblName;
+   bool completeLoad;
+   bool refreshEnabled;
+   IList inValuesList;
+   IList reqOutFeildsList;
+   table >> tblName >> completeLoad >> refreshEnabled >> inValuesList >> reqOutFieldsList;
+   InValues inValues;
+   RequiredOutFields reqOutFields;
+   size_t sz = inValuesList.size();
+   for(size_t i = 0; i < sz; ++i)
+   {
+      ITuple item;
+      inValuesList >> item;
+      std::string name;
+      std::string value;
+      item >> name >> value;
+      inValues.insert(std::make_pair(name, value));
+   }
+   sz = reqOutFieldsList.size();
+   fir(size_t i = 0; i < sz; ++i)
+   {
+      std::string item;
+      reqOutFieldsList >> item;
+      reqOutFields.insert(item);
+   }
+   app->addTable(tblName, completeLoad, refreshEnabled, inValues, reqOutFields);
 }
 
 // {disconnect}
