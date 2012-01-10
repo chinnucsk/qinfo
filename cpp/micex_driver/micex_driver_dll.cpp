@@ -24,6 +24,7 @@ class MicexApplication;
 
 void process_connect(MicexApplication**, ei_cxx::ITuple&);
 void process_disconnect(MicexApplication*);
+void addTable(MicexApplication* app, ei_cxx::ITuple& table);
 
 void sendError(std::string const& err)
 {
@@ -77,61 +78,61 @@ private:
    virtual void onTableDataBegin(std::string const& tblName)
    {
       using namespace ei_cxx;
-      Otuple t(2);
+      OTuple t(2);
       t << Atom("data_begin") << tblName;
       t.send(g_port);
    }
+   virtual void onTableDataEnd(std::string const& tblName)
+   {
+      using namespace ei_cxx;
+      OTuple t(2);
+      t << Atom("data_end") << tblName;
+      t.send(g_port);
+   }   
    virtual void onTableData(std::string const& tblName, OutRow const& row)
    {
       using namespace ei_cxx;
       if (tblName == "SECURITIES")
       {
-         std::string key = row.getField("SECBOARD")->getAsString() + '_' + row.getField("SECCODE")->getAsString();
+         std::string key = *row.getField("SECBOARD")->getAsString() + '_' + *row.getField("SECCODE")->getAsString();
          if (m_decimals.end() == m_decimals.find(key))
          {
-            m_decimals.insert(std::make_pair(key, row.getField("DECIMALS")->getAsInt64()));
+            m_decimals.insert(std::make_pair(key, (unsigned int)*row.getField("DECIMALS")->getAsInt64()));
          }
       }
-      OTuple erlRow(row.size() + 1);
-      erlRow << Atom(tblName);
+      OTuple erlRow(row.size() + 2);
+      erlRow << Atom("data_row") << Atom(tblName);
       OutFieldPtr fld = row.first();
       while(fld)
       {
-         if (fld.type() == FieldType::charType || fld.type() == FieldType::timeType || fld.type() == FieldType::dateType)
+         if (fld->type() == FieldType::charType || fld->type() == FieldType::timeType || fld->type() == FieldType::dateType)
          {
-            erlRow << fld->getAsString();
+            erlRow << *fld->getAsString();
          }
-         else if (fld.type() == FieldType::intType)
+         else if (fld->type() == FieldType::intType)
          {
-            erlRow << fld->getAsInt64();
+            erlRow << *fld->getAsInt64();
          }
-         else if (fld.type() == FieldType::fixedType)
+         else if (fld->type() == FieldType::fixedType)
          {
-            erlRow << fld->getAsFloat(FixedPrec);
+            erlRow << *fld->getAsFloat(FixedPrec);
          }
-         else if (fld.type() == FieldType::floatType)
+         else if (fld->type() == FieldType::floatType)
          {
-            std::string key = row.getField("SECBOARD")->getAsString() + '_' + row.getField("SECCODE")->getAsString();
+            std::string key = *row.getField("SECBOARD")->getAsString() + '_' + *row.getField("SECCODE")->getAsString();
             Decimals::const_iterator it = m_decimals.find(key);
             if (it == m_decimals.end())
             {
                THROW(std::runtime_error, FMT("Key %1% not found in decimals table", key));
             }
-            erlRow << fld->getAsFloat(it->second);
+            erlRow << *fld->getAsFloat(it->second);
          }
          fld = row.next();
       }
       erlRow.send(g_port);
    }
-   virtual void onTableDataEnd(std::string const& tblName)
-   {
-      using namespace ei_cxx;
-      Otuple t(2);
-      t << Atom("data_end") << tblName;
-      t.send(g_port);
-   }
 private:
-   typedef std::map<std::string, boost::int64_t> Decimals;
+   typedef std::map<std::string, unsigned int> Decimals;
    Connection  m_conn;
    Decimals    m_decimals;
 };
@@ -280,13 +281,7 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
    {
       ITuple table;
       tables >> table;
-      std::string tblName;
-      bool completeLoad;
-      bool refreshEnabled;
-      IList inValues;
-      IList reqOutFields;
-      table >> tblName >> completeLoad >> refreshEnabled >> inValues >> reqOutFields;
-
+      addTable(*app, table);
    }
 
    (*app)->open(connStr);
