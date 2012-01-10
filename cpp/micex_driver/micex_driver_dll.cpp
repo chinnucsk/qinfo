@@ -294,7 +294,7 @@ void addTable(MicexApplication* app, ei_cxx::ITuple& table)
    bool completeLoad;
    bool refreshEnabled;
    IList inValuesList;
-   IList reqOutFeildsList;
+   IList reqOutFieldsList;
    table >> tblName >> completeLoad >> refreshEnabled >> inValuesList >> reqOutFieldsList;
    InValues inValues;
    RequiredOutFields reqOutFields;
@@ -309,7 +309,7 @@ void addTable(MicexApplication* app, ei_cxx::ITuple& table)
       inValues.insert(std::make_pair(name, value));
    }
    sz = reqOutFieldsList.size();
-   fir(size_t i = 0; i < sz; ++i)
+   for(size_t i = 0; i < sz; ++i)
    {
       std::string item;
       reqOutFieldsList >> item;
