@@ -26,6 +26,7 @@ public:
    OutFieldPtr getField(std::string const& fieldName) const;
    OutFieldPtr first();
    OutFieldPtr next();
+   size_t size() const { return m_fields.size(); }
 private:
    void addField(OutFieldPtr outField);
 private:
