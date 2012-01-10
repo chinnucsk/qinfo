@@ -24,15 +24,15 @@ class OutRow
 public:
    OutRow();
    OutFieldPtr getField(std::string const& fieldName) const;
-   OutFieldPtr first();
-   OutFieldPtr next();
+   OutFieldPtr first() const;
+   OutFieldPtr next() const;
    size_t size() const { return m_fields.size(); }
 private:
    void addField(OutFieldPtr outField);
 private:
    typedef std::map<std::string, OutFieldPtr> OutFields;
    OutFields m_fields;
-   OutFields::const_iterator m_cursor;
+   mutable OutFields::const_iterator m_cursor;
 };
 
 
