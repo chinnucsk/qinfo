@@ -24,7 +24,7 @@ OutFieldPtr OutRow::getField(std::string const& fieldName) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutFieldPtr OutRow::first()
+OutFieldPtr OutRow::first() const
 {
    if (m_fields.empty())
    {
@@ -35,7 +35,7 @@ OutFieldPtr OutRow::first()
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
-OutFieldPtr OutRow::next()
+OutFieldPtr OutRow::next() const
 {
    if (++m_cursor == m_fields.end())
    {
