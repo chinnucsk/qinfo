@@ -15,8 +15,8 @@ Row::OutRow() : m_cursor(m_fields.end())
 //---------------------------------------------------------------------------------------------------------------------//
 OutFieldPtr Row::getField(std::string const& fieldName) const
 {
-   OutFields::const_iterator it = m_fields.find(fieldName);
-   if (it == m_fields.end())
+   Index::const_iterator it = m_index.find(fieldName);
+   if (it == m_index.end())
    {
       return OutFieldPtr();
    }
@@ -31,7 +31,7 @@ OutFieldPtr Row::first() const
       return OutFieldPtr();
    }
    m_cursor = m_fields.begin();
-   return m_cursor->second;
+   return *m_cursor;
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -41,14 +41,14 @@ OutFieldPtr Row::next() const
    {
       return OutFieldPtr();
    }
-   return m_cursor->second;
+   return *m_cursor;
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
 void Row::addField(OutFieldPtr field)
 {
    m_fields.push_back(field);
-   m_fields.insert(std::make_pair(field->name(), field));
+   m_index.insert(std::make_pair(field->name(), field));
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
