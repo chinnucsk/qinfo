@@ -169,7 +169,7 @@ void Table::parse(char const*& data)
       row = reinterpret_cast<MTERow const*>(data);
       try
       {
-         m_cback.onTableData(m_name, outRow);
+         m_cback.onTableData(m_name, m_outRow);
       }
       catch(...)
       {
