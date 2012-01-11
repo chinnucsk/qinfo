@@ -26,6 +26,10 @@ add_library(plaza2_driver SHARED ${PLAZA2_DRIVER_SRC})
 add_library(micex_driver SHARED ${MICEX_DRIVER_SRC})
 add_executable(micex_driver_example ${MICEX_DRIVER_EXAMPLE_SRC})
 
+set_property(TARGET plaza2_driver PROPERTY COMPILE_DEFINITIONS PLAZA2_DRIVER_DLL_EXPORTS)
+set_property(TARGET micex_driver PROPERTY COMPILE_DEFINITIONS MICEX_DRIVER_DLL_EXPORTS)
+set_property(TARGET micex_driver_example PROPERTY COMPILE_DEFINITIONS EI_CXX_LOGGING_USE_STD_OUT)
+
 target_link_Libraries(ei_cxx_test common ei)
 target_link_libraries(plaza2_driver common ei_cxx ei)
 target_link_libraries(micex_driver common ei_cxx ei mtesrl)
