@@ -66,8 +66,11 @@ void Connection::open(std::string const& connParams)
 void Connection::close()
 {
    m_stop = true;
-   m_worker->join();
-   m_worker.reset(NULL);
+   if (m_worker.get())
+   {
+      m_worker->join();
+      m_worker.reset(NULL);
+   }
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
