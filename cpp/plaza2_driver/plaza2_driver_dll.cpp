@@ -23,24 +23,6 @@ ei_cxx::Port g_port;
 void process_connect(ei_cxx::ITuple&);
 void process_disconnect();
 
-void sendError(std::string const& err)
-{
-   using namespace ei_cxx;
-   OTuple t(2);
-   t  << Atom("error")
-      << err;
-   t.send(g_port);
-}
-
-void sendOk(std::string const& text)
-{
-   using namespace ei_cxx;
-   OTuple t(2);
-   t << Atom("ok") << Atom(text);
-   t.send(g_port);
-}
-
-
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
@@ -122,7 +104,7 @@ PLAZA2_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
    }
    catch(std::exception const& err)
    {
-      sendError(err.what());
+      LOG_ERROR(g_port, err.what());
    }
    catch(_com_error const& err)
    {
