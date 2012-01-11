@@ -1,6 +1,9 @@
 #include "precomp.h"
 #include "connection.h"
 
+#include <ei_cxx/tuple.h>
+#include <ei_cxx/atom.h>
+
 #include <boost/bind.hpp>
 
 extern ei_cxx::Port g_port;
@@ -24,7 +27,7 @@ void Connection::connect(
 {
    if (m_conn)
    {
-      LOG_ERROR(g_port, "Already connected. Do disconnect first.");
+      ERL_LOG_ERROR(g_port, "Already connected. Do disconnect first.");
       return;
    }
    m_conn.CreateInstance(CLSID_CP2Connection);
@@ -46,7 +49,7 @@ Connection* Connection::instance()
 //------------------------------------------------------------------------------------------------------------------------//
 void Connection::disconnect()
 {
-   LOG_INFO(g_port, "Disconnecting...");
+   ERL_LOG_INFO(g_port, "Disconnecting...");
    m_stop = true;
    m_worker->join();
    m_worker.reset(NULL);
@@ -57,7 +60,7 @@ void Connection::disconnect()
       DispEventUnadvise(m_conn);
       m_conn = NULL;
    }
-   LOG_INFO(g_port, "Disconnected.")
+   ERL_LOG_INFO(g_port, "Disconnected.")
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
@@ -79,47 +82,47 @@ void Connection::ConnectionStatusChanged(IDispatch* conn, TConnectionStatus stat
    {
       m_connected = false;
       m_conn->Disconnect();
-      LOG_INFO(g_port, "Connection status DISCONNECTED.");
+      ERL_LOG_INFO(g_port, "Connection status DISCONNECTED.");
    }
    if (status & ConnectionStatus::CONNECTED)
    {
-      LOG_INFO(g_port, "Connection status CONNECTED.");
+      ERL_LOG_INFO(g_port, "Connection status CONNECTED.");
    }
    if (status & ConnectionStatus::INVALID)
    {
-      LOG_INFO(g_port, "Connection status INVALID.");
+      ERL_LOG_INFO(g_port, "Connection status INVALID.");
       m_conn->Disconnect();
       m_connected = false;
    }
    if (status & ConnectionStatus::BUSY)
    {
-      LOG_INFO(g_port, "Connection status BUSY.");
+      ERL_LOG_INFO(g_port, "Connection status BUSY.");
    }
    if (status & ConnectionStatus::ROUTER_DISCONNECTED)
    {
-      LOG_INFO(g_port, "Connection status ROUTER_DISCONNECTED.");
+      ERL_LOG_INFO(g_port, "Connection status ROUTER_DISCONNECTED.");
    }
    if (status & ConnectionStatus::ROUTER_RECONNECTING)
    {
-      LOG_INFO(g_port, "Connection status ROUTER_RECONNECTING.");
+      ERL_LOG_INFO(g_port, "Connection status ROUTER_RECONNECTING.");
    }
    if (status & ConnectionStatus::ROUTER_CONNECTED)
    {
-      LOG_INFO(g_port, "Connection status ROUTER_CONNECTED.");
+      ERL_LOG_INFO(g_port, "Connection status ROUTER_CONNECTED.");
    }
    if (status & ConnectionStatus::ROUTER_LOGINFAILED)
    {
-      LOG_INFO(g_port, "Connection status ROUTER_LOGINFAILED.");
+      ERL_LOG_INFO(g_port, "Connection status ROUTER_LOGINFAILED.");
    }
    if (status & ConnectionStatus::ROUTER_NOCONNECT)
    {
-      LOG_INFO(g_port, "Connection status ROUTER_NOCONNECT.");
+      ERL_LOG_INFO(g_port, "Connection status ROUTER_NOCONNECT.");
    }}
 
 //------------------------------------------------------------------------------------------------------------------------//
 void Connection::run()
 {
-   LOG_INFO(g_port, "Connecting... appName='" << m_conn->AppName << "', host='" << m_conn->Host << "', port=" << m_conn->Port);
+   ERL_LOG_INFO(g_port, "Connecting... appName='" << m_conn->AppName << "', host='" << m_conn->Host << "', port=" << m_conn->Port);
    while(!m_stop)
    {
       try
@@ -148,16 +151,16 @@ void Connection::run()
       }
       catch(TryAgain const& err)
       {
-         LOG_ERROR(g_port, "Unable to connect. Error = " << err.what());
+         ERL_LOG_ERROR(g_port, "Unable to connect. Error = " << err.what());
          Sleep(1000);
       }
       catch(std::exception const& err)
       {
-         LOG_ERROR(g_port, "Connection::run error. Error=" << err.what());
+         ERL_LOG_ERROR(g_port, "Connection::run error. Error=" << err.what());
       }
       catch(_com_error const& err)
       {
-         LOG_ERROR(g_port, "Connection::run COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
+         ERL_LOG_ERROR(g_port, "Connection::run COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
       }
    }
 }

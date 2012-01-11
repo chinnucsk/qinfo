@@ -19,48 +19,52 @@ DECLARE_ENUM
 
 extern LogLevel::type_t log_level;
 
-#define LOG_DEBUG(port, Str)            \
+#define ERL_LOG_DEBUG(port, Str)        \
 if (log_level >= LogLevel::debug)       \
 {                                       \
    using namespace ei_cxx;              \
    std::ostringstream ost;              \
    ost << Str;                          \
-   OTuple t(2);                         \
-   t << Atom("log_debug") << ost.str(); \
+   OTuple t(3);                         \
+   t << Atom("log")                     \
+     << Atom("debug") << ost.str();     \
    t.send(port);                        \
 }
 
-#define LOG_INFO(port, Str)            \
+#define ERL_LOG_INFO(port, Str)        \
 if (log_level >= LogLevel::info)       \
 {                                      \
    using namespace ei_cxx;             \
    std::ostringstream ost;             \
    ost << Str;                         \
-   OTuple t(2);                        \
-   t << Atom("log_info") << ost.str(); \
+   OTuple t(3);                        \
+   t << Atom("log")                    \
+     << Atom("info") << ost.str();     \
    t.send(port);                       \
 }
 
-#define LOG_WARN(port, Str)            \
+#define ERL_LOG_WARN(port, Str)        \
 if (log_level >= LogLevel::warning)    \
 {                                      \
    using namespace ei_cxx;             \
    std::ostringstream ost;             \
    ost << Str;                         \
-   OTuple t(2);                        \
-   t << Atom("log_warn") << ost.str(); \
+   OTuple t(3);                        \
+   t << Atom("log")                    \
+     << Atom("warninig") << ost.str(); \
    t.send(port);                       \
 }
 
-#define LOG_ERROR(port, Str)            \
+#define ERL_LOG_ERROR(port, Str)       \
 if (log_level >= LogLevel::error)       \
 {                                       \
    using namespace ei_cxx;              \
    std::ostringstream ost;              \
    ost << Str;                          \
-   OTuple t(2);                         \
-   t << Atom("log_error") << ost.str(); \
+   OTuple t(3);                         \
+   t << Atom("log")                     \
+     << Atom("error") << ost.str();     \
    t.send(port);                        \
 }
 
-#endif // COMMON_LOG_WRAPPER_H
+#endif // COMMON_ERL_LOG_WRAPPER_H

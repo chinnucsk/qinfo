@@ -2,8 +2,8 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/10/2012 10:36:13 PM
 
-#ifndef MICEX_DRIVER_ROW_H
-#define MICEX_DRIVER_ROW_H
+#ifndef MTESRL_ROW_H
+#define MTESRL_ROW_H
 
 #include "precomp.h"
 #include "field.h"
@@ -12,7 +12,7 @@
 #include <map>
 #include <string>
 
-namespace micex
+namespace mtesrl
 {
 
 class Row
@@ -35,6 +35,6 @@ private:
    mutable OutFields::const_iterator m_cursor;
 };
 
-} // namespace micex
+} // namespace mtesrl
 
-#endif // MICEX_DRIVER_ROW_H
+#endif // MTESRL_ROW_H

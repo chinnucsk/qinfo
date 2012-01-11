@@ -2,8 +2,8 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/03/2012 05:11:01 PM
 
-#ifndef MICEX_CONNECTION_H
-#define MICEX_CONNECTION_H
+#ifndef MTESRL_CONNECTION_H
+#define MTESRL_CONNECTION_H
 
 #include "table.h"
 
@@ -12,7 +12,7 @@
 #include <list>
 #include <string>
 
-namespace micex
+namespace mtesrl
 {
 
 class ConnectionCallback;
@@ -47,6 +47,6 @@ private:
    bool                          m_stop;
 };
 
-} // namespace micex
+} // namespace mtesrl
 
 #endif // MICEX_CONNECTION_H

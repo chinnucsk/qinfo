@@ -2,10 +2,8 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/05/2012 08:48:44 AM
 
-#ifndef MICEX_DRIVER_FIELD_H
-#define MICEX_DRIVER_FIELD_H
-
-#include "precomp.h"
+#ifndef MTESRL_FIELD_H
+#define MTESRL_FIELD_H
 
 #include <common/smart_enum.h>
 #include <boost/shared_ptr.hpp>
@@ -13,8 +11,9 @@
 #include <boost/optional.hpp>
 
 #include <string>
+#include <map>
 
-namespace micex
+namespace mtesrl
 {
 
 namespace
@@ -23,6 +22,8 @@ namespace
 unsigned int const FixedPrec = 2;
 
 } // namespace
+
+typedef std::map<std::string, std::string> InValues;
 
 DECLARE_ENUM
 (
@@ -78,6 +79,6 @@ private:
 typedef boost::shared_ptr<InField> InFieldPtr;
 typedef boost::shared_ptr<OutField> OutFieldPtr;
 
-} // namespace micex
+} // namespace mtesrl
 
-#endif // MICEX_DRIVER_FIELD_H
+#endif // MTESRL_FIELD_H

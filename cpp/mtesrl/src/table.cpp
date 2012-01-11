@@ -1,16 +1,15 @@
 /// @file   table.cpp/// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/04/2012 08:38:11 AM
 
-#include "precomp.h"
-#include "table.h"
-#include "connection_callback.h"
+#include "../include/mtesrl/precomp.h"
+#include "../include/mtesrl/table.h"
+#include "../include/mtesrl/connection_callback.h"
+#include "../include/mtesrl/mtesrl_lib.h"
 
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>
 
-extern ei_cxx::Port g_port;
-
-namespace micex
+namespace mtesrl
 {
 
 long Table::m_refCounter = 0;
@@ -42,7 +41,7 @@ void Table::init(char const*& data)
    if ((flags & MteTableUpdatable) == 0)
    {
       m_refreshEnabled = false;
-      LOG_WARN(g_port, FMT("Table %1% doesn't support refreshes.", m_name));
+      MTESRL_LOG_WARN(g_port, FMT("Table %1% doesn't support refreshes.", m_name));
    }
    int32_t numFields = get_int32(data);
    for(int32_t i = 0; i < numFields; ++i)
@@ -173,11 +172,11 @@ void Table::parse(char const*& data)
       }
       catch(...)
       {
-         LOG_ERROR(g_port, "Unexpected exception from callback.");
+         MTESRL_LOG_ERROR(g_port, "Unexpected exception from callback.");
       }
    }
    m_cback.onTableDataEnd(m_name);
 }
 
 
-} // namespace micex
+} // namespace mtesrl

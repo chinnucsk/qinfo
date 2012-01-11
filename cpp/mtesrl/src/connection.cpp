@@ -2,17 +2,17 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/03/2012 05:26:41 PM
 
-#include "precomp.h"
-#include "connection.h"
-#include "connection_callback.h"
+#include "../../include/mtesrl/precomp.h"
+#include "../../include/mtesrl/connection.h"
+#include "../../include/mtesrl/connection_callback.h"
 
-#include <mtesrl/public.h>
+#include <common/log_wrapper.h>
+#include <common/exception.h>
+
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-extern ei_cxx::Port g_port;
-
-namespace micex
+namespace mtesrl
 {
 
 namespace
@@ -43,7 +43,7 @@ Connection::Connection(std::string const& fileName, ConnectionCallback& cback, L
    : m_cback(cback), m_connDescr(-1), m_stop(false)
 {
    MTELoadLibrary(fileName);
-   setLogLevel(llevel);
+   log_level = llevel;
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -101,7 +101,7 @@ void Connection::run(std::string const& connParams)
       }
       catch(MteError const& err)
       {
-         LOG_ERROR(g_port, err.what());
+         MTESRL_LOG_ERROR(g_port, err.what());
          if (err.error() != MTE_SRVUNAVAIL && err.error() != MTE_INVALIDCONNECT && err.error() == MTE_NOTCONNECTED &&
                err.error() != MTE_WRITE && err.error() != MTE_READ && err.error() != MTE_TSMR)
          {
@@ -115,7 +115,7 @@ void Connection::run(std::string const& connParams)
       }
       catch(std::exception const& err)
       {
-         LOG_ERROR(g_port, err.what());
+         MTESRL_LOG_ERROR(g_port, err.what());
          break;
       }
    }
@@ -152,7 +152,7 @@ void Connection::processTables()
    }
    if (!added)
    {
-      LOG_INFO(g_port, "Nothing to refresh. Will be stopped.");
+      MTESRL_LOG_INFO(g_port, "Nothing to refresh. Will be stopped.");
       m_stop = true;
    }
    else
@@ -200,8 +200,8 @@ void Connection::initTables()
 
    char const* data = reinterpret_cast<char const*>(&msg->data);
 
-   LOG_INFO(g_port, "Interface name:" << get_string(data));
-   LOG_INFO(g_port, "Interface description:" << get_string(data));
+   MTESRL_LOG_INFO(g_port, "Interface name:" << get_string(data));
+   MTESRL_LOG_INFO(g_port, "Interface description:" << get_string(data));
 
    skip_enums(data);
 
@@ -217,7 +217,7 @@ void Connection::initTables()
          {
             (*it)->init(data);
             found = true;
-            LOG_INFO(g_port, FMT("Table %1% has been initialized.", tableName));
+            MTESRL_LOG_INFO(g_port, FMT("Table %1% has been initialized.", tableName));
             break;
          }
       }
@@ -225,7 +225,7 @@ void Connection::initTables()
       {
          //skip table structure
          Table::skip(data);
-         LOG_INFO(g_port, FMT("Table %1% not found. Skipped.", tableName));
+         MTESRL_LOG_INFO(g_port, FMT("Table %1% not found. Skipped.", tableName));
       }
    }
 }
@@ -270,7 +270,7 @@ void Connection::refresh()
       for(int32_t i = 0; i < tables->numTables; ++i)
       {
          MTETable const* table = reinterpret_cast<MTETable const*>(data);
-         LOG_DEBUG(g_port, FMT("Table row = %1%, ref = %2%", table->numRows % table->ref));
+         MTESRL_LOG_DEBUG(g_port, FMT("Table row = %1%, ref = %2%", table->numRows % table->ref));
          bool found = false;
          for(Tables::iterator it = m_tables.begin(); it != m_tables.end(); ++it)
          {
@@ -283,11 +283,11 @@ void Connection::refresh()
          }
          if (!found)
          {
-            LOG_ERROR(g_port, FMT("Table with ref %1% not found. Skipped.", table->ref));
+            MTESRL_LOG_ERROR(g_port, FMT("Table with ref %1% not found. Skipped.", table->ref));
          }
          data += table->size();
       }
    }
 }
 
-} // namespace micex
+} // namespace mtesrl

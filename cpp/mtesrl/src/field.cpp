@@ -2,7 +2,10 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/05/2012 08:51:45 AM
 
-#include "field.h"
+#include "../include/mtesrl/precomp.h"
+#include "../include/mtesrl/field.h"
+
+#include <common/excepion.h>
 
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -11,8 +14,9 @@
 
 #include <locale>
 #include <sstream>
+#include <iomanip>
 
-namespace micex
+namespace mtesrl
 {
 
 namespace
@@ -41,6 +45,7 @@ boost::int64_t pow10(int p)
    return arr[p];
 }
 
+//---------------------------------------------------------------------------------------------------------------------//
 std::string string2micex(std::string val, boost::int32_t size)
 {
    for(boost::int32_t i = val.length(); i < size; ++i)
@@ -50,6 +55,7 @@ std::string string2micex(std::string val, boost::int32_t size)
    return val;
 }
 
+//---------------------------------------------------------------------------------------------------------------------//
 std::string int2micex(std::string const& val, boost::int32_t size)
 {
    std::ostringstream ost;
@@ -61,6 +67,7 @@ std::string int2micex(std::string const& val, boost::int32_t size)
    return ost.str();
 }
 
+//---------------------------------------------------------------------------------------------------------------------//
 std::string float2micex(std::string const& val, boost::int32_t size, unsigned int precision)
 {
    std::ostringstream ost;
@@ -74,6 +81,7 @@ std::string float2micex(std::string const& val, boost::int32_t size, unsigned in
    return tmp;
 }
 
+//---------------------------------------------------------------------------------------------------------------------//
 std::string value2micex(std::string const& val, int type, boost::int32_t size, unsigned int precision)
 {
    if (type == FieldType::charType || type == FieldType::dateType || type == FieldType::timeType)
@@ -202,4 +210,4 @@ void OutField::reset()
    m_value = boost::none;
 }
 
-} // namespace micex
+} // namespace mtesrl

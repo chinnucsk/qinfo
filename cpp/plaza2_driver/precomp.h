@@ -12,7 +12,7 @@
 #include <sstream>
 #include <string>
 
-#include <ei_cxx/log_wrapper.h>
+#include <common/log_wrapper.h>
 
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN

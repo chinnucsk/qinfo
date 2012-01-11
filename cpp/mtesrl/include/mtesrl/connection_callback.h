@@ -2,12 +2,13 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/09/2012 08:50:04 AM
 
-#ifndef MICEX_DRIVER_CONNECTION_CALLBACK_H
-#define MICEX_DRIVER_CONNECTION_CALLBACK_H
+#ifndef MTESRL_CONNECTION_CALLBACK_H
+#define MTESRL_CONNECTION_CALLBACK_H
 
 #include "field.h"
 
 #include <common/smart_enum.h>
+#include <common/log_wrapper.h>
 
 #include <boost/optional.hpp>
 #include <boost/cstdint.hpp>
@@ -16,7 +17,7 @@
 #include <map>
 #include <list>
 
-namespace micex
+namespace mtesrl
 {
 
 class Row;
@@ -35,8 +36,9 @@ public:
    virtual void onTableDataBegin(std::string const& tblName) = 0;
    virtual void onTableData(std::string const& tblName, Row const& row) = 0;
    virtual void onTableDataEnd(std::string const& tblName) = 0;
+   virtual void onLog(LogLevel::type_t llevel, std::string const& txt) = 0;
 };
 
-} // namespace micex
+} // namespace mtesrl
 
-#endif // MICEX_DRIVER_CONNECTION_CALLBACK_H
+#endif // MTESRL_CONNECTION_CALLBACK_H

@@ -2,22 +2,23 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/04/2012 08:35:49 AM
 
-#ifndef MICEX_DRIVER_TABLE_H
-#define MICEX_DRIVER_TABLE_H
+#ifndef MTESRL_TABLE_H
+#define MTESRL_TABLE_H
 
 #include "field.h"
 #include "row.h"
 
-#include <mtesrl/public.h>
 #include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <map>
 
-namespace micex
+namespace mtesrl
 {
 
 class ConnectionCallback;
+
+typedef std::list<std::string> RequiredOutFields;
 
 class Table
 {
@@ -60,7 +61,7 @@ private:
 
 typedef boost::shared_ptr<Table> TablePtr;
 
-} // namespace micex
+} // namespace mtesrl
 
 
-#endif // MICEX_DRIVER_TABLE_H
+#endif // MTESRL_TABLE_H

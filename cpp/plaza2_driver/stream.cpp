@@ -80,7 +80,7 @@ StreamState Stream::getState() const
 void Stream::StreamStateChanged(IDispatch *s, TDataStreamState newState)
 {
    IP2DataStreamPtr stream(s);
-   LOG_INFO(g_port,
+   ERL_LOG_INFO(g_port,
       "Stream <" << (char*)stream->StreamName << "> state changed to " << StreamState::toString(newState));
 }
 
@@ -140,21 +140,21 @@ void Stream::processStream(std::string const& eventName, IP2DataStreamPtr stream
       t.send(g_port);
       if (tableName.length() == 0)
       {
-         LOG_DEBUG(g_port, eventName << ": " << (char*)stream->StreamName);
+         ERL_LOG_DEBUG(g_port, eventName << ": " << (char*)stream->StreamName);
       }
       else
       {
-         LOG_DEBUG(g_port, eventName << ": " <<  (char*)stream->StreamName << '.' << (char*)tableName);
+         ERL_LOG_DEBUG(g_port, eventName << ": " <<  (char*)stream->StreamName << '.' << (char*)tableName);
       }
    }
    catch(_com_error const& err)
    {
-      LOG_ERROR(g_port,
+      ERL_LOG_ERROR(g_port,
          eventName << " COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
    }
    catch(std::exception const& err)
    {
-      LOG_ERROR(g_port, eventName << ". Error=" << err.what());
+      ERL_LOG_ERROR(g_port, eventName << ". Error=" << err.what());
    }
 }
 

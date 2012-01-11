@@ -10,13 +10,12 @@
 #include <ei_cxx/port.h>
 #include <ei_cxx/atom.h>
 #include <ei_cxx/list.h>
+#include <common/log_wrapper.h>
 
 #include <erl_driver.h>
 #include <ei.h>
 
 using namespace Plaza2;
-
-extern LogLevel::type_t log_level;
 
 ei_cxx::Port g_port;
 
@@ -104,11 +103,11 @@ PLAZA2_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
    }
    catch(std::exception const& err)
    {
-      LOG_ERROR(g_port, err.what());
+      ERL_LOG_ERROR(g_port, err.what());
    }
    catch(_com_error const& err)
    {
-      LOG_ERROR(g_port,
+      ERL_LOG_ERROR(g_port,
          "received(): COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
    }
 }

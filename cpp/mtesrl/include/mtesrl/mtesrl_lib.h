@@ -2,8 +2,8 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/03/2012 11:32:59 AM
 
-#ifndef MTESRL_PUBLIC_H
-#define MTESRL_PUBLIC_H
+#ifndef MTESRL_LIB_H
+#define MTESRL_LIB_H
 
 #pragma pack(push)
 #pragma pack(1)
@@ -122,4 +122,4 @@ boost::int32_t MTEConnectionStats(boost::int32_t clientIdx, ConnectionStats* sta
 
 #pragma pack(pop)
 
-#endif // MTESRL_PUBLIC_H
+#endif // MTESRL_LIB_H

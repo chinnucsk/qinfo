@@ -2,9 +2,9 @@
 /// @author Dmitry S. Melnikov, dmitryme@cqg.com
 /// @date   Created on: 01/10/2012 10:40:28 PM
 
-#include "row.h"
+#include "../include/mtesrl/row.h"
 
-namespace micex
+namespace mtesrl
 {
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -60,4 +60,4 @@ void Row::reset()
    }
 }
 
-} // namespace micex
+} // namespace mtesrl
