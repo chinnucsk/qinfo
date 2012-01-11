@@ -1,5 +1,5 @@
 /// @file   table.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/04/2012 08:35:49 AM
 
 #ifndef MTESRL_TABLE_H

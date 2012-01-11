@@ -1,5 +1,5 @@
 /// @file   connection_callback.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/09/2012 08:50:04 AM
 
 #ifndef MTESRL_CONNECTION_CALLBACK_H

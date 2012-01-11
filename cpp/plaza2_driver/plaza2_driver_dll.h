@@ -1,9 +1,6 @@
-// The following ifdef block is the standard way of creating macros which make exporting
-// from a DLL simpler. All files within this DLL are compiled with the CDP_WRAPPER_DLL_EXPORTS
-// symbol defined on the command line. this symbol should not be defined on any project
-// that uses this DLL. This way any other project whose source files include this file see
-// CDP_WRAPPER_DLL_API functions as being imported from a DLL, whereas this DLL sees symbols
-// defined with this macro as being exported.
+/// @file   plaza2_driver_dll.h
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @date   Created on: 01/11/2012 09:31:15 PM
 
 #include <erl_driver.h>
 

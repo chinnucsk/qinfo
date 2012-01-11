@@ -1,3 +1,8 @@
+/// @file   precomp.h
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @date   Created on: 01/11/2012 09:31:47 PM
+
+
 #pragma once
 
 #include <sstream>

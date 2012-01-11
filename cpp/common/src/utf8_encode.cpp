@@ -1,5 +1,5 @@
 /// @file   utf8_encode.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 06/24/2011 06:28:04 PM
 
 #include "../include/common/utf8_encode.h"

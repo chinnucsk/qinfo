@@ -1,5 +1,5 @@
 /// @file   row.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/10/2012 10:36:13 PM
 
 #ifndef MTESRL_ROW_H

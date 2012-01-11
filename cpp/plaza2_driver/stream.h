@@ -1,3 +1,8 @@
+/// @file   stream.h
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @date   Created on: 01/11/2012 09:32:18 PM
+
+
 #ifndef PLAZA2_DRIVER_STREAM_H
 #define PLAZA2_DRIVER_STREAM_H
 

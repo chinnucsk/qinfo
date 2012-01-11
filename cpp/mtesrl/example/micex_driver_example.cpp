@@ -1,5 +1,5 @@
 /// @file   micex_driver_example.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/09/2012 10:29:33 AM
 
 #include <mtesrl/connection.h>

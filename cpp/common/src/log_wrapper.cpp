@@ -1,5 +1,5 @@
 /// @file   log_wrapper.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/11/2012 06:57:11 PM
 
 #include "../include/common/log_wrapper.h"

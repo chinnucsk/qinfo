@@ -1,3 +1,7 @@
+/// @file   connection.cpp
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @date   Created on: 01/11/2012 09:30:24 PM
+
 #include "precomp.h"
 #include "connection.h"
 

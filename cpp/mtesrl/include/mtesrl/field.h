@@ -1,5 +1,5 @@
 /// @file   field.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/05/2012 08:48:44 AM
 
 #ifndef MTESRL_FIELD_H

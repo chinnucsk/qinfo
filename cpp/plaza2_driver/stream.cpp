@@ -1,3 +1,8 @@
+/// @file   stream.cpp
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @date   Created on: 01/11/2012 09:31:59 PM
+
+
 #include "precomp.h"
 #include "stream.h"
 

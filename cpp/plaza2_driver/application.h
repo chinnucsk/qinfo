@@ -1,3 +1,8 @@
+/// @file   application.h
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @date   Created on: 01/11/2012 09:30:05 PM
+
+
 #ifndef PLAZA2_DRIVER_APPLICATION_H
 #define PLAZA2_DRIVER_APPLICATION_H
 
@@ -13,14 +18,14 @@ using namespace P2ClientGateMTA;
 class Application : private boost::noncopyable
 {
 private:
-	Application();
+   Application();
 public:
    static Application* instance();
    void init(std::string const& iniFile);
    operator bool () const;
-	~Application();
+   ~Application();
 private:
-	IP2ApplicationPtr m_app;
+   IP2ApplicationPtr m_app;
 };
 
 } // namespace Plaza2

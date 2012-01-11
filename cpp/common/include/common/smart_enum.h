@@ -1,6 +1,6 @@
 /**
  * @file smart_enum.hpp
- * @author Dmitry Melnikov (dmitryme@cqg.com)
+ * @author Dmitry Melnikov (dmitryme@gmail.com)
  * @version $Id: smart_enum.h,v 1.10 2009/12/03 16:44:54 dmitryme Exp $
  */
 

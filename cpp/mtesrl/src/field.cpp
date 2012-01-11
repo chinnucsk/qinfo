@@ -1,5 +1,5 @@
 /// @file   field.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/05/2012 08:51:45 AM
 
 #include "../include/mtesrl/precomp.h"

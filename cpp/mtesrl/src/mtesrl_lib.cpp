@@ -1,5 +1,5 @@
 /// @file   mtesrl.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/09/2012 01:31:57 PM
 
 #include "../include/mtesrl/public.h"

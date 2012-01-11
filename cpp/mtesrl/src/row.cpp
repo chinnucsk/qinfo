@@ -1,5 +1,5 @@
 /// @file   row.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/10/2012 10:40:28 PM
 
 #include "../include/mtesrl/row.h"

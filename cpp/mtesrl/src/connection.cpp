@@ -1,5 +1,5 @@
 /// @file   connection.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/03/2012 05:26:41 PM
 
 #include "../../include/mtesrl/precomp.h"

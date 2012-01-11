@@ -1,4 +1,4 @@
-/// @file   table.cpp/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @file   table.cpp/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/04/2012 08:38:11 AM
 
 #include "../include/mtesrl/precomp.h"

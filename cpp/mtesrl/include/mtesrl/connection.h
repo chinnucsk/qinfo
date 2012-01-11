@@ -1,5 +1,5 @@
 /// @file   connection.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/03/2012 05:11:01 PM
 
 #ifndef MTESRL_CONNECTION_H

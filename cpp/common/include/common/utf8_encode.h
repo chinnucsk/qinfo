@@ -1,5 +1,5 @@
 /// @file   utf8_encode.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 06/24/2011 06:28:04 PM
 /// @version $Id: Exp $
 

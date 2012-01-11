@@ -1,5 +1,6 @@
-// cdp_wrapper_dll.cpp : Defines the entry point for the DLL application.
-//
+/// @file   plaza2_driver_dll.cpp
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @date   Created on: 01/11/2012 09:30:56 PM
 
 #include "precomp.h"
 #include "application.h"
@@ -25,27 +26,27 @@ void process_disconnect();
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
-					 )
+                )
 {
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
-	}
+   switch (ul_reason_for_call)
+   {
+   case DLL_PROCESS_ATTACH:
+   case DLL_THREAD_ATTACH:
+   case DLL_THREAD_DETACH:
+   case DLL_PROCESS_DETACH:
+      break;
+   }
     return TRUE;
 }
 
 struct PortData
 {
-	ErlDrvPort port;
+   ErlDrvPort port;
 };
 
 PLAZA2_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
 {
-	PortData* d = (PortData*)driver_alloc(sizeof(PortData));
+   PortData* d = (PortData*)driver_alloc(sizeof(PortData));
     d->port = port;
     if (!g_port)
     {
@@ -69,36 +70,36 @@ PLAZA2_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
       using namespace ei_cxx;
       for(size_t i = 1; i < ev->vsize; ++i)
       {
-		   IBinary bin(ev->binv[i]);
-		   if (bin.get_type() == IBinary::ErlSmallTuple || bin.get_type() == IBinary::ErlLargeTuple)
-		   {
-			   ITuple tuple;
-			   bin >> tuple;
-			   Atom command_name;
-			   tuple >> command_name;
-			   if (command_name.get() == "disconnect")
-			   {
-				   process_disconnect();
-			   }
-			   else if (command_name.get() == "connect")
-			   {
-				   process_connect(tuple);
-			   }
-			   else if (command_name.get() == "log_level")
-			   {
+         IBinary bin(ev->binv[i]);
+         if (bin.get_type() == IBinary::ErlSmallTuple || bin.get_type() == IBinary::ErlLargeTuple)
+         {
+            ITuple tuple;
+            bin >> tuple;
+            Atom command_name;
+            tuple >> command_name;
+            if (command_name.get() == "disconnect")
+            {
+               process_disconnect();
+            }
+            else if (command_name.get() == "connect")
+            {
+               process_connect(tuple);
+            }
+            else if (command_name.get() == "log_level")
+            {
                Atom llevel;
                tuple >> llevel;
                log_level = LogLevel::fromString(llevel.get());
-			   }
-			   else
-			   {
-				   THROW(std::runtime_error, "Unknown command");
-			   }
-		   }
-		   else
-		   {
-			   THROW(std::runtime_error, "Unknown command");
-		   }
+            }
+            else
+            {
+               THROW(std::runtime_error, "Unknown command");
+            }
+         }
+         else
+         {
+            THROW(std::runtime_error, "Unknown command");
+         }
       }
    }
    catch(std::exception const& err)

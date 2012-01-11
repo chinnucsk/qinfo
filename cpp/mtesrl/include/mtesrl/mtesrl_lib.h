@@ -1,5 +1,5 @@
 /// @file   mtesrl.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/03/2012 11:32:59 AM
 
 #ifndef MTESRL_LIB_H
