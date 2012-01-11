@@ -19,7 +19,9 @@ start() ->
 
 init(_Args) ->
    create_db(),
+   pg:create(?group_micex_instruments),
    pg:create(?group_rts_instruments),
+   pg:join(?group_micex_instruments, self()),
    pg:join(?group_rts_instruments, self()),
    {ok, undef}.
 
