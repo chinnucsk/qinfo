@@ -1,4 +1,4 @@
--module(plaza2_srv).
+-module(rts_plaza2_srv).
 
 -behaviour(gen_server).
 
@@ -34,13 +34,13 @@
 %% ========= public ============
 
 start() ->
-   gen_server:start_link({global, ?qinfo_plaza2}, ?MODULE, [], []).
+   gen_server:start_link({global, ?qinfo_rts_plaza2}, ?MODULE, [], []).
 
 init(_Args) ->
    {ok, #service{settings = SList}} = metadata:register_service(
-      ?qinfo_plaza2, ?def_settings, ?def_schedule),
+      ?qinfo_rts_plaza2, ?def_settings, ?def_schedule),
    Settings = extract_settings(SList),
-   error_logger:info_msg("~p settings: ~p.~n", [?qinfo_plaza2, Settings]),
+   error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
    ok = erl_ddll:load_driver(".", ?plaza2_driver_dll),
    DrvPort = open(Settings#settings.ini_file, Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
       Settings#settings.passwd, Settings#settings.log_level,
