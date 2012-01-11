@@ -70,6 +70,13 @@ void Table::init(char const*& data)
          THROW(std::runtime_error, FMT("Required field %1% not found among table %2% fields", *it % m_name));
       }
    }
+   if (m_outRow.size() == 0) // RequiredOutFields is empty, so all fields are required
+   {
+      for(OutFields::const_iterator jt = m_outFields.begin(); jt != m_outFields.end(); ++jt)
+      {
+         m_outRow.addField(*jt);
+      }
+   }
 }
 
 //---------------------------------------------------------------------------------------------------------------------//
@@ -172,7 +179,7 @@ void Table::parse(char const*& data)
       }
       catch(...)
       {
-         MTESRL_LOG_ERROR(g_port, "Unexpected exception from callback.");
+         MTESRL_LOG_ERROR(m_cback, "Unexpected exception from callback.");
       }
    }
    m_cback.onTableDataEnd(m_name);
