@@ -235,8 +235,7 @@ MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 
 // {connect, LibraryFullName, LogLevel, ConnParams, Tables}.
 //    LibraryFullName = String()
-//    ConnParams = [ConnParam]
-//    ConnParam = {ParamName, Value}
+//    ConnParams = binary()
 //    ParamName = String()
 //    Value     = String()
 //    LogLevel  = atom()
@@ -259,31 +258,20 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
    Atom logLevel;
    t >> logLevel;
 
-   IList connParams;
+   ei_cxx::bytes connParams;
    t >> connParams;
-   size_t sz = connParams.size();
-   std::string connStr;
-   for(size_t i = 0; i < sz; ++i)
-   {
-      ITuple param;
-      connParams >> param;
-      std::string paramName;
-      std::string paramValue;
-      param >> paramName >> paramValue;
-      connStr += paramName + '=' + paramValue + "\r\n";
-   }
    *app = new MicexApplication(libFullName, LogLevel::fromString(logLevel.get()));
 
    IList tables;
    t >> tables;
-   sz = tables.size();
+   size_t sz = tables.size();
    for(size_t i = 0; i < sz; ++i)
    {
       ITuple table;
       tables >> table;
       addTable(*app, table);
    }
-   (*app)->open(connStr);
+   (*app)->open(std::string((char*)&connParams[0], connParams.size());
 }
 
 void addTable(MicexApplication* app, ei_cxx::ITuple& table)
