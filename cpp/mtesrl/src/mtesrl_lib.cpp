@@ -2,7 +2,7 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/09/2012 01:31:57 PM
 
-#include "../include/mtesrl/public.h"
+#include "../include/mtesrl/mtesrl_lib.h"
 
 #include <sstream>
 

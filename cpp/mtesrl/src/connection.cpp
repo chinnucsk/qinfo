@@ -2,9 +2,10 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/03/2012 05:26:41 PM
 
-#include "../../include/mtesrl/precomp.h"
-#include "../../include/mtesrl/connection.h"
-#include "../../include/mtesrl/connection_callback.h"
+#include "../include/mtesrl/precomp.h"
+#include "../include/mtesrl/mtesrl_lib.h"
+#include "../include/mtesrl/connection.h"
+#include "../include/mtesrl/connection_callback.h"
 
 #include <common/log_wrapper.h>
 #include <common/exception.h>

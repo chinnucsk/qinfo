@@ -83,6 +83,5 @@ if (log_level >= LogLevel::error)           \
    ost << Str;                              \
    cback.onLog(LogLevel::error, ost.str()); \
 }
-#endif
 
 #endif // MTESRL_PRECOMP_H

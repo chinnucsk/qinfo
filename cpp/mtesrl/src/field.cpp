@@ -5,7 +5,7 @@
 #include "../include/mtesrl/precomp.h"
 #include "../include/mtesrl/field.h"
 
-#include <common/excepion.h>
+#include <common/exception.h>
 
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/lambda/lambda.hpp>

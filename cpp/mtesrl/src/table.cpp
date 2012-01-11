@@ -1,10 +1,13 @@
-/// @file   table.cpp/// @author Dmitry S. Melnikov, dmitryme@gmail.com
+/// @file   table.cpp
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/04/2012 08:38:11 AM
 
 #include "../include/mtesrl/precomp.h"
 #include "../include/mtesrl/table.h"
 #include "../include/mtesrl/connection_callback.h"
 #include "../include/mtesrl/mtesrl_lib.h"
+
+#include <common/exception.h>
 
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>
@@ -41,7 +44,7 @@ void Table::init(char const*& data)
    if ((flags & MteTableUpdatable) == 0)
    {
       m_refreshEnabled = false;
-      MTESRL_LOG_WARN(g_port, FMT("Table %1% doesn't support refreshes.", m_name));
+      MTESRL_LOG_WARN(m_cback, FMT("Table %1% doesn't support refreshes.", m_name));
    }
    int32_t numFields = get_int32(data);
    for(int32_t i = 0; i < numFields; ++i)
