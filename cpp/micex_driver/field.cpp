@@ -167,7 +167,7 @@ boost::optional<boost::int64_t> OutField::getAsInt64() const
    {
       return boost::none;
    }
-   std::string tmp = boost::trim_left_copy_if(m_value, boost::lambda::_1 == '0');
+   std::string tmp = boost::trim_left_copy_if(*m_value, boost::lambda::_1 == '0');
    if (tmp.empty())
    {
       tmp = "0";
@@ -182,7 +182,7 @@ boost::optional<float> OutField::getAsFloat(unsigned int precision) const
    {
       return boost::none;
    }
-   float const tmp = boost::lexical_cast<float>(boost::trim_left_copy_if(m_value, boost::lambda::_1 == '0'));
+   float const tmp = boost::lexical_cast<float>(boost::trim_left_copy_if(*m_value, boost::lambda::_1 == '0'));
    return boost::optional<float>(tmp / pow10(precision));
 }
 
