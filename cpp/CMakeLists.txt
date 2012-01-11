@@ -15,8 +15,7 @@ aux_source_directory(plaza2_driver PLAZA2_DRIVER_SRC)
 aux_source_directory(micex_driver MICEX_DRIVER_SRC)
 
 set(MICEX_DRIVER_EXAMPLE_SRC micex_driver/example/micex_driver_example.cpp micex_driver/connection.cpp
-   micex_driver/table.cpp micex_driver/field.cpp micex_driver/field.cpp micex_driver/precomp.cpp
-   micex_driver/connection_callback.cpp)
+   micex_driver/table.cpp micex_driver/field.cpp micex_driver/field.cpp micex_driver/precomp.cpp)
 
 add_library(mtesrl STATIC ${MTESRL_SRC})
 add_library(common STATIC ${COMMON_SRC})
