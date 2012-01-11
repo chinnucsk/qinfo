@@ -89,7 +89,7 @@ private:
       t << Atom("data_end") << tblName;
       t.send(g_port);
    }   
-   virtual void onTableData(std::string const& tblName, OutRow const& row)
+   virtual void onTableData(std::string const& tblName, Row const& row)
    {
       using namespace ei_cxx;
       if (tblName == "SECURITIES")
@@ -271,7 +271,7 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
       tables >> table;
       addTable(*app, table);
    }
-   (*app)->open(std::string((char*)&connParams[0], connParams.size());
+   (*app)->open(std::string((char*)&connParams[0], connParams.size()));
 }
 
 void addTable(MicexApplication* app, ei_cxx::ITuple& table)
@@ -301,7 +301,7 @@ void addTable(MicexApplication* app, ei_cxx::ITuple& table)
    {
       std::string item;
       reqOutFieldsList >> item;
-      reqOutFields.insert(item);
+      reqOutFields.push_back(item);
    }
    app->addTable(tblName, completeLoad, refreshEnabled, inValues, reqOutFields);
 }
