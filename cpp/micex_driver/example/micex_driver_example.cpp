@@ -30,7 +30,7 @@ public:
    {
       std::cout << "Table data end: " << tblName << std::endl;
    }
-   virtual void onTableData(std::string const& tblName, micex::OutRow const& row)
+   virtual void onTableData(std::string const& tblName, micex::Row const& row)
    {
       if (tblName == "SECURITIES")
       {
