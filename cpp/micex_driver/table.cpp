@@ -167,7 +167,14 @@ void Table::parse(char const*& data)
          field->parse(data);
       }
       row = reinterpret_cast<MTERow const*>(data);
-      m_cback.onTableData(m_name, outRow);
+      try
+      {
+         m_cback.onTableData(m_name, outRow);
+      }
+      catch(...)
+      {
+         LOG_ERROR(g_port, "Unexpected exception from callback.");
+      }
    }
    m_cback.onTableDataEnd(m_name);
 }
