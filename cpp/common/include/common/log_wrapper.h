@@ -27,7 +27,7 @@ if (log_level >= LogLevel::debug)       \
    ost << Str;                          \
    OTuple t(3);                         \
    t << Atom("log")                     \
-     << Atom("debug") << ost.str();     \
+     << Atom(LogLevel::toString(LogLevel::debug) << ost.str();     \
    t.send(port);                        \
 }
 
@@ -39,7 +39,7 @@ if (log_level >= LogLevel::info)       \
    ost << Str;                         \
    OTuple t(3);                        \
    t << Atom("log")                    \
-     << Atom("info") << ost.str();     \
+     << Atom(LogLevel::toString(LogLevel::info) << ost.str();     \
    t.send(port);                       \
 }
 
@@ -51,7 +51,7 @@ if (log_level >= LogLevel::warning)    \
    ost << Str;                         \
    OTuple t(3);                        \
    t << Atom("log")                    \
-     << Atom("warninig") << ost.str(); \
+     << Atom(LogLevel::toString(LogLevel::warning) << ost.str(); \
    t.send(port);                       \
 }
 
@@ -61,10 +61,10 @@ if (log_level >= LogLevel::error)       \
    using namespace ei_cxx;              \
    std::ostringstream ost;              \
    ost << Str;                          \
-   OTuple t(3);                         \
-   t << Atom("log")                     \
-     << Atom("error") << ost.str();     \
-   t.send(port);                        \
+   OTuple t(3);                                                \
+   t << Atom("log")                                            \
+     << Atom(LogLevel::toString(LogLevel::error) << ost.str(); \
+   t.send(port);                                               \
 }
 
 #endif // COMMON_ERL_LOG_WRAPPER_H
