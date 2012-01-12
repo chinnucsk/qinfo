@@ -1,9 +1,8 @@
 /// @file   micex_driver_dll.cpp
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/04/2012 08:50:51 AM
 
-#include "connection.h"
-#include "connection_callback.h"
+#include "micex_application.h"
 #include "micex_driver_dll.h"
 
 #include <ei_cxx/tuple.h>
@@ -13,10 +12,7 @@
 
 #include <boost/cstdint.hpp>
 
-#include <erl_driver.h>
 #include <ei.h>
-
-using namespace micex;
 
 ei_cxx::Port g_port;
 
@@ -25,117 +21,6 @@ class MicexApplication;
 void process_connect(MicexApplication**, ei_cxx::ITuple&);
 void process_disconnect(MicexApplication*);
 void addTable(MicexApplication* app, ei_cxx::ITuple& table);
-
-void sendError(std::string const& err)
-{
-   using namespace ei_cxx;
-   OTuple t(2);
-   t  << Atom("error")
-      << err;
-   t.send(g_port);
-}
-
-void sendOk(std::string const& text)
-{
-   using namespace ei_cxx;
-   OTuple t(2);
-   t << Atom("ok") << Atom(text);
-   t.send(g_port);
-}
-
-class MicexApplication : public ConnectionCallback
-{
-public:
-   MicexApplication(std::string const& fileName, LogLevel::type_t llevel)
-      : m_conn(fileName, *this, llevel)
-   {
-   }
-   void addTable(
-         std::string const& name,
-         bool completeLoad,
-         bool refreshEnabled,
-         InValues const& inValues,
-         RequiredOutFields const& reqOutFields)
-   {
-      m_conn.addTable(name, completeLoad, refreshEnabled, inValues, reqOutFields);
-   }
-   void open(std::string const& connParams)
-   {
-      m_conn.open(connParams);
-   }
-   void close()
-   {
-      m_conn.close();
-   }
-private:
-   virtual void onConnectionStatus(ConnectionStatus::type_t status)
-   {
-      using namespace ei_cxx;
-      OTuple t(2);
-      t << Atom("connection_status") << ConnectionStatus::toString(status);
-      t.send(g_port);
-   }
-   virtual void onTableDataBegin(std::string const& tblName)
-   {
-      using namespace ei_cxx;
-      OTuple t(2);
-      t << Atom("data_begin") << tblName;
-      t.send(g_port);
-   }
-   virtual void onTableDataEnd(std::string const& tblName)
-   {
-      using namespace ei_cxx;
-      OTuple t(2);
-      t << Atom("data_end") << tblName;
-      t.send(g_port);
-   }   
-   virtual void onTableData(std::string const& tblName, Row const& row)
-   {
-      using namespace ei_cxx;
-      if (tblName == "SECURITIES")
-      {
-         std::string key = *row.getField("SECBOARD")->getAsString() + '_' + *row.getField("SECCODE")->getAsString();
-         if (m_decimals.end() == m_decimals.find(key))
-         {
-            m_decimals.insert(std::make_pair(key, (unsigned int)*row.getField("DECIMALS")->getAsInt64()));
-         }
-      }
-      OTuple erlRow(row.size() + 2);
-      erlRow << Atom("data_row") << Atom(tblName);
-      OutFieldPtr fld = row.first();
-      while(fld)
-      {
-         if (fld->type() == FieldType::charType || fld->type() == FieldType::timeType || fld->type() == FieldType::dateType)
-         {
-            erlRow << *fld->getAsString();
-         }
-         else if (fld->type() == FieldType::intType)
-         {
-            erlRow << *fld->getAsInt64();
-         }
-         else if (fld->type() == FieldType::fixedType)
-         {
-            erlRow << *fld->getAsFloat(FixedPrec);
-         }
-         else if (fld->type() == FieldType::floatType)
-         {
-            std::string key = *row.getField("SECBOARD")->getAsString() + '_' + *row.getField("SECCODE")->getAsString();
-            Decimals::const_iterator it = m_decimals.find(key);
-            if (it == m_decimals.end())
-            {
-               THROW(std::runtime_error, FMT("Key %1% not found in decimals table", key));
-            }
-            erlRow << *fld->getAsFloat(it->second);
-         }
-         fld = row.next();
-      }
-      erlRow.send(g_port);
-   }
-private:
-   typedef std::map<std::string, unsigned int> Decimals;
-   Connection  m_conn;
-   Decimals    m_decimals;
-};
 
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  ul_reason_for_call,
@@ -179,11 +64,11 @@ MICEX_DRIVER_DLL_API void stop(ErlDrvData handle)
       d->app->close();
       delete d->app;
       d->app = NULL;
-   }
+
    g_port = NULL;
 }
 
-//------------------------------------------------------------------------------------------------------------------------//
+P//------------------------------------------------------------------------------------------------------------------------//
 MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 {
    try
@@ -229,7 +114,7 @@ MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
    }
    catch(std::exception const& err)
    {
-      sendError(err.what());
+      ERL_LOG_ERROR(g_port, err.what());
    }
 }
 
@@ -260,7 +145,7 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
 
    ei_cxx::bytes connParams;
    t >> connParams;
-   *app = new MicexApplication(libFullName, LogLevel::fromString(logLevel.get()));
+   *app = new MicexApplication(g_port, libFullName, LogLevel::fromString(logLevel.get()));
 
    IList tables;
    t >> tables;
@@ -277,7 +162,7 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
 void addTable(MicexApplication* app, ei_cxx::ITuple& table)
 {
    using namespace ei_cxx;
-   
+
    std::string tblName;
    bool completeLoad;
    bool refreshEnabled;

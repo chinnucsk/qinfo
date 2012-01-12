@@ -1,5 +1,5 @@
 /// @file   micex_driver_dll.h
-/// @author Dmitry S. Melnikov, dmitryme@cqg.com
+/// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/04/2012 08:49:47 AM
 
 #include <erl_driver.h>
