@@ -64,11 +64,11 @@ MICEX_DRIVER_DLL_API void stop(ErlDrvData handle)
       d->app->close();
       delete d->app;
       d->app = NULL;
-
+   }
    g_port = NULL;
 }
 
-P//------------------------------------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------------------------//
 MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 {
    try
@@ -99,7 +99,7 @@ MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
             {
                Atom llevel;
                tuple >> llevel;
-               setLogLevel(LogLevel::fromString(llevel.get()));
+               log_level = LogLevel::fromString(llevel.get());
             }
             else
             {
@@ -162,6 +162,7 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
 void addTable(MicexApplication* app, ei_cxx::ITuple& table)
 {
    using namespace ei_cxx;
+   using namespace mtesrl;
 
    std::string tblName;
    bool completeLoad;

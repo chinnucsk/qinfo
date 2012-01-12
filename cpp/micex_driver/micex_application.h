@@ -6,8 +6,8 @@
 #define MICEX_DRIVER_APPLICATION_H
 
 #include <mtesrl/connection.h>
-#include <mtesrl/connection_status.h>
-#include "instrument.h"
+#include <mtesrl/connection_callback.h>
+#include "instruments.h"
 
 #include <common/log_wrapper.h>
 
@@ -38,7 +38,7 @@ public:
    void open(std::string const& connParams);
    void close();
 private:
-   virtual void onConnectionStatus(mesrl::ConnectionStatus::type_t status);
+   virtual void onConnectionStatus(mtesrl::ConnectionStatus::type_t status);
    virtual void onTableDataBegin(std::string const& tblName);
    virtual void onTableDataEnd(std::string const& tblName);
    virtual void onTableData(std::string const& tblName, mtesrl::Row const& row);
@@ -47,7 +47,7 @@ private:
    typedef std::map<std::string, unsigned int> Decimals;
    mtesrl::Connection   m_conn;
    InstrumentsPtr       m_instruments;
-   ei_cxx::Port         m_port;
+   ei_cxx::Port&        m_port;
 };
 
 #endif // MICEX_DRIVER_APPLICATION_H

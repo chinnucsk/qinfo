@@ -10,6 +10,7 @@
 
 //---------------------------------------------------------------------------------------------------------------------//
 MicexApplication::MicexApplication(ei_cxx::Port& port, std::string const& fileName, LogLevel::type_t llevel)
+   :   m_port(port), m_conn(fileName, *this, llevel)
 {
 }
 
@@ -21,10 +22,10 @@ void MicexApplication::addTable(
       mtesrl::InValues const& inValues,
       mtesrl::RequiredOutFields const& reqOutFields)
 {
-   m_conn.addTable(name, completeLoad, reqOutFields, inValues, reqOutFields);
+   m_conn.addTable(name, completeLoad, refreshEnabled, inValues, reqOutFields);
    if (name == "SECURITIES")
    {
-      m_instruments = InstrumentsPtr(new Instrument(m_port, reqOutFields));
+      m_instruments = InstrumentsPtr(new Instruments(m_port, reqOutFields));
    }
 }
 
@@ -46,7 +47,7 @@ void MicexApplication::onConnectionStatus(mtesrl::ConnectionStatus::type_t statu
 {
    using namespace ei_cxx;
    OTuple t(2);
-   t << Atom("connection_status") << ConnectionStatus::toString(status);
+   t << Atom("connection_status") << mtesrl::ConnectionStatus::toString(status);
    t.send(m_port);
 }
 
@@ -85,7 +86,7 @@ void MicexApplication::onTableData(std::string const& tblName, mtesrl::Row const
       while(fld)
       {
          if (fld->type() == FieldType::charType || fld->type() == FieldType::timeType ||
-               fld->type() == FieldType::timeType || fld->type() == dateType)
+               fld->type() == FieldType::timeType || fld->type() == FieldType::dateType)
          {
             erlRow << *fld->getAsString();
          }
@@ -99,14 +100,12 @@ void MicexApplication::onTableData(std::string const& tblName, mtesrl::Row const
          }
          else if (fld->type() == FieldType::floatType)
          {
-            std::string const key = *row.getAsStirng("SECBOARD")->getAsString() + "_" +
-               *row.getAsString("SECCODE")->getAsString();
-            erlRow << *fld->getAsFloat(m_instruments->getDecimals(key));
+            erlRow << *fld->getAsFloat(m_instruments->getDecimals(row));
          }
          fld = row.next();
       }
+      erlRow.send(m_port);
    }
-   erlRow.send(m_port);
 }
 
 //---------------------------------------------------------------------------------------------------------------------//

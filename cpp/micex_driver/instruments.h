@@ -27,7 +27,7 @@ class Port;
 class Instrument
 {
 public:
-   Instrument(ei_cxx:Port& port, mtesrl::RequireqOutFields const& reqOutFields);
+   Instrument(ei_cxx::Port& port, mtesrl::RequiredOutFields const& reqOutFields);
    void onTableData(mtesrl::Row const& row);
    void reset();
    template<typename T>
@@ -71,7 +71,7 @@ public:
    Instruments(ei_cxx::Port& port, mtesrl::RequiredOutFields const& reqOutFields);
    void onTableData(mtesrl::Row const& row);
    void reset();
-   unsigned int getDecimals(std::string const& key);
+   unsigned int getDecimals(mtesrl::Row const& row);
 private:
    typedef std::map<std::string, InstrumentPtr> Container;
    ei_cxx::Port&              m_port;
