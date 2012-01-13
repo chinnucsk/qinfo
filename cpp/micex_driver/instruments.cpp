@@ -11,6 +11,7 @@
 
 #include <boost/cstdint.hpp>
 
+//---------------------------------------------------------------------------------------------------------------------//
 Instrument::Instrument(ei_cxx::Port& port, mtesrl::RequiredOutFields const& reqOutFields)
    :   m_port(port), m_decimals(mtesrl::FixedPrec)
 {
