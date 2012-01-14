@@ -1,9 +1,0 @@
-{
-	'src/*',
-	[
-		debug_info,
-		{i, "../../../common/include"},
-		{outdir, "ebin"},
-		{nowarn_unused_function, {get_settins, 1}}
-	]
-}.

@@ -1,0 +1,10 @@
+{application, metadata,
+   [
+      {description, "metadata"},
+      {vsn, "0.1"},
+      {registered, [metadata_sup, 'qinfo.metadata']},
+      {applications, [kernel, stdlib]},
+      {mod, {metadata_app, []}},
+      {start_phases, []}
+   ]
+}.

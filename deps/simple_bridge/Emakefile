@@ -1,7 +1,0 @@
-{['src/*', 'src/inets_bridge_modules/*'],
-	[
-	   {i, "include"},
-		debug_info,
-		{outdir, "ebin"}
-	]
-}.

@@ -1,0 +1,8 @@
+{application,common,
+             [{description,[]},
+              {vsn,"1"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {mod,{common_app,[]}},
+              {env,[]},
+              {modules,[]}]}.
