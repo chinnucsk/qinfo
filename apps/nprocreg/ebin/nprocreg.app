@@ -1,7 +1,0 @@
-{application,nprocreg,
-             [{description,"Minimal Distributed Erlang Process Registry."},
-              {vsn,"0.2.0"},
-              {applications,[kernel,stdlib]},
-              {registered,[]},
-              {mod,{nprocreg_app,[]}},
-              {modules,[nprocreg,nprocreg_app,nprocreg_sup]}]}.

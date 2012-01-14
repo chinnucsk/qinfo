@@ -1,9 +1,0 @@
-{application,metadata,
-             [{description,"metadata"},
-              {vsn,"0.1"},
-              {registered,[metadata_sup,'qinfo.metadata']},
-              {applications,[kernel,stdlib]},
-              {mod,{metadata_app,[]}},
-              {start_phases,[]},
-              {modules,[index,instruments,metadata,metadata_app,metadata_srv,
-                        metadata_sup,settings,site_app,statistics]}]}.
