@@ -1,30 +1,19 @@
 #!/bin/bash
 
-mkdir -p rel/ebin/metadata
-mkdir -p rel/ebin/nitrogen_core
-mkdir -p rel/ebin/nprocreg
-mkdir -p rel/ebin/simple_bridge
-mkdir -p rel/ebin/site
+./rebar compile
 
-cd deps/nitrogen_core
-erl -pa ebin -make
-cp ebin/*.beam ../../rel/ebin/nitrogen_core
+mkdir -p build/ebin/nitrogen_core/ebin
+mkdir -p build/ebin/nprocreg/ebin
+mkdir -p build/ebin/simple_bridge/ebin
+mkdir -p build/ebin/metadata/ebin
+mkdir -p build/ebin/www
 
-cd ../nprocreg
-erl -pa ebin -make
-cp ebin/*.beam ../../rel/ebin/nprocreg
-cp src/nprocreg.app ../../rel/ebin
-
-cd ../simple_bridge
-erl -pa ebin -make
-cp ebin/*.beam ../../rel/ebin/simple_bridge
-
-cd ../../metadata
-
-erl -make
-cp ebin/*.beam ../rel/ebin/metadata
-cp src/metadata.app ../rel/ebin
-cp -r src/web_ui/templates ../rel/ebin/site
-cp -r src/web_ui/static ../rel/ebin/site
-
-cd ../..
+cp -r apps/common/ebin/*.app build/ebin
+cp -pr apps/nitrogen_core/ebin/*.beam build/ebin/nitrogen_core/ebin
+cp -r apps/nprocreg/ebin/*.beam build/ebin/nprocreg/ebin
+cp -r apps/nprocreg/ebin/*.app build/ebin/
+cp -r apps/simple_bridge/ebin/*.beam build/ebin/simple_bridge/ebin
+cp -r apps/simple_bridge/ebin/*.app build/ebin/
+cp -r apps/metadata/ebin/*.beam build/ebin/metadata/ebin
+cp -r apps/metadata/ebin/*.app build/ebin/
+cp -r apps/metadata/src/www/static/* build/ebin/www

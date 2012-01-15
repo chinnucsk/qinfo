@@ -1,11 +1,11 @@
 -module(statistics).
 
--include ("../../nitrogen_core/include/wf.hrl").
+-include_lib("nitrogen_core/include/wf.hrl").
 
 -export([main/0, layout/0]).
 
 main() ->
-   #template{ file="./site/templates/page.html"}.
+   #template{ file="./www/page.html"}.
 
 layout() ->
    #panel{
