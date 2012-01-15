@@ -9,6 +9,8 @@
 -include_lib("common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
+-on_load(load_dll/0).
+
 -define(def_settings,
    [
       {'SERVICE',
@@ -46,7 +48,6 @@ init(_Args) ->
    {ok, #service{settings = SList}} = metadata:register_service(?qinfo_micex_mtesrl, ?def_settings, ?def_schedule),
    Settings = extract_setting(SList),
    error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl, Settings]),
-   ok = erl_ddll:load_driver(".", ?micex_driver_dll),
    DrvPort = open(Settings),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.
 
@@ -70,6 +71,17 @@ code_change(_OldVsn, State, _Extra) ->
    {ok, State}.
 
 %% ==================== private =========================
+
+load_dll() ->
+   case erl_ddll:load_driver(code:priv_dir(micex_mtesrl), ?micex_driver_dll) of
+      ok ->
+         ok;
+      {error, already_loaded} ->
+         ok;
+      Err = {error, _} ->
+         throw(Err)
+   end.
+
 open(#settings{lib_full_path = LibFullPath, log_level = LogLevel, conn_params = ConnParams, tables = Tables}) ->
    DrvPort = erlang:open_port({spawn, ?micex_driver_dll}, [binary]),
    erlang:port_command(DrvPort, term_to_binary({connect, LibFullPath, LogLevel, ConnParams, Tables})),

@@ -5,7 +5,7 @@
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("metadata.hrl").
--include("names.hrl").
+-include_lib("common/include/names.hrl").
 
 -record(m_instrument, {name, full_name, exch, expiration = undef, commodity, limit_up, limit_down,
       lot_size, type, enabled, ref}).
@@ -32,8 +32,8 @@ handle_call({register, ServiceName, Settings, Schedule}, _From, State) ->
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
          Msg = #service{service = ServiceName, settings = Settings},
          {reply, {ok, Msg}, State};
-      [#m_service{service = Service, settings = Settings}] ->
-         Msg = #service{service = Service, settings = Settings},
+      [#m_service{service = Service, settings = OldSettings}] ->
+         Msg = #service{service = Service, settings = OldSettings},
          {reply, {ok, Msg}, State}
    end;
 

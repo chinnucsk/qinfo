@@ -11,18 +11,19 @@
 
 -define(def_settings,
    [
-      {'SERVICE',
+      {
+         'SERVICE',
          [
             {"LogLevel", "info", "possible values are: info, debug, warning, error"}
          ]
       },
-      {'PLAZA2',
+      {
+         'PLAZA2',
          [
-            {"IniFile", "P2ClientGate.ini"},
             {"Host", "192.168.1.99", "Plaza2 router host"},
-            {"Port", 4001, "Plaza2 router port"},
+            {"Port", "4001", "Plaza2 router port"},
             {"Application", "qinfo", "name of this application"},
-            {"Password", "", "should be set if router is on another box"}
+            {"Password", "123", "should be set if router is on another box"}
          ]
       }
    ]).
@@ -38,7 +39,7 @@
       {sun, not_working}
    ]).
 
--record(settings, {ini_file, host, port, app_name, passwd, log_level}).
+-record(settings, {host, port, app_name, passwd, log_level}).
 -record(state, {drv_port, settings}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
       isin, name, commodity, limit_up, limit_down, lot_size, expiration, signs}).
@@ -53,11 +54,12 @@ init(_Args) ->
       ?qinfo_rts_plaza2, ?def_settings, ?def_schedule),
    Settings = extract_settings(SList),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
-   ok = erl_ddll:load_driver(".", ?plaza2_driver_dll),
-   DrvPort = open(Settings#settings.ini_file, Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
+   IniDir = code:lib_dir(rts_plaza2) ++ "/ini/",
+   load_dll(),
+   DrvPort = open(IniDir ++ "P2ClientGate.ini", Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
       Settings#settings.passwd, Settings#settings.log_level,
       [
-         {"FORTS_FUTINFO_REPL", "fut_info.ini", 'RT_COMBINED_DYNAMIC'}
+         {"FORTS_FUTINFO_REPL", IniDir ++ "fut_info.ini", 'RT_COMBINED_DYNAMIC'}
       ]
    ),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.
@@ -85,6 +87,14 @@ code_change(_OldVsn, State, _Extra) ->
    {ok, State}.
 
 %% ========= private ===========
+
+load_dll() ->
+   case erl_ddll:load_driver(code:priv_dir(rts_plaza2), ?plaza2_driver_dll) of
+     {error, already_loaded} ->
+        ok;
+     Res ->
+        Res
+   end.
 
 open(IniFile, Host, Port, AppName, Password, LogLevel, Streams) ->
    DrvPort = erlang:open_port({spawn, ?plaza2_driver_dll}, [binary]),
@@ -125,16 +135,16 @@ processInfo(
 
 processInfo(#'FORTS_FUTINFO_REPL.fut_sess_contents'{}) ->
    ok;
-processInfo({log_info, Str}) ->
+processInfo({log, info, Str}) ->
    error_logger:info_msg(Str);
-processInfo({log_debug, Str}) ->
+processInfo({log, debug, Str}) ->
    error_logger:info_msg(Str);
-processInfo({log_error, Str}) ->
+processInfo({log, error, Str}) ->
    error_logger:error_msg(Str);
-processInfo({log_warn, Str}) ->
+processInfo({log, warn, Str}) ->
    error_logger:warning_msg(Str);
 processInfo(Msg) ->
-   ok.
+   error_logger:error_msg("Unexpected message: ~p", [Msg]).
 
 format_datetime(DateTime) ->
    Year = DateTime div 10000000000000,
@@ -146,9 +156,8 @@ format_datetime(DateTime) ->
    MSec = DateTime rem 1000,
    {{Year, Month, Day},{Hour, Min, Sec, MSec}}.
 
-extract_settings([{service, SList}, {plaza2, PList}]) ->
+extract_settings([{'SERVICE', SList}, {'PLAZA2', PList}]) ->
    #settings{
-      ini_file = element(2, lists:keyfind("IniFile", 1, PList)),
       host     = element(2, lists:keyfind("Host", 1, PList)),
       port     = list_to_integer(element(2, lists:keyfind("Port", 1, PList))),
       app_name = element(2, lists:keyfind("Application", 1, PList)),

@@ -1,6 +1,6 @@
 -module(metadata).
 
--include("names.hrl").
+-include_lib("common/include/names.hrl").
 
 -export([register_service/3, get_settings/1, get_instruments/2]).
 
