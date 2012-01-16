@@ -10,7 +10,7 @@
 -record(m_instrument, {name, full_name, exch, expiration = undef, commodity, limit_up, limit_down,
       lot_size, type, enabled, ref}).
 -record(m_commodity, {key, enabled = false, alias = undef}).
--record(m_service, {service, settings = [], schedule = []}).
+-record(m_service, {service, description, settings = [], schedule = []}).
 
 %% ========= public ============
 
@@ -25,10 +25,10 @@ init(_Args) ->
    pg:join(?group_rts_instruments, self()),
    {ok, undef}.
 
-handle_call({register, ServiceName, Settings, Schedule}, _From, State) ->
+handle_call({register, ServiceName, Description, Settings, Schedule}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
-         mnesia:dirty_write(#m_service{service = ServiceName, settings = Settings, schedule = Schedule}),
+         mnesia:dirty_write(#m_service{service = ServiceName, description = Description, settings = Settings, schedule = Schedule}),
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
          Msg = #service{service = ServiceName, settings = Settings},
          {reply, {ok, Msg}, State};
