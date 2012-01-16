@@ -9,17 +9,14 @@
 -include_lib("common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--define(def_settings,
-   [
+-define(def_settings, [
       {
-         'SERVICE',
-         [
+         'SERVICE', [
             {"LogLevel", "info", "possible values are: info, debug, warning, error"}
          ]
       },
       {
-         'PLAZA2',
-         [
+         'PLAZA2', [
             {"Host", "192.168.1.99", "Plaza2 router host"},
             {"Port", "4001", "Plaza2 router port"},
             {"Application", "qinfo", "name of this application"},
