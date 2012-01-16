@@ -3,7 +3,7 @@
       {description, "MICEX MTESRL line handler"},
       {vsn, "0.1"},
       {registered, [micex_mtesrl_sup, micex_mtesrl_srv]},
-      {application, [kernel, stdlib]},
+      {applications, [kernel, stdlib, metadata]},
       {mod, {micex_mtesrl_app, []}},
       {start_phases, []}
    ]
