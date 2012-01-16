@@ -9,16 +9,18 @@
 -include_lib("common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--define(def_settings,
-   [
-      {'SERVICE',
-         [
+-define(def_settings, [
+      {'SERVICE', [
             {"LibFullPath", "mtesrl.dll", "full path to mtesrl.dll library"},
             {"LogLevel", "info", "possible values are info, debug, warning, error"}
          ]
       },
-      {'MTESRL',
-         [<<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password\r\nINTERFACE=<exchange_interface>">>]}
+      {'MTESRL', [
+           {"ConnParams",
+           <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password\r\nINTERFACE=<exchange_interface>">>,
+           "connection parameters as decribed in mtesrl documentation"}
+        ]
+      }
    ]
 ).
 
@@ -125,17 +127,17 @@ format_sec_type([SecType]) when SecType == $9 orelse SecType == $A orelse SecTyp
 format_sec_type([_SecType]) ->
    unknown.
 
-extract_setting([{'SERVICE', SList}, {'MTESRL', Bin}]) ->
+extract_setting([{'SERVICE', SList}, {'MTESRL', MList}]) ->
    #settings{
       lib_full_path = element(2, lists:keyfind("LibFullPath", 1, SList)),
       log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, SList))),
-      conn_params = Bin,
+      conn_params = element(2, lists:keyfind("ConnParams", 1, MList)),
       tables =
       [
          {
             "SECURITIES", true, true,
             [{"MARKETID", "FOND"}],
-            [{"SECBOARD", "SECCODE", "SECNAME", "LOTSIZE", "DECIMALS", "SECTYPE"}]
+            ["SECBOARD", "SECCODE", "SECNAME", "LOTSIZE", "DECIMALS", "SECTYPE"]
          }
       ]
    }.
