@@ -4,16 +4,10 @@
 
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--include("metadata.hrl").
+-include_lib("metadata/include/metadata.hrl").
 -include_lib("common/include/names.hrl").
 
--record(m_instrument, {name, full_name, exch, expiration = undef, commodity, limit_up, limit_down,
-      lot_size, type, enabled, ref}).
--record(m_commodity, {key, enabled = false, alias = undef}).
--record(m_service, {service, description, settings = [], schedule = []}).
-
 %% ========= public ============
-
 start() ->
    gen_server:start_link({global, ?qinfo_metadata}, ?MODULE, [], []).
 

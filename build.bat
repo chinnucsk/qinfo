@@ -12,11 +12,11 @@ popd
 
 escript.exe rebar compile
 
-xcopy apps\line_handlers\micex\mtesrl\ebin\*.beam build\ebin\micex_mtesrl\ebin\  /Y
-xcopy apps\line_handlers\micex\mtesrl\ebin\*.app build\ebin\ /Y
-xcopy apps\line_handlers\rts\plaza2\ebin\*.beam build\ebin\rts_plaza2\ebin\  /Y
-xcopy apps\line_handlers\rts\plaza2\ebin\*.app build\ebin\  /Y
-xcopy apps\line_handlers\rts\plaza2\ini\* build\ebin\rts_plaza2\ini\ /Y
+xcopy apps\micex_mtesrl\ebin\*.beam build\ebin\micex_mtesrl\ebin\  /Y
+xcopy apps\micex_mtesrl\ebin\*.app build\ebin\ /Y
+xcopy apps\rts_plaza2\ebin\*.beam build\ebin\rts_plaza2\ebin\  /Y
+xcopy apps\rts_plaza2\ebin\*.app build\ebin\  /Y
+xcopy apps\rts_plaza2\ini\* build\ebin\rts_plaza2\ini\ /Y
 xcopy apps\metadata\ebin\*.beam build\ebin\metadata\ebin\ /Y
 xcopy apps\metadata\ebin\*.app build\ebin\ /Y
 xcopy apps\metadata\src\www\static\* build\ebin\www\ /Y

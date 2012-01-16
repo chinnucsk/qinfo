@@ -1,4 +1,8 @@
 cpp/3rd_party/boost*
 *.beam
 build.log
+<<<<<<< HEAD
 apps/*/ebin
+=======
+apps/ebin
+>>>>>>> 80e6cff6b7254f9b7a7b9c4c25bfafbd7ecbcfe2

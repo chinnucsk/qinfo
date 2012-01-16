@@ -5,13 +5,13 @@
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(plaza2_driver_dll, "plaza2_driver").
--define(serverName, {global, ?qinfo_rts_plaza2}).
+-define(server_name, {global, ?qinfo_rts_plaza2}).
 
 -include_lib("common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
 -define(def_settings, [
-      {"LogLevel", "info", "possible values are: info, debug, warning, error"}
+      {"LogLevel", "info", "possible values are: info, debug, warning, error"},
       {"Host", "192.168.1.99", "Plaza2 router host"},
       {"Port", "4001", "Plaza2 router port"},
       {"Application", "qinfo", "name of this application"},
@@ -41,7 +41,7 @@ start() ->
 
 init(_Args) ->
    {ok, #service{settings = SList}} = metadata:register_service(
-      ?serverName, "RTS Plaza2 market data", ?def_settings, ?def_schedule),
+      ?server_name, "RTS Plaza2 market data", ?def_settings, ?def_schedule),
    Settings = extract_settings(SList),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
    IniDir = code:lib_dir(rts_plaza2) ++ "/ini/",
