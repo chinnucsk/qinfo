@@ -40,6 +40,7 @@ private:
    void processTables();
 private:
    typedef std::list<TablePtr> Tables;
+   std::string                   m_libPath;
    ConnectionCallback&           m_cback;
    long                          m_connDescr;
    Tables                        m_tables;

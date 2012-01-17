@@ -40,10 +40,9 @@ void skip_enums(char const*& data)
 } // namespace
 
 //---------------------------------------------------------------------------------------------------------------------//
-Connection::Connection(std::string const& fileName, ConnectionCallback& cback, LogLevel::type_t llevel)
-   : m_cback(cback), m_connDescr(-1), m_stop(false)
+Connection::Connection(std::string const& libPath, ConnectionCallback& cback, LogLevel::type_t llevel)
+   : m_libPath(libPath), m_cback(cback), m_connDescr(-1), m_stop(false)
 {
-   MTELoadLibrary(fileName);
    log_level = llevel;
 }
 
@@ -88,6 +87,7 @@ void Connection::run(std::string const& connParams)
       {
          if (m_connDescr < MTE_OK)
          {
+            MTELoadLibrary(m_libPath);
             m_connDescr = MTEConnect(params.get(), err);
             if (m_connDescr < MTE_OK)
             {
