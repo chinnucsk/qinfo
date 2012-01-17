@@ -146,11 +146,11 @@ format_datetime(DateTime) ->
    MSec = DateTime rem 1000,
    {{Year, Month, Day},{Hour, Min, Sec, MSec}}.
 
-extract_settings([{'SERVICE', SList}, {'PLAZA2', PList}]) ->
+extract_settings(Settings) ->
    #settings{
-      host     = element(2, lists:keyfind("Host", 1, PList)),
-      port     = list_to_integer(element(2, lists:keyfind("Port", 1, PList))),
-      app_name = element(2, lists:keyfind("Application", 1, PList)),
-      passwd   = element(2, lists:keyfind("Password", 1, PList)),
-      log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, SList)))
+      host     = element(2, lists:keyfind("Host", 1, Settings)),
+      port     = list_to_integer(element(2, lists:keyfind("Port", 1, Settings))),
+      app_name = element(2, lists:keyfind("Application", 1, Settings)),
+      passwd   = element(2, lists:keyfind("Password", 1, Settings)),
+      log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, Settings)))
    }.
