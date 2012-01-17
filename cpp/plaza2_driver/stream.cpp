@@ -6,7 +6,6 @@
 #include "precomp.h"
 #include "stream.h"
 
-#include <common/utf8_encode.h>
 #include <ei_cxx/list.h>
 #include <ei_cxx/tuple.h>
 #include <ei_cxx/atom.h>
@@ -131,7 +130,7 @@ void Stream::processStream(std::string const& eventName, IP2DataStreamPtr stream
          else if (val.vt == VT_BSTR)
          {
             std::string const str = (_bstr_t)val;
-            t << OList::from_std_list(cp1251_to_utf8(str));
+            t << str;
          }
          else if (val.vt == VT_DECIMAL)
          {
