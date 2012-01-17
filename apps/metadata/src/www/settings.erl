@@ -22,20 +22,32 @@ layout() ->
       ]
    },
    Body = build([], mnesia:dirty_first(m_service)),
-   [TopPanel,#p{}|Body].
+   [
+      TopPanel,
+      #p{},
+      #button{ text = "Apply" },
+      #literal{ text = " " },
+      #button{ text = "Save" },
+      #p{}|
+      Body
+   ].
 
 build(Body, '$end_of_table') ->
    Body;
 build(Body, Key) ->
    [#m_service{description = Descr, settings = Settings}] = mnesia:dirty_read(m_service, Key),
-   build([
+   build(
+      [
          #p{},
          #literal{ text = Descr },
          #table{ rows = [ build_settings(Settings) ]}|
          Body
-      ], mnesia:dirty_next(m_service, Key)).
+      ], mnesia:dirty_next(m_service, Key)
+   ).
 
 build_settings([]) ->
    [];
+build_settings([{Name, Value, _}|Rest]) when is_binary(Value) ->
+   [#tablerow{ cells = [ #tablecell{ text = Name }, #tablecell{ body = #textarea{ text = Value} } ] } | build_settings(Rest)];
 build_settings([{Name, Value, _}|Rest]) ->
    [#tablerow{ cells = [ #tablecell{ text = Name }, #tablecell{ body = #textbox{ text = Value} } ] } | build_settings(Rest)].
