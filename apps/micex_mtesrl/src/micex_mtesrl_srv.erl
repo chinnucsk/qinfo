@@ -5,22 +5,17 @@
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(micex_driver_dll, "micex_driver").
+-define(server_name, {global, ?qinfo_micex_mtesrl}).
 
 -include_lib("common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
 -define(def_settings, [
-      {'SERVICE', [
-            {"LibFullPath", "mtesrl.dll", "full path to mtesrl.dll library"},
-            {"LogLevel", "info", "possible values are info, debug, warning, error"}
-         ]
-      },
-      {'MTESRL', [
-           {"ConnParams",
+      {"LibFullPath", "mtesrl.dll", "full path to mtesrl.dll library"},
+      {"LogLevel", "info", "possible values are info, debug, warning, error"},
+      {"ConnParams",
            <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password\r\nINTERFACE=<exchange_interface>">>,
            "connection parameters as decribed in mtesrl documentation"}
-        ]
-      }
    ]
 ).
 
@@ -42,10 +37,10 @@
 %% ========= public ============
 
 start() ->
-   gen_server:start_link({global, ?qinfo_micex_mtesrl}, ?MODULE, [], []).
+   gen_server:start_link(?server_name, ?MODULE, [], []).
 
 init(_Args) ->
-   {ok, #service{settings = SList}} = metadata:register_service(?qinfo_micex_mtesrl, ?def_settings, ?def_schedule),
+   {ok, #service{settings = SList}} = metadata:register_service(?server_name, "MICEX MTESrl market data", ?def_settings, ?def_schedule),
    Settings = extract_setting(SList),
    error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl, Settings]),
    ok = load_dll(),
@@ -127,11 +122,11 @@ format_sec_type([SecType]) when SecType == $9 orelse SecType == $A orelse SecTyp
 format_sec_type([_SecType]) ->
    unknown.
 
-extract_setting([{'SERVICE', SList}, {'MTESRL', MList}]) ->
+extract_setting(Settings) ->
    #settings{
-      lib_full_path = element(2, lists:keyfind("LibFullPath", 1, SList)),
-      log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, SList))),
-      conn_params = element(2, lists:keyfind("ConnParams", 1, MList)),
+      lib_full_path = element(2, lists:keyfind("LibFullPath", 1, Settings)),
+      log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, Settings))),
+      conn_params = element(2, lists:keyfind("ConnParams", 1, Settings)),
       tables =
       [
          {
