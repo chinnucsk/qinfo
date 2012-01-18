@@ -11,11 +11,14 @@
 -include_lib("metadata/include/metadata.hrl").
 
 -define(def_settings, [
-      {"LibFullPath", "mtesrl.dll", "full path to mtesrl.dll library"},
-      {"LogLevel", "info", "possible values are info, debug, warning, error"},
-      {"ConnParams",
-           <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password>\r\nINTERFACE=<exchange_interface>">>,
-           "connection parameters as decribed in mtesrl documentation"}
+      #setting{name = "LibFullPath", value = "mtesrl.dll", description = "full path to mtesrl.dll library",
+         validator = "fun(_, Val) -> length(Val) > 0 end."},
+      #setting{name = "LogLevel", value = "info", description = "possible values are info, debug, warning, error",
+         validator = "fun(_, Val) -> settings:val_is_log_level(Val) end."},
+      #setting{name = "ConnParams",
+           value = <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password>\r\nINTERFACE=<exchange_interface>">>,
+           description = "connection parameters as decribed in mtesrl documentation",
+           validator = "fun(_, Val) -> length(Val) > 0 end."}
    ]
 ).
 
@@ -124,9 +127,9 @@ format_sec_type([_SecType]) ->
 
 extract_setting(Settings) ->
    #settings{
-      lib_full_path = element(2, lists:keyfind("LibFullPath", 1, Settings)),
-      log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, Settings))),
-      conn_params = element(2, lists:keyfind("ConnParams", 1, Settings)),
+      lib_full_path =  (lists:keyfind("LibFullPath", 1, Settings))#setting.value,
+      log_level = list_to_atom((lists:keyfind("LogLevel", 1, Settings))#setting.value),
+      conn_params = (lists:keyfind("ConnParams", 1, Settings))#setting.value,
       tables =
       [
          {

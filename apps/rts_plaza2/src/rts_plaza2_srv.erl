@@ -11,11 +11,15 @@
 -include_lib("metadata/include/metadata.hrl").
 
 -define(def_settings, [
-      {"LogLevel", "info", "possible values are: info, debug, warning, error"},
-      {"Host", "192.168.1.99", "Plaza2 router host"},
-      {"Port", "4001", "Plaza2 router port"},
-      {"Application", "qinfo", "name of this application"},
-      {"Password", "123", "should be set if router is on another box"}
+      #setting{name = "LogLevel", value = "info", description = "possible values are: info, debug, warning, error",
+         validator = "fun(_,Val) -> settings:val_is_log_level(Val) end."},
+      #setting{name = "Host", value = "192.168.1.99", description = "Plaza2 router host",
+         validator = "fun(_,Val) -> length(Val) > 0 end."},
+      #setting{name = "Port", value = "4001", description = "Plaza2 router port",
+         validator = "fun(_,Val) -> settings:val_is_integer(Val) end."},
+      #setting{name = "Application", value = "qinfo", description = "name of this application",
+         validator = "fun(_,Val) -> length(Val) > 0 end."},
+      #setting{name = "Password", value = "123", description = "should be set if router is on another box"}
    ]).
 
 -define(def_schedule,
@@ -148,9 +152,9 @@ format_datetime(DateTime) ->
 
 extract_settings(Settings) ->
    #settings{
-      host     = element(2, lists:keyfind("Host", 1, Settings)),
-      port     = list_to_integer(element(2, lists:keyfind("Port", 1, Settings))),
-      app_name = element(2, lists:keyfind("Application", 1, Settings)),
-      passwd   = element(2, lists:keyfind("Password", 1, Settings)),
-      log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, Settings)))
+      host     = (lists:keyfind("Host", 1, Settings))#setting.value,
+      port     = list_to_integer((lists:keyfind("Port", 1, Settings))#setting.value),
+      app_name = (lists:keyfind("Application", 1, Settings))#setting.value,
+      passwd   = (lists:keyfind("Password", 1, Settings))#setting.value,
+      log_level = list_to_atom((lists:keyfind("LogLevel", 1, Settings))#setting.value)
    }.
