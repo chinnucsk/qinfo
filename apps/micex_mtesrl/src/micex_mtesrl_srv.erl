@@ -14,7 +14,7 @@
       {"LibFullPath", "mtesrl.dll", "full path to mtesrl.dll library"},
       {"LogLevel", "info", "possible values are info, debug, warning, error"},
       {"ConnParams",
-           <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password\r\nINTERFACE=<exchange_interface>">>,
+           <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password>\r\nINTERFACE=<exchange_interface>">>,
            "connection parameters as decribed in mtesrl documentation"}
    ]
 ).
