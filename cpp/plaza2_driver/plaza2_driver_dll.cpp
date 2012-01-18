@@ -44,6 +44,7 @@ struct PortData
    ErlDrvPort port;
 };
 
+//------------------------------------------------------------------------------------------------------------------------//
 PLAZA2_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
 {
    PortData* d = (PortData*)driver_alloc(sizeof(PortData));
@@ -55,6 +56,7 @@ PLAZA2_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
     return (ErlDrvData)d;
 }
 
+//------------------------------------------------------------------------------------------------------------------------//
 PLAZA2_DRIVER_DLL_API void stop(ErlDrvData handle)
 {
    Connection::instance()->disconnect();
