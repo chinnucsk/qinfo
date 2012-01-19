@@ -1,11 +1,11 @@
--module(micex_mtesrl_srv).
+-module(micex_mtesrl_fond).
 
 -behaviour(gen_server).
 
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(micex_driver_dll, "micex_driver").
--define(server_name, {global, ?qinfo_micex_mtesrl}).
+-define(server_name, {global, ?qinfo_micex_mtesrl_fond}).
 
 -include_lib("common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
@@ -45,7 +45,7 @@ start() ->
 init(_Args) ->
    {ok, #service{settings = SList}} = metadata:register_service(?server_name, "MICEX MTESrl market data", ?def_settings, ?def_schedule),
    Settings = extract_setting(SList),
-   error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl, Settings]),
+   error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl_fond, Settings]),
    ok = load_dll(),
    DrvPort = open(Settings),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.

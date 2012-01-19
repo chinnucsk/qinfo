@@ -53,6 +53,7 @@ build_settings(_ServerName, []) ->
 build_settings(ServerName, [Setting = #setting{name = Name, value = Value} | Rest]) when is_binary(Value) ->
    Id = create_id(ServerName, Name),
    wf:wire(save_button, Id, #validate{ validators = create_validator(Setting)}),
+   wf:wire(apply_button, Id, #validate{ validators = create_validator(Setting)}),
    [
       #tablerow{ cells = [
             #tablecell{ text = Name, valign="top" },
@@ -63,6 +64,7 @@ build_settings(ServerName, [Setting = #setting{name = Name, value = Value} | Res
 build_settings(ServerName, [Setting = #setting{name = Name, value = Value} | Rest]) ->
    Id = create_id(ServerName, Name),
    wf:wire(save_button, Id, #validate{ validators = create_validator(Setting)}),
+   wf:wire(apply_button, Id, #validate{ validators = create_validator(Setting)}),
    [
       #tablerow{ cells = [
             #tablecell{ text = Name},
@@ -79,7 +81,7 @@ create_id({global, ServerName}, FieldName) ->
          (Ch, Acc) -> [Ch | Acc]
       end, "", Id),
    case catch(list_to_existing_atom(Id2)) of
-      {'EXIT', {bararg, _}} ->
+      {'EXIT', {badarg, _}} ->
          list_to_atom(Id2);
       Res ->
          Res
@@ -94,7 +96,8 @@ create_validator(#setting{description = Descr, validator = Val}) ->
    [ #custom{ text = Descr, function = Fun} ].
 
 event(click_apply) ->
-   ok;
+   save(mnesia:dirty_first(m_service)),
+   notify(mnesia:dirty_first(m_service));
 event(click_save) ->
    save(mnesia:dirty_first(m_service)).
 
@@ -114,6 +117,13 @@ get_settings(ServerName, [S = #setting{name = Name, value = OldVal} | Rest]) whe
 get_settings(ServerName, [S = #setting{name = Name} | Rest]) ->
    Value = wf:q(create_id(ServerName, Name)),
    [ S#setting{value = Value} | get_settings(ServerName, Rest)].
+
+notify('$end_of_table') ->
+   ok;
+notify(Key) ->
+   [#m_service{service = ServerName}] = mnesia:dirty_read(m_service, Key),
+   gen_server:cast(ServerName, reconfigure),
+   notify(mnesia:dirty_next(m_service, Key)).
 
 % ================== validators =========================================
 val_is_integer(Val) when length(Val) == 0 ->
