@@ -33,7 +33,7 @@
       {sun, not_working}
    ]).
 
--record(settings, {host, port, app_name, passwd, log_level}).
+-record(settings, {enabled, host, port, app_name, passwd, log_level}).
 -record(state, {drv_port, settings}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
       isin, name, commodity, limit_up, limit_down, lot_size, expiration, signs}).
@@ -44,13 +44,13 @@ start() ->
    gen_server:start_link(?server_name, ?MODULE, [], []).
 
 init(_Args) ->
-   {ok, #service{settings = SList}} = metadata:register_service(
-      ?server_name, "RTS Plaza2 market data", ?def_settings, ?def_schedule),
-   Settings = extract_settings(SList),
+   {ok, Service} = metadata:register_service(
+      ?server_name, "RTS Plaza2 market data", false, ?def_settings, ?def_schedule),
+   Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
    IniDir = code:lib_dir(rts_plaza2) ++ "/ini/",
    load_dll(),
-   DrvPort = open(IniDir ++ "P2ClientGate.ini", Settings#settings.host, Settings#settings.port, Settings#settings.app_name,
+   DrvPort = open(Settings),
       Settings#settings.passwd, Settings#settings.log_level,
       [
          {"FORTS_FUTINFO_REPL", IniDir ++ "fut_info.ini", 'RT_COMBINED_DYNAMIC'}
@@ -62,6 +62,19 @@ handle_call(Msg, _From, State) ->
    error_logger:error_msg("Unexpected message: ~p~n", [Msg]),
    {reply, undef, State}.
 
+handle_cast(reconfigure, State = #state{drv_port = DrvPort, settings = OldSettings}) ->
+   {ok, Service} = metadata:get_settings(?server_name),
+   NewSettings = extract_settings(Service),
+   error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, NewSettings]),
+   case NewSettings == OldSettings of
+      true ->
+         error_logger:info_msg("New settings are the same as old one. Nothing to do."),
+         {noreply, State};
+      false ->
+         close(DrvPort),
+         NewDrvPort = open(NewSettings),
+         {noreply, State#state{drv_port = NewDrvPort, settings = NewSettings}}
+   end;
 handle_cast(Msg, State) ->
    error_logger:error_msg("Unexpected message: ~p~n", [Msg]),
    {noreply, State}.
@@ -71,10 +84,12 @@ handle_info({_Port, {data, Msg}}, State) ->
    {noreply, State};
 
 handle_info(Msg, State) ->
-   error_logger:error_msg("Unexpected msg: ~p.~n", [Msg]).
+   error_logger:error_msg("Unexpected msg: ~p.~n", [Msg]),
+   {noreply, State}.
 
 terminate(Reason, #state{drv_port = DrvPort}) ->
    error_logger:info_msg("Terminate. Reason = ~p.~n", [Reason]),
+   close(DrvPort),
    ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -90,11 +105,18 @@ load_dll() ->
         Res
    end.
 
-open(IniFile, Host, Port, AppName, Password, LogLevel, Streams) ->
+open(#settings{enabled = false}) ->
+   error_logger:info_msg("~p is not enabled.", [?qinfo_rts_plaza2]),
+   undef;
+open(Settings) ->
    DrvPort = erlang:open_port({spawn, ?plaza2_driver_dll}, [binary]),
-   true = erlang:port_command(DrvPort, term_to_binary({connect, IniFile, Host, Port, AppName, Password, LogLevel, Streams})),
+   true = erlang:port_command(DrvPort, term_to_binary({init, Settings#settings.ini_file})),
+   true = erlang:port_command(DrvPort, term_to_binary({connect, Settings#settings.host, Settings#settings.port,
+            Settings#settings.app_name, Settings#settings.passwd, Settings#settings.log_level, Settings#settings.streams})),
    DrvPort.
 
+close(undef) ->
+   ok;
 close(DrvPort) ->
    true = erlang:port_command(DrvPort, term_to_binary({disconnect})),
    port_close(DrvPort).
@@ -150,11 +172,15 @@ format_datetime(DateTime) ->
    MSec = DateTime rem 1000,
    {{Year, Month, Day},{Hour, Min, Sec, MSec}}.
 
-extract_settings(Settings) ->
+extract_settings(#service{enabled = Enabled, settings = Settings}) ->
+   IniDir = code:lib_dir(rts_plaza2) ++ "/ini/",
    #settings{
-      host     = (lists:keyfind("Host", 1, Settings))#setting.value,
-      port     = list_to_integer((lists:keyfind("Port", 1, Settings))#setting.value),
-      app_name = (lists:keyfind("Application", 1, Settings))#setting.value,
-      passwd   = (lists:keyfind("Password", 1, Settings))#setting.value,
-      log_level = list_to_atom((lists:keyfind("LogLevel", 1, Settings))#setting.value)
+      enabled  = Enabled,
+      ini_file = IniDir ++ "P2ClientGate.ini",
+      host     = (lists:keyfind("Host", 2, Settings))#setting.value,
+      port     = list_to_integer((lists:keyfind("Port", 2, Settings))#setting.value),
+      app_name = (lists:keyfind("Application", 2, Settings))#setting.value,
+      passwd   = (lists:keyfind("Password", 2, Settings))#setting.value,
+      log_level = list_to_atom((lists:keyfind("LogLevel", 2, Settings))#setting.value),
+      streams  =  [{"FORTS_FUTINFO_REPL", IniDir ++ "fut_info.ini", 'RT_COMBINED_DYNAMIC'}]
    }.
