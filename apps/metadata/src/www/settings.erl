@@ -14,7 +14,6 @@ layout() ->
    TopPanel = #panel{
       body =
       [
-         #flash{},
          #link{ class=a, text = "main", url = "index"},
          #literal{ text = " | "},
          #literal{ text = "settings"},
@@ -38,12 +37,17 @@ layout() ->
 build(Body, '$end_of_table') ->
    Body;
 build(Body, Key) ->
-   [#m_service{service = ServerName, description = Descr, settings = Settings}] = mnesia:dirty_read(m_service, Key),
+   [#m_service{service = ServerName, description = Descr, enabled = Enabled, settings = Settings}] = mnesia:dirty_read(m_service, Key),
+   Id = create_id(ServerName, "checkbox_enabled"),
    build(
       [
          #p{},
          #h3{ text = Descr },
-         #table{ rows = [ build_settings(ServerName, Settings) ]}|
+         #table{ rows = [
+            #tablerow{ cells = [
+               #tablecell{ text = "Enabled"},
+               #tablecell{ body = #checkbox{ id = Id, checked = Enabled}}]},
+            build_settings(ServerName, Settings) ]}|
          Body
       ], mnesia:dirty_next(m_service, Key)
    ).
@@ -73,7 +77,7 @@ build_settings(ServerName, [Setting = #setting{name = Name, value = Value} | Res
       } | build_settings(ServerName, Rest)
    ].
 
-create_id({global, ServerName}, FieldName) ->
+create_id({_, ServerName}, FieldName) ->
    Id = atom_to_list(ServerName) ++ "_" ++ FieldName,
    Id2 = lists:foldr(
       fun(Ch, Acc) when Ch == $. ->
@@ -97,16 +101,19 @@ create_validator(#setting{description = Descr, validator = Val}) ->
 
 event(click_apply) ->
    save(mnesia:dirty_first(m_service)),
-   notify(mnesia:dirty_first(m_service));
+   notify(mnesia:dirty_first(m_service)),
+   wf:flash("saved. Services will be reconfigured.");
 event(click_save) ->
-   save(mnesia:dirty_first(m_service)).
+   save(mnesia:dirty_first(m_service)),
+   wf:flash("saved").
 
 save('$end_of_table') ->
    ok;
 save(Key) ->
    [Service = #m_service{service = ServerName, settings = Settings}] = mnesia:dirty_read(m_service, Key),
    NewSettings = get_settings(ServerName, Settings),
-   ok = mnesia:dirty_write(Service#m_service{settings = NewSettings}),
+   Enabled = wf:q(create_id(ServerName, "checkbox_enabled")),
+   ok = mnesia:dirty_write(Service#m_service{enabled = if Enabled == "on" -> true; true -> false end, settings = NewSettings}),
    save(mnesia:dirty_next(m_service, Key)).
 
 get_settings(_ServerName, []) ->
