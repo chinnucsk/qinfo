@@ -14,11 +14,11 @@
 
 #include <ei.h>
 
-ei_cxx::Port g_port;
+struct PortData;
 
 class MicexApplication;
 
-void process_connect(MicexApplication**, ei_cxx::ITuple&);
+void process_connect(PortData*, ei_cxx::ITuple&);
 void process_disconnect(MicexApplication*);
 void addTable(MicexApplication* app, ei_cxx::ITuple& table);
 
@@ -40,7 +40,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
 struct PortData
 {
-   ErlDrvPort port;
+   ei_cxx::Port port;
    MicexApplication* app;
 };
 
@@ -48,10 +48,6 @@ MICEX_DRIVER_DLL_API ErlDrvData start(ErlDrvPort port, char *buff)
 {
    PortData* d = (PortData*)driver_alloc(sizeof(PortData));
     d->port = port;
-    if (!g_port)
-    {
-      g_port = port;
-    }
     d->app = NULL;
     return (ErlDrvData)d;
 }
@@ -65,12 +61,12 @@ MICEX_DRIVER_DLL_API void stop(ErlDrvData handle)
       delete d->app;
       d->app = NULL;
    }
-   g_port = NULL;
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
 MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 {
+   PortData* pd = reinterpret_cast<PortData*>(drv_data);
    try
    {
       using namespace ei_cxx;
@@ -85,15 +81,13 @@ MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
             tuple >> command_name;
             if (command_name.get() == "disconnect")
             {
-               PortData* pd = (PortData*)drv_data;
                process_disconnect(pd->app);
                delete pd->app;
                pd->app = NULL;
             }
             else if (command_name.get() == "connect")
             {
-               PortData* pd = (PortData*)drv_data;
-               process_connect(&pd->app, tuple);
+               process_connect(pd, tuple);
             }
             else if (command_name.get() == "log_level")
             {
@@ -114,7 +108,7 @@ MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
    }
    catch(std::exception const& err)
    {
-      ERL_LOG_ERROR(g_port, err.what());
+      ERL_LOG_ERROR(pd->port, err.what());
    }
 }
 
@@ -135,7 +129,7 @@ MICEX_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
 //    FieldVal  = String()
 //    RequiredFields = [ReqField]
 //    ReqField  = String()
-void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
+void process_connect(PortData* pd, ei_cxx::ITuple& t)
 {
    using namespace ei_cxx;
    std::string libFullName;
@@ -145,7 +139,7 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
 
    ei_cxx::bytes connParams;
    t >> connParams;
-   *app = new MicexApplication(g_port, libFullName, LogLevel::fromString(logLevel.get()));
+   pd->app = new MicexApplication(pd->port, libFullName, LogLevel::fromString(logLevel.get()));
 
    IList tables;
    t >> tables;
@@ -154,9 +148,9 @@ void process_connect(MicexApplication** app, ei_cxx::ITuple& t)
    {
       ITuple table;
       tables >> table;
-      addTable(*app, table);
+      addTable(pd->app, table);
    }
-   (*app)->open(std::string((char*)&connParams[0], connParams.size()));
+   pd->app->open(std::string((char*)&connParams[0], connParams.size()));
 }
 
 void addTable(MicexApplication* app, ei_cxx::ITuple& table)
