@@ -26,6 +26,7 @@ layout() ->
    Body = build([], mnesia:dirty_first(m_service)),
    [
       TopPanel,
+      #flash{},
       #p{},
       #button{ id = apply_button, text = "Apply", postback = click_apply },
       #literal{ text = " " },
