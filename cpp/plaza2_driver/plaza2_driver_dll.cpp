@@ -132,10 +132,6 @@ void process_init(PortData*, ei_cxx::ITuple& t)
 void process_connect(PortData* pd, ei_cxx::ITuple& t)
 {
    using namespace ei_cxx;
-   std::string iniFile;
-   t >> iniFile;
-   Application::instance()->init(iniFile);
-
    std::string host;
    unsigned long port;
    std::string appName;

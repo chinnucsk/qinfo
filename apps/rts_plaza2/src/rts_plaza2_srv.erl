@@ -33,7 +33,7 @@
       {sun, not_working}
    ]).
 
--record(settings, {enabled, host, port, app_name, passwd, log_level}).
+-record(settings, {enabled, ini_file, host, port, app_name, passwd, log_level, streams}).
 -record(state, {drv_port, settings}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
       isin, name, commodity, limit_up, limit_down, lot_size, expiration, signs}).
@@ -48,14 +48,8 @@ init(_Args) ->
       ?server_name, "RTS Plaza2 market data", false, ?def_settings, ?def_schedule),
    Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
-   IniDir = code:lib_dir(rts_plaza2) ++ "/ini/",
    load_dll(),
    DrvPort = open(Settings),
-      Settings#settings.passwd, Settings#settings.log_level,
-      [
-         {"FORTS_FUTINFO_REPL", IniDir ++ "fut_info.ini", 'RT_COMBINED_DYNAMIC'}
-      ]
-   ),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.
 
 handle_call(Msg, _From, State) ->

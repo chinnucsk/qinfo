@@ -18,6 +18,7 @@ namespace Plaza2
 //------------------------------------------------------------------------------------------------------------------------//
 Stream::Stream(
    ei_cxx::Port& port, std::string const& streamName, std::string const& iniFile, StreamType::type_t streamType)
+   : m_port(port)
 {
    IP2TableSetPtr tableSet;
    tableSet.CreateInstance(CLSID_CP2TableSet);

@@ -44,7 +44,7 @@ start() ->
 
 init(_Args) ->
    {ok, Service} = metadata:register_service(?server_name, "MICEX (FOND) MTESrl market data", false, ?def_settings, ?def_schedule),
-   Settings = extract_setting(Service),
+   Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl_fond, Settings]),
    ok = load_dll(),
    DrvPort = open(Settings),
