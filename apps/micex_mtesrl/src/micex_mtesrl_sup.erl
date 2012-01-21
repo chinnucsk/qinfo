@@ -13,7 +13,7 @@ init(_Args) ->
       {
          {one_for_one, 10, 1},
          [
-            {1,{micex_mtesrl_srv, start, []}, permanent, 1000, worker, [micex_mtesrl_srv]}
+            {1,{micex_mtesrl_fond, start, []}, permanent, 1000, worker, [micex_mtesrl_fond]}
          ]
       }
    }.

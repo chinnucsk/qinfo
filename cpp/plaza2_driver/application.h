@@ -17,11 +17,8 @@ using namespace P2ClientGateMTA;
 
 class Application : private boost::noncopyable
 {
-private:
-   Application();
 public:
-   static Application* instance();
-   void init(std::string const& iniFile);
+   explicit Application(std::string const& iniFile);
    operator bool () const;
    ~Application();
 private:

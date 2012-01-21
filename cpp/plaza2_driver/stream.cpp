@@ -12,14 +12,13 @@
 
 #include <iostream>
 
-extern ei_cxx::Port g_port;
-
 namespace Plaza2
 {
 
 //------------------------------------------------------------------------------------------------------------------------//
 Stream::Stream(
-   std::string const& streamName, std::string const& iniFile, StreamType::type_t streamType)
+   ei_cxx::Port& port, std::string const& streamName, std::string const& iniFile, StreamType::type_t streamType)
+   : m_port(port)
 {
    IP2TableSetPtr tableSet;
    tableSet.CreateInstance(CLSID_CP2TableSet);
@@ -84,7 +83,7 @@ StreamState Stream::getState() const
 void Stream::StreamStateChanged(IDispatch *s, TDataStreamState newState)
 {
    IP2DataStreamPtr stream(s);
-   ERL_LOG_INFO(g_port,
+   ERL_LOG_INFO(m_port,
       "Stream <" << (char*)stream->StreamName << "> state changed to " << StreamState::toString(newState));
 }
 
@@ -141,24 +140,24 @@ void Stream::processStream(std::string const& eventName, IP2DataStreamPtr stream
             t << static_cast<float>(val);
          }
       }
-      t.send(g_port);
+      t.send(m_port);
       if (tableName.length() == 0)
       {
-         ERL_LOG_DEBUG(g_port, eventName << ": " << (char*)stream->StreamName);
+         ERL_LOG_DEBUG(m_port, eventName << ": " << (char*)stream->StreamName);
       }
       else
       {
-         ERL_LOG_DEBUG(g_port, eventName << ": " <<  (char*)stream->StreamName << '.' << (char*)tableName);
+         ERL_LOG_DEBUG(m_port, eventName << ": " <<  (char*)stream->StreamName << '.' << (char*)tableName);
       }
    }
    catch(_com_error const& err)
    {
-      ERL_LOG_ERROR(g_port,
+      ERL_LOG_ERROR(m_port,
          eventName << " COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
    }
    catch(std::exception const& err)
    {
-      ERL_LOG_ERROR(g_port, eventName << ". Error=" << err.what());
+      ERL_LOG_ERROR(m_port, eventName << ". Error=" << err.what());
    }
 }
 
@@ -193,7 +192,7 @@ void Stream::StreamDBWillBeDeleted(IDispatch* s)
    IP2DataStreamPtr stream(s);
 
    t << Atom("stream_deleted") << std::string(stream->StreamName);
-   t.send(g_port);
+   t.send(m_port);
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
@@ -206,7 +205,7 @@ void Stream::StreamLifeNumChanged(IDispatch* s, long LifeNum)
 
    OTuple t(3);
    t << Atom("life_num") << std::string(stream->StreamName) << LifeNum;
-   t.send(g_port);
+   t.send(m_port);
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
@@ -216,7 +215,7 @@ void Stream::StreamDataBegin(IDispatch* s)
    IP2DataStreamPtr stream(s);
    OTuple t(2);
    t << Atom("StreamDataBegin") << std::string(stream->StreamName);
-   t.send(g_port);
+   t.send(m_port);
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
@@ -226,7 +225,7 @@ void Stream::StreamDataEnd(IDispatch* s)
    IP2DataStreamPtr stream(s);
    OTuple t(2);
    t << Atom("StreamDataEnd") << std::string(stream->StreamName);
-   t.send(g_port);
+   t.send(m_port);
 }
 
 } // namespace Plaza2

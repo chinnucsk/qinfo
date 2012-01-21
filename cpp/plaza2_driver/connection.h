@@ -19,10 +19,8 @@ using namespace P2ClientGateMTA;
 class Connection : private boost::noncopyable,
                    public IDispEventImpl<0, Connection, &IID_IP2ConnectionEvent, &LIBID_P2ClientGateMTA, 1>
 {
-private:
-   Connection();
 public:
-   static Connection* instance();
+   explicit Connection(ei_cxx::Port& port);
    void connect(
       std::string const& host,
       unsigned long port,
@@ -43,7 +41,7 @@ private:
 private:
    typedef boost::mutex::scoped_lock ScopedLock;
    typedef std::list<StreamPtr>  Streams;
-   ei_cxx::Port*                 m_port;
+   ei_cxx::Port&                 m_port;
    IP2ConnectionPtr              m_conn;
    bool                          m_stop;
    std::auto_ptr<boost::thread>  m_worker;

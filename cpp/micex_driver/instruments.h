@@ -43,7 +43,7 @@ public:
                   FMT("Field %1% not found among required fields in SECURITIES table", fieldName))
          }
          it->second->type = type;
-         it->second->value = val;
+         it->second->value = *val;
       }
    }
    void sendRow();

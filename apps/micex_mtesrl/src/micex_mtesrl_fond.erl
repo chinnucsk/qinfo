@@ -1,21 +1,24 @@
--module(micex_mtesrl_srv).
+-module(micex_mtesrl_fond).
 
 -behaviour(gen_server).
 
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(micex_driver_dll, "micex_driver").
--define(server_name, {global, ?qinfo_micex_mtesrl}).
+-define(server_name, {global, ?qinfo_micex_mtesrl_fond}).
 
 -include_lib("common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
 -define(def_settings, [
-      {"LibFullPath", "mtesrl.dll", "full path to mtesrl.dll library"},
-      {"LogLevel", "info", "possible values are info, debug, warning, error"},
-      {"ConnParams",
-           <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password>\r\nINTERFACE=<exchange_interface>">>,
-           "connection parameters as decribed in mtesrl documentation"}
+      #setting{name = "LibFullPath", value = "mtesrl.dll", description = "full path to mtesrl.dll library",
+         validator = "fun(_, Val) -> length(Val) > 0 end."},
+      #setting{name = "LogLevel", value = "info", description = "possible values are info, debug, warning, error",
+         validator = "fun(_, Val) -> settings:val_is_log_level(Val) end."},
+      #setting{name = "ConnParams",
+           value = <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password>\r\nINTERFACE=<exchange_interface>">>,
+           description = "connection parameters as decribed in mtesrl documentation",
+           validator = "fun(_, Val) -> length(Val) > 0 end."}
    ]
 ).
 
@@ -30,7 +33,7 @@
       {sun, not_working}
    ]).
 
--record(settings, {lib_full_path, log_level, conn_params, tables}).
+-record(settings, {enabled, lib_full_path, log_level, conn_params, tables}).
 -record(state, {drv_port, settings}).
 -record(data_row, {table, sec_board, sec_code, sec_name, lot_size, decimals, sec_type}).
 
@@ -40,9 +43,9 @@ start() ->
    gen_server:start_link(?server_name, ?MODULE, [], []).
 
 init(_Args) ->
-   {ok, #service{settings = SList}} = metadata:register_service(?server_name, "MICEX MTESrl market data", ?def_settings, ?def_schedule),
-   Settings = extract_setting(SList),
-   error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl, Settings]),
+   {ok, Service} = metadata:register_service(?server_name, "MICEX (FOND) MTESrl market data", false, ?def_settings, ?def_schedule),
+   Settings = extract_settings(Service),
+   error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl_fond, Settings]),
    ok = load_dll(),
    DrvPort = open(Settings),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.
@@ -51,6 +54,19 @@ handle_call(Msg, _From, State) ->
    error_logger:warning_msg("Unexpected message: ~p", [Msg]),
    {reply, undef, State}.
 
+handle_cast(reconfigure, State = #state{drv_port = DrvPort, settings = OldSettings}) ->
+   {ok, Service} = metadata:get_settings(?server_name),
+   NewSettings = extract_settings(Service),
+   error_logger:info_msg("~p settings: ~p.~n", [?qinfo_micex_mtesrl_fond, NewSettings]),
+   case NewSettings == OldSettings of
+      true ->
+         error_logger:info_msg("New settings are the same as old one. Nothing to do."),
+         {noreply, State};
+      false ->
+         close(DrvPort),
+         NewDrvPort = open(NewSettings),
+         {noreply, State#state{drv_port = NewDrvPort, settings = NewSettings}}
+   end;
 handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p", [Msg]),
    {noreply, State}.
@@ -76,11 +92,16 @@ load_dll() ->
          Msg
    end.
 
+open(#settings{enabled = false}) ->
+   error_logger:info_msg("~p is not enabled.", [?qinfo_micex_mtesrl_fond]),
+   undef;
 open(#settings{lib_full_path = LibFullPath, log_level = LogLevel, conn_params = ConnParams, tables = Tables}) ->
    DrvPort = erlang:open_port({spawn, ?micex_driver_dll}, [binary]),
    erlang:port_command(DrvPort, term_to_binary({connect, LibFullPath, LogLevel, ConnParams, Tables})),
    DrvPort.
 
+close(undef) ->
+   ok;
 close(DrvPort) ->
    erlang:port_command(DrvPort, term_to_binary({disconnect})),
    port_close(DrvPort).
@@ -122,11 +143,12 @@ format_sec_type([SecType]) when SecType == $9 orelse SecType == $A orelse SecTyp
 format_sec_type([_SecType]) ->
    unknown.
 
-extract_setting(Settings) ->
+extract_settings(#service{enabled = Enabled, settings = Settings}) ->
    #settings{
-      lib_full_path = element(2, lists:keyfind("LibFullPath", 1, Settings)),
-      log_level = list_to_atom(element(2, lists:keyfind("LogLevel", 1, Settings))),
-      conn_params = element(2, lists:keyfind("ConnParams", 1, Settings)),
+      enabled       = Enabled,
+      lib_full_path = (lists:keyfind("LibFullPath", 2, Settings))#setting.value,
+      log_level     = list_to_atom((lists:keyfind("LogLevel", 2, Settings))#setting.value),
+      conn_params   = (lists:keyfind("ConnParams", 2, Settings))#setting.value,
       tables =
       [
          {

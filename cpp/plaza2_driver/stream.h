@@ -21,7 +21,7 @@ class Stream :
    public IDispEventImpl<0, Stream, &IID_IP2DataStreamEvents, &LIBID_P2ClientGateMTA, 1>
 {
 public:
-   explicit Stream(std::string const& streamName, std::string const& iniFile, StreamType::type_t streamType);
+   explicit Stream(ei_cxx::Port& port, std::string const& streamName, std::string const& iniFile, StreamType::type_t streamType);
    void open(IP2ConnectionPtr conn);
    void close();
    StreamState getState() const;
@@ -50,7 +50,8 @@ private:
    void setRevisions(IP2TableSetPtr ts);
    void processStream(std::string const& eventName, IP2DataStreamPtr stream, IP2RecordPtr rec, _bstr_t tableName);
 private:
-   IP2DataStreamPtr     m_dataStream;
+   ei_cxx::Port&     m_port;
+   IP2DataStreamPtr  m_dataStream;
 };
 
 typedef boost::shared_ptr<Stream> StreamPtr;

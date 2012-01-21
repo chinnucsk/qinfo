@@ -19,7 +19,7 @@ xcopy apps\rts_plaza2\ebin\*.app build\ebin\  /Y
 xcopy apps\rts_plaza2\ini\* build\ebin\rts_plaza2\ini\ /Y
 xcopy apps\metadata\ebin\*.beam build\ebin\metadata\ebin\ /Y
 xcopy apps\metadata\ebin\*.app build\ebin\ /Y
-xcopy apps\metadata\src\www\static\* build\ebin\www\ /Y
+xcopy apps\metadata\src\www\static\* build\ebin\www\ /Y /S
 xcopy apps\nitrogen_core\ebin\*.beam build\ebin\nitrogen_core\ebin\ /Y
 xcopy apps\nprocreg\ebin\*.beam build\ebin\nprocreg\ebin\ /Y
 xcopy apps\nprocreg\ebin\*.app build\ebin\ /Y

@@ -10,15 +10,13 @@
 
 #include <boost/bind.hpp>
 
-extern ei_cxx::Port g_port;
-
 namespace Plaza2
 {
 
 unsigned long DEF_WAIT_TIMEOUT = 10;
 
 //------------------------------------------------------------------------------------------------------------------------//
-Connection::Connection() : m_conn(NULL), m_stop(false), m_connected(false)
+Connection::Connection(ei_cxx::Port& port) : m_port(port), m_conn(NULL), m_stop(false), m_connected(false)
 {
 }
 
@@ -31,7 +29,7 @@ void Connection::connect(
 {
    if (m_conn)
    {
-      ERL_LOG_ERROR(g_port, "Already connected. Do disconnect first.");
+      ERL_LOG_ERROR(m_port, "Already connected. Do disconnect first.");
       return;
    }
    m_conn.CreateInstance(CLSID_CP2Connection);
@@ -44,16 +42,13 @@ void Connection::connect(
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
-Connection* Connection::instance()
-{
-   static Connection* conn = new Connection();
-   return conn;
-}
-
-//------------------------------------------------------------------------------------------------------------------------//
 void Connection::disconnect()
 {
-   ERL_LOG_INFO(g_port, "Disconnecting...");
+   if (m_stop) // already stopped
+   {
+      return;
+   }
+   ERL_LOG_INFO(m_port, "Disconnecting...");
    m_stop = true;
    m_worker->join();
    m_worker.reset(NULL);
@@ -64,7 +59,7 @@ void Connection::disconnect()
       DispEventUnadvise(m_conn);
       m_conn = NULL;
    }
-   ERL_LOG_INFO(g_port, "Disconnected.")
+   ERL_LOG_INFO(m_port, "Disconnected.")
 }
 
 //------------------------------------------------------------------------------------------------------------------------//
@@ -86,47 +81,47 @@ void Connection::ConnectionStatusChanged(IDispatch* conn, TConnectionStatus stat
    {
       m_connected = false;
       m_conn->Disconnect();
-      ERL_LOG_INFO(g_port, "Connection status DISCONNECTED.");
+      ERL_LOG_INFO(m_port, "Connection status DISCONNECTED.");
    }
    if (status & ConnectionStatus::CONNECTED)
    {
-      ERL_LOG_INFO(g_port, "Connection status CONNECTED.");
+      ERL_LOG_INFO(m_port, "Connection status CONNECTED.");
    }
    if (status & ConnectionStatus::INVALID)
    {
-      ERL_LOG_INFO(g_port, "Connection status INVALID.");
+      ERL_LOG_INFO(m_port, "Connection status INVALID.");
       m_conn->Disconnect();
       m_connected = false;
    }
    if (status & ConnectionStatus::BUSY)
    {
-      ERL_LOG_INFO(g_port, "Connection status BUSY.");
+      ERL_LOG_INFO(m_port, "Connection status BUSY.");
    }
    if (status & ConnectionStatus::ROUTER_DISCONNECTED)
    {
-      ERL_LOG_INFO(g_port, "Connection status ROUTER_DISCONNECTED.");
+      ERL_LOG_INFO(m_port, "Connection status ROUTER_DISCONNECTED.");
    }
    if (status & ConnectionStatus::ROUTER_RECONNECTING)
    {
-      ERL_LOG_INFO(g_port, "Connection status ROUTER_RECONNECTING.");
+      ERL_LOG_INFO(m_port, "Connection status ROUTER_RECONNECTING.");
    }
    if (status & ConnectionStatus::ROUTER_CONNECTED)
    {
-      ERL_LOG_INFO(g_port, "Connection status ROUTER_CONNECTED.");
+      ERL_LOG_INFO(m_port, "Connection status ROUTER_CONNECTED.");
    }
    if (status & ConnectionStatus::ROUTER_LOGINFAILED)
    {
-      ERL_LOG_INFO(g_port, "Connection status ROUTER_LOGINFAILED.");
+      ERL_LOG_INFO(m_port, "Connection status ROUTER_LOGINFAILED.");
    }
    if (status & ConnectionStatus::ROUTER_NOCONNECT)
    {
-      ERL_LOG_INFO(g_port, "Connection status ROUTER_NOCONNECT.");
+      ERL_LOG_INFO(m_port, "Connection status ROUTER_NOCONNECT.");
    }}
 
 //------------------------------------------------------------------------------------------------------------------------//
 void Connection::run()
 {
-   ERL_LOG_INFO(g_port, "Connecting... appName='" << m_conn->AppName << "', host='" << m_conn->Host << "', port=" << m_conn->Port);
+   ERL_LOG_INFO(m_port, "Connecting... appName='" << m_conn->AppName << "', host='" << m_conn->Host << "', port=" << m_conn->Port);
    while(!m_stop)
    {
       try
@@ -155,16 +150,16 @@ void Connection::run()
       }
       catch(TryAgain const& err)
       {
-         ERL_LOG_ERROR(g_port, "Unable to connect. Error = " << err.what());
+         ERL_LOG_ERROR(m_port, "Unable to connect. Error = " << err.what());
          Sleep(1000);
       }
       catch(std::exception const& err)
       {
-         ERL_LOG_ERROR(g_port, "Connection::run error. Error=" << err.what());
+         ERL_LOG_ERROR(m_port, "Connection::run error. Error=" << err.what());
       }
       catch(_com_error const& err)
       {
-         ERL_LOG_ERROR(g_port, "Connection::run COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
+         ERL_LOG_ERROR(m_port, "Connection::run COM error. Error=" << err.Error() << ", Message=" << err.ErrorMessage());
       }
    }
 }
@@ -172,7 +167,7 @@ void Connection::run()
 //------------------------------------------------------------------------------------------------------------------------//
 void Connection::addStream(std::string const& streamName, std::string const& iniFile, StreamType::type_t st)
 {
-   StreamPtr stream(new Stream(streamName, iniFile, st));
+   StreamPtr stream(new Stream(m_port, streamName, iniFile, st));
    m_streams.push_back(stream);
 }
 

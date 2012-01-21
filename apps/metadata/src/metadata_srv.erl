@@ -19,15 +19,15 @@ init(_Args) ->
    pg:join(?group_rts_instruments, self()),
    {ok, undef}.
 
-handle_call({register, ServiceName, Description, Settings, Schedule}, _From, State) ->
+handle_call({register, ServiceName, Description, Enabled, Settings, Schedule}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
-         mnesia:dirty_write(#m_service{service = ServiceName, description = Description, settings = Settings, schedule = Schedule}),
+         mnesia:dirty_write(#m_service{service = ServiceName, description = Description, enabled = Enabled, settings = Settings, schedule = Schedule}),
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
-         Msg = #service{service = ServiceName, settings = Settings},
+         Msg = #service{service = ServiceName, enabled = Enabled, settings = Settings},
          {reply, {ok, Msg}, State};
-      [#m_service{service = Service, settings = OldSettings}] ->
-         Msg = #service{service = Service, settings = OldSettings},
+      [#m_service{service = Service, enabled = OldEnabled, settings = OldSettings}] ->
+         Msg = #service{service = Service, enabled = OldEnabled, settings = OldSettings},
          {reply, {ok, Msg}, State}
    end;
 
@@ -35,9 +35,9 @@ handle_call({get_settings, ServiceName}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
          {reply, {error, no_such_service}, State};
-      [#m_service{service = Service, settings = Settings}] ->
-         Msg = #service{service = Service, settings = Settings},
-         {reply, Msg, State}
+      [#m_service{service = Service, enabled = Enabled, settings = Settings}] ->
+         Msg = #service{service = Service, enabled = Enabled, settings = Settings},
+         {reply, {ok, Msg}, State}
    end;
 
 handle_call({get_instruments, Exchange, OnlyEnabled}, _From, State) ->

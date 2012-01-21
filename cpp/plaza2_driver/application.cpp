@@ -9,19 +9,7 @@ namespace Plaza2
 {
 
 //------------------------------------------------------------------------------------------------------------------------//
-Application::Application() : m_app(NULL)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------//
-Application* Application::instance()
-{
-   static Application* app = new Application();
-   return app;
-}
-
-//------------------------------------------------------------------------------------------------------------------------//
-void Application::init(std::string const& iniFile)
+Application::Application(std::string const& iniFile) : m_app(NULL)
 {
    CoInitializeEx(NULL, COINIT_MULTITHREADED);
    m_app.CreateInstance(CLSID_CP2Application);
@@ -38,7 +26,7 @@ Application::operator bool () const
 Application::~Application()
 {
    m_app->CleanUp();
-   //CoUninitialize();
+   CoUninitialize();
    m_app = NULL;
 }
 
