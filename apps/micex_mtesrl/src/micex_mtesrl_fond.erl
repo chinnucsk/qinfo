@@ -109,7 +109,7 @@ close(DrvPort) ->
 processInfo(#data_row{table = 'SECURITIES', sec_board = SecBoard, sec_code = SecCode, sec_name = SecName, lot_size =
       LotSize, sec_type = SecType}) ->
    Instr = #new_instrument{
-      exch = "MICEX",
+      exchange = "MICEX",
       class_code = SecBoard,
       name = SecCode,
       full_name = SecName,

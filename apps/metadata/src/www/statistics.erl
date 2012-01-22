@@ -8,7 +8,7 @@ main() ->
    #template{ file="./www/page.html"}.
 
 layout() ->
-   #panel{
+   TopPanel = #panel{
       body =
       [
          #link{ class=a, text = "main", url = "index"},
@@ -19,4 +19,5 @@ layout() ->
          #literal{ text = " | "},
          #literal{ text = "statistics"}
       ]
-   }.
+   },
+   [TopPanel, #panel{ text = <<208,159,209,128,208,184,208,178,208,181,209,130>>}].

@@ -44,7 +44,7 @@ handle_call({get_instruments, Exchange, OnlyEnabled}, _From, State) ->
    {atomic, Res} = mnesia:transaction
    (
       fun() ->
-         mnesia:select(m_instrument, [{#m_instrument{exch = '$1', _='_'}, [{'==', '$1', 'RTS'}], ['$_']}])
+         mnesia:select(m_instrument, [{#m_instrument{exchange = '$1', _='_'}, [{'==', '$1', 'RTS'}], ['$_']}])
       end
    ),
    {reply, Res, State};
@@ -59,7 +59,7 @@ handle_cast(Msg, State) ->
 
 handle_info({pg_message, _, _, #new_instrument{
          name = Name,
-         exch = Exch,
+         exchange = Exch,
          full_name = FullName,
          class_code = ClassCode,
          expiration = Expiration,
@@ -82,7 +82,7 @@ handle_info({pg_message, _, _, #new_instrument{
                #m_instrument{
                   name = {Name, ClassCode},
                   full_name = FullName,
-                  exch = Exch,
+                  exchange = Exch,
                   expiration = Expiration,
                   commodity = Commodity,
                   limit_up = LUp,
@@ -151,11 +151,11 @@ get_expiration({{Year, Month, _Day}, _}) ->
    Y = Year - (Year div 10 * 10),
    [month_to_symbol(Month)] ++ integer_to_list(Y).
 
-create_internal_symbol(#m_instrument{exch = Exchange, type = Type = future, expiration = Expiration},
+create_internal_symbol(#m_instrument{exchange = Exchange, type = Type = future, expiration = Expiration},
    #m_commodity{alias = Alias}) ->
    lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(Type), Alias, get_expiration(Expiration)]));
 
-create_internal_symbol(#m_instrument{exch = Exchange, type = Type, expiration = Expiration},
+create_internal_symbol(#m_instrument{exchange = Exchange, type = Type, expiration = Expiration},
    #m_commodity{alias = Alias}) ->
    lists:flatten(io_lib:format("~s.~c.~s", [Exchange, type_to_symbol(Type), Alias])).
 
@@ -173,11 +173,11 @@ get_expiration_test() ->
 create_internal_symbol_test() ->
    ?assertEqual("RTS.S.SBER",
       create_internal_symbol(
-         #m_instrument{exch = 'RTS', type = standard, expiration = {{2012, 1, 1}, {10, 0, 0}}},
+         #m_instrument{exchange = 'RTS', type = standard, expiration = {{2012, 1, 1}, {10, 0, 0}}},
          #m_commodity{alias = "SBER"})),
    ?assertEqual("RTS.F.LKOH.F2",
       create_internal_symbol(
-         #m_instrument{exch = 'RTS', type = future, expiration = {{2012, 1, 1}, {10, 0, 0}}},
+         #m_instrument{exchange = 'RTS', type = future, expiration = {{2012, 1, 1}, {10, 0, 0}}},
          #m_commodity{alias = "LKOH"})).
 
 -endif.

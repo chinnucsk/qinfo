@@ -130,7 +130,7 @@ processInfo(
       lot_size = LSize}) when (Signs band 16#100 == 0) and (Signs band 16#800 == 0) and (Signs band 16#1000 == 0)
                                and ((Signs band 16#8 =/= 0) or (Signs band 16#4 == 0))->
    Instr = #new_instrument{
-      exch = "RTS",
+      exchange = "RTS",
       class_code = if (Signs band 16#8 =/= 0) -> 'RTS_STD'; true -> 'RTS_FUT' end,
       name = if (Signs band 16#8 =/= 0) -> Commodity; true -> Isin end,
       full_name = FullName,
