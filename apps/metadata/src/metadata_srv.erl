@@ -69,12 +69,13 @@ handle_info({pg_message, _, _, #new_instrument{
          lot_size = LSize,
          type = Type,
          ref = Ref}}, State) ->
+   ExchAtom = common_utils:list_to_atom(Exch),
    {atomic, ok} = mnesia:transaction(fun() ->
-            Enabled = case mnesia:read(m_commodity, {Exch, ClassCode, Commodity}) of
+            Enabled = case mnesia:read(m_commodity, {ExchAtom, ClassCode, Commodity}) of
                          [] ->
-                            mnesia:write(#m_commodity{ key = {Exch, ClassCode, Commodity}, alias = Commodity}),
+                            mnesia:write(#m_commodity{ key = {ExchAtom, ClassCode, Commodity}, alias = Commodity}),
                             false;
-                         [#m_commodity{key = {Exch, ClassCode, Commodity}, enabled = E}] -> % already exists, nothing to do
+                         [#m_commodity{key = {ExchAtom, ClassCode, Commodity}, enabled = E}] -> % already exists, nothing to do
                             E
                       end,
             mnesia:write(
@@ -89,7 +90,8 @@ handle_info({pg_message, _, _, #new_instrument{
                   lot_size = LSize,
                   type = Type,
                   enabled = Enabled,
-                  ref = Ref})
+                  ref = Ref}),
+            mnesia:write(#m_exchange{name = Exch})
       end),
    {noreply, State};
 
@@ -109,7 +111,7 @@ code_change(_OldVsn, State, _Extra) ->
 -define(create_table(Table, Type),
    case (catch mnesia:table_info(Table, version)) of
       {'EXIT', {aborted, {no_exists, Table, _}}} ->
-         mnesia:create_table(
+         {atomic, ok} = mnesia:create_table(
             Table, [{disc_copies, [node()]}, {type, Type}, {attributes, record_info(fields, Table)}]);
       _ ->
          ok
@@ -121,7 +123,8 @@ create_db() ->
          mnesia:start(),
          ?create_table(m_instrument, set),
          ?create_table(m_commodity, set),
-         ?create_table(m_service, set);
+         ?create_table(m_service, set),
+         ?create_table(m_exchange, set);
       {error, {_, {already_exists, _}}} ->
          mnesia:start(),
          ok

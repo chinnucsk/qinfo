@@ -2,6 +2,7 @@
 
 ./rebar compile
 
+mkdir -p build/ebin/common/ebin
 mkdir -p build/ebin/micex_mtesrl/ebin
 mkdir -p build/ebin/rts_plaza2/ebin
 mkdir -p build/ebin/rts_plaza2/ini
@@ -11,6 +12,7 @@ mkdir -p build/ebin/simple_bridge/ebin
 mkdir -p build/ebin/metadata/ebin
 mkdir -p build/ebin/www
 
+cp -r apps/common/ebin/*.beam build/ebin/common/ebin
 cp -r apps/common/ebin/*.app build/ebin
 cp -r apps/micex_mtesrl/ebin/*.beam build/ebin/micex_mtesrl/ebin
 cp -r apps/micex_mtesrl/ebin/*.app build/ebin

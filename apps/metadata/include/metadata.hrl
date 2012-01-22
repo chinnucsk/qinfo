@@ -1,7 +1,5 @@
 -record(new_instrument, {name, exch, class_code, full_name, type, commodity, limit_up, limit_down, lot_size, expiration,
    ref}).
--record(get_instrument, {name, exch, class_code, full_name, type, commodity, limit_up, limit_down, lot_size, expiration,
-   ref, qinfo_name}).
 -record(trade, {price, qty}).
 -record(service, {service, enabled, settings = [], schedule = []}).
 -record(setting, {name, value, description, validator = undef}).
@@ -10,3 +8,4 @@
       lot_size, type, enabled, ref}).
 -record(m_commodity, {key, enabled = false, alias = undef}).
 -record(m_service, {service, description, enabled, settings = [], schedule = []}).
+-record(m_exchange, {name, description = ""}).
