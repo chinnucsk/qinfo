@@ -144,7 +144,7 @@ OBinary& OBinary::operator << (unsigned long val)
 }
 
 
-#ifdef EI_CXX_ENABLE_INT64
+#if defined(EI_CXX_ENABLE_INT64) && defined(__WIN32__)
 //------------------------------------------------------------------------------------------------------------------------//
 OBinary& OBinary::operator << (boost::int64_t val)
 {

@@ -90,7 +90,7 @@ IBinary& IBinary::operator >> (unsigned long& val)
    return *this;
 }
 
-#ifdef EI_CXX_ENABLE_INT64
+#if defined(EI_CXX_ENABLE_INT64) && defined(__WIN32__)
 //------------------------------------------------------------------------------------------------------------------------//
 IBinary& IBinary::operator >> (boost::int64_t& val)
 {

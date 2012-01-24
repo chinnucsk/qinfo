@@ -38,7 +38,7 @@ public:
    virtual IBinary& operator >> (bool& val);
    virtual IBinary& operator >> (long& val);
    virtual IBinary& operator >> (unsigned long& val);
-#ifdef EI_CXX_ENABLE_INT64
+#if defined(EI_CXX_ENABLE_INT64) && defined(__WIN32__)
    virtual IBinary& operator >> (boost::int64_t& val);
    virtual IBinary& operator >> (boost::uint64_t& val);
 #endif // EI_CXX_ENABLE_INT64
