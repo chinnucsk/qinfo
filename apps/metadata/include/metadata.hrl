@@ -1,5 +1,5 @@
 -type commodity() :: string().
--type type :: 'equity' | 'future' | 'bond' | 'itf' | 'standard'.
+-type type() :: 'equity' | 'future' | 'bond' | 'itf' | 'standard'.
 -type exchange() :: string().
 -type commodity_key() :: {commodity(), type(), exchange()}.
 -type instrument_key() :: {string(), type(), exchange()}.
