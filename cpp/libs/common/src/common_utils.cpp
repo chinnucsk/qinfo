@@ -27,7 +27,7 @@ COMMON_UTILS_API ERL_NIF_TERM cp1251_to_unicode(ErlNifEnv* env, int argc, const 
    {
       int ch;
       enif_get_int(env, head, &ch);
-      out[++cnt] = enif_make_int(env, cp1251_to_unicode((unsigned char)ch));
+      out[++cnt] = enif_make_int(env, cp1251_to_utf8((unsigned char)ch));
    }
    return enif_make_list_from_array(env, out.get(), len);
 }
@@ -35,6 +35,6 @@ COMMON_UTILS_API ERL_NIF_TERM cp1251_to_unicode(ErlNifEnv* env, int argc, const 
 ErlNifFunc nif_funcs[] =
 {
    {"cp1251_to_unicode", 1, cp1251_to_unicode}
-}
+};
 
 ERL_NIF_INIT(common_utils, nif_funcs, NULL, NULL, NULL, NULL);
