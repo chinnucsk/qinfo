@@ -80,7 +80,7 @@ handle_info({pg_message, _, _, #new_instrument{
             end,
             mnesia:write(
                #m_instrument{
-                  name = {Name, Type, Exch},
+                  key = {Name, Type, Exch},
                   full_name = common_utils:cp1251_to_unicode(FullName),
                   exchange = Exch,
                   expiration = Expiration,
