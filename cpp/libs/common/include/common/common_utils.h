@@ -7,7 +7,7 @@
 
 #include <erl_nif.h>
 
-#ifndef COMMON_UTILS_EXPORTS
+#ifdef COMMON_UTILS_EXPORTS
 #   define COMMON_UTILS_API __declspec(dllexport)
 #else
 #   define COMMON_UTILS_API __declspec(dllimport)
