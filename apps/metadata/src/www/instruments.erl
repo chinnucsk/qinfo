@@ -21,7 +21,7 @@ layout() ->
       ]
    },
    {Filter, Exchanges} = build_filter(),
-   {AlphaFilter, Instruments} = build_instr(digits, $0, Exchanges),
+   {AlphaFilter, Instruments} = build_instr($0, Exchanges),
    [
       TopPanel,
       #p{},
@@ -32,7 +32,7 @@ layout() ->
    ].
 
 build_filter() ->
-   Checkboxes, Exchanges] = build_exchanges(mnesia:dirty_first(m_exchange), []),
+   {Checkboxes, Exchanges} = build_exchanges(mnesia:dirty_first(m_exchange), []),
    {[
       #panel{ body = Checkboxes },
       #panel{ body = [ #checkbox{ id = checkbox_enabled, text = "Only enabled instruments", postback = filter_changed}]}
@@ -43,7 +43,7 @@ build_exchanges('$end_of_table', Exchanges) ->
    {[], Exchanges};
 build_exchanges(Key, Exchanges) ->
    [#m_exchange{ name = ExchName }] = mnesia:dirty_read(m_exchange, Key),
-   {Checkboxes, NewExchanges} = build_exchanges(mnesia:dirty_next(m_exchange, Key), [ExchName, | Exchanges]),
+   {Checkboxes, NewExchanges} = build_exchanges(mnesia:dirty_next(m_exchange, Key), [ExchName | Exchanges]),
    {[
       #checkbox{
          id= checkbox_exchange,
@@ -96,7 +96,7 @@ build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, Key) ->
          NewAlphaList = replace_to_link(Commodity, AlphaList),
          build_instr_impl(Alpha, NewAlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key));
       false ->
-         build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key));
+         build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key))
    end.
 
 event({alpha, A}) ->
