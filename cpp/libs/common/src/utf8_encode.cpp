@@ -29,13 +29,13 @@ int cp1251_to_utf8(unsigned char ch)
    return enc_table[ch - 0x80];
 }
 
-std::list<long> cp1251_to_utf8(std::string const& str)
+std::list<int> cp1251_to_utf8(std::string const& str)
 {
-   std::list<long> out;
+   std::list<int> out;
 
    for(size_t i = 0; i < str.length(); ++i)
    {
-      out.push_back(cp1251_to_utf8(ch));
+      out.push_back(cp1251_to_utf8(str[i]));
    }
    return out;
 }
