@@ -12,6 +12,7 @@ popd
 
 escript.exe rebar compile
 
+xcopy apps\common\ebin\*.beam build\ebin\common\ebin\  /Y
 xcopy apps\micex_mtesrl\ebin\*.beam build\ebin\micex_mtesrl\ebin\  /Y
 xcopy apps\micex_mtesrl\ebin\*.app build\ebin\ /Y
 xcopy apps\rts_plaza2\ebin\*.beam build\ebin\rts_plaza2\ebin\  /Y
@@ -26,3 +27,4 @@ xcopy apps\nprocreg\ebin\*.app build\ebin\ /Y
 xcopy apps\simple_bridge\ebin\*.beam build\ebin\simple_bridge\ebin\ /Y
 xcopy build\cpp\Debug\micex_driver.dll build\ebin\micex_mtesrl\priv\ /Y
 xcopy build\cpp\Debug\plaza2_driver.dll build\ebin\rts_plaza2\priv\ /Y
+xcopy build\cpp\Debug\common_utils.dll build\ebin\common\priv\ /Y

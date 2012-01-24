@@ -9,6 +9,8 @@
 #include <string>
 #include <list>
 
-std::list<long> cp1251_to_utf8(std::string const& str);
+int cp1251_to_utf8(unsigned char ch);
+
+std::list<int> cp1251_to_utf8(std::string const& str);
 
 #endif // COMMON_UTF8_ENCODE_H

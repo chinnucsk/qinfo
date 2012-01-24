@@ -69,19 +69,19 @@ handle_info({pg_message, _, _, #new_instrument{
          lot_size = LSize,
          type = Type,
          ref = Ref}}, State) ->
-   ExchAtom = common_utils:list_to_atom(Exch),
    {atomic, ok} = mnesia:transaction(fun() ->
-            Enabled = case mnesia:read(m_commodity, {ExchAtom, ClassCode, Commodity}) of
-                         [] ->
-                            mnesia:write(#m_commodity{ key = {ExchAtom, ClassCode, Commodity}, alias = Commodity}),
-                            false;
-                         [#m_commodity{key = {ExchAtom, ClassCode, Commodity}, enabled = E}] -> % already exists, nothing to do
-                            E
-                      end,
+            Key = {Commodity, Type, Exch},
+            case mnesia:read(m_commodity, Key) of
+               [] ->
+                  mnesia:write(#m_commodity{ key = Key, class_code = ClassCode}),
+                  false;
+               Res ->
+                  ok
+            end,
             mnesia:write(
                #m_instrument{
-                  name = {Name, ClassCode},
-                  full_name = FullName,
+                  name = {Name, Type, Exch},
+                  full_name = common_utils:cp1251_to_unicode(FullName),
                   exchange = Exch,
                   expiration = Expiration,
                   commodity = Commodity,
@@ -89,7 +89,6 @@ handle_info({pg_message, _, _, #new_instrument{
                   limit_down = LDown,
                   lot_size = LSize,
                   type = Type,
-                  enabled = Enabled,
                   ref = Ref}),
             mnesia:write(#m_exchange{name = Exch})
       end),
@@ -121,7 +120,7 @@ create_db() ->
    case mnesia:create_schema([]) of
       ok ->
          mnesia:start(),
-         ?create_table(m_instrument, set),
+         ?create_table(m_instrument, ordered_set),
          ?create_table(m_commodity, set),
          ?create_table(m_service, set),
          ?create_table(m_exchange, set);
@@ -130,9 +129,11 @@ create_db() ->
          ok
    end.
 
-type_to_symbol(future) -> $F;
-type_to_symbol(standard) -> $S;
-type_to_symbol(equity) -> $E.
+type_to_symbol(future)    -> $F;
+type_to_symbol(standard)  -> $S;
+type_to_symbol(equity)    -> $E;
+type_to_symbol(bond)      -> $B;
+type_to_symbol(itf)       -> $I.
 
 month_to_symbol(1) -> $F;
 month_to_symbol(2) -> $G;
