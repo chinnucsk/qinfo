@@ -44,7 +44,7 @@ handle_call({get_instruments, _Exchange, OnlyEnabled}, _From, State) ->
    {atomic, Res} = mnesia:transaction
    (
       fun() ->
-         mnesia:select(m_instrument, [{#m_instrument{exchange = '$1', _='_'}, [{'==', '$1', 'RTS'}], ['$_']}])
+         mnesia:select(m_instrument, [{#m_instrument{key = {'_', '_', '$1'}, _='_'}, [{'==', '$1', 'RTS'}], ['$_']}])
       end
    ),
    {reply, Res, State};
@@ -57,7 +57,7 @@ handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
    {noreply, State}.
 
-handle_info({pg_message, _, _, I = #new_instrument{}, State) ->
+handle_info({pg_message, _, _, I = #new_instrument{}}, State) ->
    {atomic, ok} = mnesia:transaction(
       fun() ->
          insert_commodity(I),
@@ -111,15 +111,12 @@ insert_instrument(#new_instrument{
       [] ->
          NewInstr = #m_instrument{
                   key = Key,
-                  exch_name = Name,
+                  commodity = {Commodity, Type, Exch},
                   full_name = common_utils:cp1251_to_unicode(FullName),
-                  exchange = Exch,
                   expiration = Expiration,
-                  commodity = Commodity,
                   limit_up = LUp,
                   limit_down = LDown,
                   lot_size = LSize,
-                  type = Type,
                   ref = Ref},
          ok = mnesia:write(NewInstr),
          NewInstr;
@@ -159,9 +156,10 @@ create_db() ->
       ok ->
          mnesia:start(),
          ?create_table(m_instrument, ordered_set),
-         ?create_table(m_commodity, set),
+         ?create_table(m_commodity, ordered_set),
          ?create_table(m_service, set),
-         ?create_table(m_exchange, set);
+         ?create_table(m_exchange, set),
+         mnesia:add_table_index(m_instrument, #m_instrument.commodity);
       {error, {_, {already_exists, _}}} ->
          mnesia:start(),
          ok
@@ -190,11 +188,11 @@ get_expiration({{Year, Month, _Day}, _}) ->
    Y = Year - (Year div 10 * 10),
    [month_to_symbol(Month)] ++ integer_to_list(Y).
 
-create_internal_symbol(#m_instrument{exchange = Exchange, type = Type = future, expiration = Expiration},
+create_internal_symbol(#m_instrument{key = {_, future, Exchange}, expiration = Expiration},
    #m_commodity{alias = Alias}) ->
-   lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(Type), Alias, get_expiration(Expiration)]));
+   lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(future), Alias, get_expiration(Expiration)]));
 
-create_internal_symbol(#m_instrument{exchange = Exchange, type = Type},
+create_internal_symbol(#m_instrument{key = {_, Type, Exchange}},
    #m_commodity{alias = Alias}) ->
    lists:flatten(io_lib:format("~s.~c.~s", [Exchange, type_to_symbol(Type), Alias])).
 

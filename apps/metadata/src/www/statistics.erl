@@ -2,7 +2,7 @@
 
 -include_lib("nitrogen_core/include/wf.hrl").
 
--export([main/0, layout/0]).
+-export([main/0, layout/0, event/1]).
 
 main() ->
    #template{ file="./www/page.html"}.
@@ -20,4 +20,12 @@ layout() ->
          #literal{ text = "statistics"}
       ]
    },
-   [TopPanel, #panel{ text = <<208,159,209,128,208,184,208,178,208,181,209,130>>}].
+   [TopPanel, #table{ rows = [
+         #tablerow{ cells = [
+               #tablecell{ text = "sdfsdf"},
+               #tablecell{ body = [ #textbox{ text = "123", postback = a} ]}
+            ]}
+      ]}].
+
+event(E) ->
+   io:format("~p~n", [E]).

@@ -5,6 +5,9 @@
 
 -export([main/0, layout/0, event/1]).
 
+-define(white, "#FFFFFF;").
+-define(gray,  "#EEEEEE;").
+
 main() ->
    #template{ file="./www/page.html"}.
 
@@ -33,8 +36,7 @@ layout() ->
 
 build_filter() ->
    {Checkboxes, Exchanges} = build_exchanges(mnesia:dirty_first(m_exchange), []),
-   {[
-      #panel{ body = Checkboxes },
+   {[ #panel{ body = Checkboxes },
       #panel{ body = [ #checkbox{ id = checkbox_enabled, text = "Only enabled instruments", postback = filter_changed}]}
    ],
    Exchanges}.
@@ -44,8 +46,7 @@ build_exchanges('$end_of_table', Exchanges) ->
 build_exchanges(Key, Exchanges) ->
    [#m_exchange{ name = ExchName }] = mnesia:dirty_read(m_exchange, Key),
    {Checkboxes, NewExchanges} = build_exchanges(mnesia:dirty_next(m_exchange, Key), [ExchName | Exchanges]),
-   {[
-      #checkbox{
+   {[#checkbox{
          id= checkbox_exchange,
          text = ExchName,
          checked = true,
@@ -58,6 +59,7 @@ build_instr_header() ->
       #tableheader{ text = "Name", style = "width: 100px;"},
       #tableheader{ text = "Full name", style = "width: 300px;"},
       #tableheader{ text = "ExchName", style = "width: 100px;"},
+      #tableheader{ text = "Type", align = center, style = "width: 80px;"},
       #tableheader{ text = "Lot size", align = center, style = "width: 80px;"},
       #tableheader{ text = "Enabled", align = center}
    ], style = "background-color: #999797;"}.
@@ -67,37 +69,45 @@ build_instr(Alpha, Exchanges) ->
       [ [ [#literal{ text = [X]}, #literal{ text = " "}] || X <- lists:seq($0, $9)],
         [ [#literal{ text = [X]}, #literal{ text = " "}] || X <- lists:seq($A, $Z)]]),
    EnabledOnly = get_enabled_only(),
-   {NewAlphaList, Instrs} = build_instr_impl(Alpha, AlphaList, EnabledOnly, Exchanges, mnesia:dirty_first(m_instrument)),
+   {NewAlphaList, Instrs} = build_instr_impl(Alpha, AlphaList, EnabledOnly, Exchanges, mnesia:dirty_first(m_commodity),
+   ?white),
    InstrHeader = build_instr_header(),
    {#panel{ id = alpha_filter, body = NewAlphaList}, #table{ id = instruments, rows = [InstrHeader, Instrs]}}.
 
-build_instr_impl(_,  AlphaList, _, _, '$end_of_table') ->
+build_instr_impl(_,  AlphaList, _, _, '$end_of_table', _) ->
    {AlphaList, []};
-build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, Key) ->
-   [#m_instrument{
-         commodity = [FL|_] = Commodity,
-         exch_name = ExchName,
-         exchange = Exch,
-         full_name = FullName,
-         lot_size = LS}] = mnesia:dirty_read(m_instrument, Key),
-   case is_in_filter(SelectedExchs, EnabledOnly, Exch, false) of
+build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, Key, BackColor) ->
+   [Commodity = #m_commodity{key = {[FL|_], _Type, Exchange}}] = mnesia:dirty_read(m_commodity, Key),
+   case is_in_filter(SelectedExchs, EnabledOnly, Exchange, false) of
       true when Alpha == FL ->
-         {NewAlphaList, Instrs} = build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key)),
-         NewAlphaList2 = replace_to_link(Alpha, NewAlphaList),
-         {NewAlphaList2, [
-            #tablerow{ cells = [
-               #tablecell{ text = ExchName },
-               #tablecell{ text = unicode:characters_to_binary(FullName) },
-               #tablecell{ text = Exch },
-               #tablecell{ text = LS, align = center },
-               #tablecell{ body = [ #checkbox{ checked = false}], align = center }
-            ]} | Instrs]};
+         NewAlphaList = replace_to_link(Alpha, AlphaList),
+         CommodityInstrs = build_by_commodity(Commodity, BackColor),
+         {NewAlphaList2, Instrs} = build_instr_impl(Alpha, NewAlphaList, EnabledOnly, SelectedExchs,
+            mnesia:dirty_next(Key), invert_color(BackColor)),
+         {
+            NewAlphaList2,
+            [CommodityInstrs, Instrs]
+         };
       true ->
          NewAlphaList = replace_to_link(Commodity, AlphaList),
-         build_instr_impl(Alpha, NewAlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key));
+         build_instr_impl(Alpha, NewAlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key),
+            BackColor);
       false ->
-         build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key))
+         build_instr_impl(Alpha, AlphaList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_instrument, Key), BackColor)
    end.
+
+build_by_commodity(#m_commodity{key = Key = {_, Type, Exch}, enabled = Enabled}, BackColor) ->
+   Instruments = mnesia:dirty_index_read(m_instrument, Key, #m_instrument.commodity),
+   lists:foldr(
+      fun(#m_instrument{key = {ExchName, _, _}, full_name = FullName, lot_size = LSize}, Acc) ->
+         [#tablerow{ cells = [
+            #tablecell{ text = ExchName },
+            #tablecell{ text = unicode:characters_to_binary(FullName) },
+            #tablecell{ text = Exch },
+            #tablecell{ text = Type, align = center },
+            #tablecell{ text = LSize, align = center },
+            #tablecell{ body = [ #checkbox{ checked = Enabled}], align = center }
+         ], style = "background-color: " ++ BackColor} | Acc] end, [], Instruments).
 
 event({alpha, A}) ->
    {AlphaFilter, Instruments} = build_instr(A, wf:qs(checkbox_exchange)),
@@ -132,3 +142,8 @@ is_in_filter(SelectedExchs, EnabledOnly, Exch, Enabled) ->
 
 is_in_filter(_, _, _, _) ->
    false.
+
+invert_color(?white) ->
+   ?gray;
+invert_color(?gray) ->
+   ?white.
