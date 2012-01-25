@@ -40,7 +40,7 @@ handle_call({get_settings, ServiceName}, _From, State) ->
          {reply, {ok, Msg}, State}
    end;
 
-handle_call({get_instruments, Exchange, OnlyEnabled}, _From, State) ->
+handle_call({get_instruments, _Exchange, OnlyEnabled}, _From, State) ->
    {atomic, Res} = mnesia:transaction
    (
       fun() ->
@@ -57,40 +57,13 @@ handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
    {noreply, State}.
 
-handle_info({pg_message, _, _, #new_instrument{
-         name = Name,
-         exchange = Exch,
-         full_name = FullName,
-         class_code = ClassCode,
-         expiration = Expiration,
-         commodity = Commodity,
-         limit_up = LUp,
-         limit_down = LDown,
-         lot_size = LSize,
-         type = Type,
-         ref = Ref}}, State) ->
-   {atomic, ok} = mnesia:transaction(fun() ->
-            Key = {Commodity, Type, Exch},
-            case mnesia:read(m_commodity, Key) of
-               [] ->
-                  mnesia:write(#m_commodity{ key = Key, class_code = ClassCode}),
-                  false;
-               Res ->
-                  ok
-            end,
-            mnesia:write(
-               #m_instrument{
-                  key = {Name, Type, Exch},
-                  full_name = common_utils:cp1251_to_unicode(FullName),
-                  exchange = Exch,
-                  expiration = Expiration,
-                  commodity = Commodity,
-                  limit_up = LUp,
-                  limit_down = LDown,
-                  lot_size = LSize,
-                  type = Type,
-                  ref = Ref}),
-            mnesia:write(#m_exchange{name = Exch})
+handle_info({pg_message, _, _, I = #new_instrument{}, State) ->
+   {atomic, ok} = mnesia:transaction(
+      fun() ->
+         insert_commodity(I),
+         insert_instrument(I),
+         insert_exchange(I),
+         ok
       end),
    {noreply, State};
 
@@ -106,6 +79,71 @@ code_change(_OldVsn, State, _Extra) ->
    {ok, State}.
 
 %% ========= private ============}
+
+insert_commodity(#new_instrument{
+         exchange = Exch,
+         class_code = ClassCode,
+         commodity = Commodity,
+         type = Type}) ->
+   Key = {Commodity, Type, Exch},
+   case mnesia:read(m_commodity, Key) of
+      [] ->
+         NewCommodity = #m_commodity{ key = Key, class_code = ClassCode},
+         ok = mnesia:write(NewCommodity),
+         NewCommodity;
+      [Comm] ->
+         Comm
+   end.
+
+insert_instrument(#new_instrument{
+         name = Name,
+         exchange = Exch,
+         full_name = FullName,
+         expiration = Expiration,
+         commodity = Commodity,
+         limit_up = LUp,
+         limit_down = LDown,
+         lot_size = LSize,
+         type = Type,
+         ref = Ref}) ->
+   Key = {Name, Type, Exch},
+   case mnesia:read(m_instrument, Key) of
+      [] ->
+         NewInstr = #m_instrument{
+                  key = Key,
+                  exch_name = Name,
+                  full_name = common_utils:cp1251_to_unicode(FullName),
+                  exchange = Exch,
+                  expiration = Expiration,
+                  commodity = Commodity,
+                  limit_up = LUp,
+                  limit_down = LDown,
+                  lot_size = LSize,
+                  type = Type,
+                  ref = Ref},
+         ok = mnesia:write(NewInstr),
+         NewInstr;
+      [Instr] ->
+         UpdateInstr = Instr#m_instrument{
+            full_name = common_utils:cp1251_to_unicode(FullName),
+            expiration = Expiration,
+            limit_up = LUp,
+            limit_down = LDown,
+            lot_size = LSize,
+            ref = Ref},
+         ok = mnesia:write(UpdateInstr),
+         UpdateInstr
+   end.
+
+insert_exchange(#new_instrument{exchange = Exch}) ->
+   case mnesia:read(m_exchange, exch) of
+      [] ->
+         NewExchange = #m_exchange{name = Exch},
+         ok = mnesia:write(NewExchange),
+         NewExchange;
+      [Exch] ->
+         Exch
+   end.
 
 -define(create_table(Table, Type),
    case (catch mnesia:table_info(Table, version)) of
@@ -156,7 +194,7 @@ create_internal_symbol(#m_instrument{exchange = Exchange, type = Type = future, 
    #m_commodity{alias = Alias}) ->
    lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(Type), Alias, get_expiration(Expiration)]));
 
-create_internal_symbol(#m_instrument{exchange = Exchange, type = Type, expiration = Expiration},
+create_internal_symbol(#m_instrument{exchange = Exchange, type = Type},
    #m_commodity{alias = Alias}) ->
    lists:flatten(io_lib:format("~s.~c.~s", [Exchange, type_to_symbol(Type), Alias])).
 
