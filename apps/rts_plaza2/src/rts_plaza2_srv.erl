@@ -136,7 +136,7 @@ processInfo(
       full_name = FullName,
       expiration = format_datetime(Expiration),
       commodity = Commodity,
-      type = if (Signs band 16#8 =/= 0) -> standard; true -> future end,
+      type = if (Signs band 16#8 =/= 0) -> spot; true -> future end,
       limit_up = LUp,
       limit_down = LDown,
       lot_size = LSize,
