@@ -24,17 +24,17 @@
 
 -define(def_schedule,
    [
-      {mon, {10, 0, 0}, {23, 00, 00}},
-      {tue, {10, 0, 0}, {23, 00, 00}},
-      {wed, all_day},
-      {thu, {10, 0, 0}, {23, 00, 00}},
-      {fri, all_day},
-      {sat, not_working},
-      {sun, not_working}
+      {mon, disabled, "9:59-19:00"},
+      {tue, disabled, "9:59-19:00"},
+      {wed, disabled, "9:59-19:00"},
+      {thu, disabled, "9:59-19:00"},
+      {fri, disabled, "9:59-19:00"},
+      {sat, disabled, ""},
+      {sun, disabled, ""}
    ]).
 
--record(settings, {enabled, lib_full_path, log_level, conn_params, tables}).
--record(state, {drv_port, settings}).
+-record(settings, {lib_full_path, log_level, conn_params, tables}).
+-record(state, {status = offline, drv_port, settings}).
 -record(data_row, {table, sec_board, sec_code, sec_name, lot_size, decimals, sec_type}).
 
 %% ========= public ============
@@ -43,7 +43,7 @@ start() ->
    gen_server:start_link(?server_name, ?MODULE, [], []).
 
 init(_Args) ->
-   {ok, Service} = metadata:register_service(?server_name, "MICEX (FOND) MTESrl market data", false, ?def_settings, ?def_schedule),
+   {ok, Service} = metadata:register_service(?server_name, "MICEX (FOND) MTESrl market data", ?def_settings, ?def_schedule),
    Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl_fond, Settings]),
    ok = load_dll(),
@@ -54,7 +54,7 @@ handle_call(Msg, _From, State) ->
    error_logger:warning_msg("Unexpected message: ~p", [Msg]),
    {reply, undef, State}.
 
-handle_cast(reconfigure, State = #state{drv_port = DrvPort, settings = OldSettings}) ->
+handle_cast(reconfigure, State = #state{status = Status, drv_port = DrvPort, settings = OldSettings}) ->
    {ok, Service} = metadata:get_settings(?server_name),
    NewSettings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_micex_mtesrl_fond, NewSettings]),
@@ -62,11 +62,26 @@ handle_cast(reconfigure, State = #state{drv_port = DrvPort, settings = OldSettin
       true ->
          error_logger:info_msg("New settings are the same as old one. Nothing to do."),
          {noreply, State};
-      false ->
+      false when Status == online ->
          close(DrvPort),
          NewDrvPort = open(NewSettings),
-         {noreply, State#state{drv_port = NewDrvPort, settings = NewSettings}}
+         {noreply, State#state{drv_port = NewDrvPort, settings = NewSettings}};
+      false ->
+         error_logger:info_msg("Settings are applied."),
+         {noreply, State#state{settings = NewSettings}}
    end;
+handle_cast(online, #state{status = online}) ->
+   error_logger:info_msg("Service ~p is already online.", [?qinfo_micex_mtesrl_fond]);
+handle_cast(offline, #state{status = offline}) ->
+   error_logger:info_msg("Service ~p is already offline.", [?qinfo_micex_mtesrl_fond]);
+handle_cast(online, State = #state{settings = Settings}) ->
+   NewDrvPort = open(Settings),
+   error_logger:info_msg("Service ~p is online.", [?qinfo_micex_mtesrl_fond]),
+   {noreply, State#state{status = online, drv_port = NewDrvPort}};
+handle_cast(offline, State = #state{drv_port = DrvPort}) ->
+   close(DrvPort),
+   error_logger:info_msg("Service ~p is offline.", [?qinfo_micex_mtesrl_fond]),
+   {noreply, State#state{status = offline, drv_port = undef}};
 handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p", [Msg]),
    {noreply, State}.
@@ -92,9 +107,6 @@ load_dll() ->
          Msg
    end.
 
-open(#settings{enabled = false}) ->
-   error_logger:info_msg("~p is not enabled.", [?qinfo_micex_mtesrl_fond]),
-   undef;
 open(#settings{lib_full_path = LibFullPath, log_level = LogLevel, conn_params = ConnParams, tables = Tables}) ->
    DrvPort = erlang:open_port({spawn, ?micex_driver_dll}, [binary]),
    erlang:port_command(DrvPort, term_to_binary({connect, LibFullPath, LogLevel, ConnParams, Tables})),
@@ -143,9 +155,8 @@ format_sec_type([SecType]) when SecType == $9 orelse SecType == $A orelse SecTyp
 format_sec_type([_SecType]) ->
    unknown.
 
-extract_settings(#service{enabled = Enabled, settings = Settings}) ->
+extract_settings(#service{settings = Settings}) ->
    #settings{
-      enabled       = Enabled,
       lib_full_path = (lists:keyfind("LibFullPath", 2, Settings))#setting.value,
       log_level     = list_to_atom((lists:keyfind("LogLevel", 2, Settings))#setting.value),
       conn_params   = (lists:keyfind("ConnParams", 2, Settings))#setting.value,

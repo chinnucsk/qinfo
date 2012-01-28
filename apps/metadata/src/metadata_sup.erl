@@ -13,7 +13,8 @@ init(_Args) ->
       {
          {one_for_one, 10, 1},
          [
-            {1,{metadata_srv, start, []}, permanent, 1000, worker, [metadata_srv]}
+            {1, {metadata_srv,  start, []}, permanent, 1000, worker, [metadata_srv]},
+            {2, {scheduler_srv, start, []}, permanent, 1000, worker, [scheduler_srv]}
          ]
       }
    }.

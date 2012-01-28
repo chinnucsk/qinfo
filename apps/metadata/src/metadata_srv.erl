@@ -19,15 +19,15 @@ init(_Args) ->
    pg:join(?group_rts_instruments, self()),
    {ok, undef}.
 
-handle_call({register, ServiceName, Description, Enabled, Settings, Schedule}, _From, State) ->
+handle_call({register, ServiceName, Description, Settings, Schedule}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
-         mnesia:dirty_write(#m_service{service = ServiceName, description = Description, enabled = Enabled, settings = Settings, schedule = Schedule}),
+         mnesia:dirty_write(#m_service{service = ServiceName, description = Description, settings = Settings, schedule = Schedule}),
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
-         Msg = #service{service = ServiceName, enabled = Enabled, settings = Settings},
+         Msg = #service{service = ServiceName, settings = Settings},
          {reply, {ok, Msg}, State};
-      [#m_service{service = Service, enabled = OldEnabled, settings = OldSettings}] ->
-         Msg = #service{service = Service, enabled = OldEnabled, settings = OldSettings},
+      [#m_service{service = Service, settings = OldSettings}] ->
+         Msg = #service{service = Service, settings = OldSettings},
          {reply, {ok, Msg}, State}
    end;
 
@@ -35,8 +35,8 @@ handle_call({get_settings, ServiceName}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
          {reply, {error, no_such_service}, State};
-      [#m_service{service = Service, enabled = Enabled, settings = Settings}] ->
-         Msg = #service{service = Service, enabled = Enabled, settings = Settings},
+      [#m_service{service = Service, settings = Settings}] ->
+         Msg = #service{service = Service, settings = Settings},
          {reply, {ok, Msg}, State}
    end;
 
@@ -47,6 +47,25 @@ handle_call({get_instruments, _Exchange, OnlyEnabled}, _From, State) ->
          mnesia:select(m_instrument, [{#m_instrument{key = {'_', '_', '$1'}, _='_'}, [{'==', '$1', 'RTS'}], ['$_']}])
       end
    ),
+   {reply, Res, State};
+
+handle_call(get_schedules, _From, State) ->
+   {atomic, SchedList} = mnesia:transaction(
+   fun() ->
+      mnesia:foldl(
+         fun(#m_service{service = ServiceName, schedule = SchedList}, Acc) ->
+            [{ServiceName, SchedList} | Acc]
+         end, [], m_service)
+   end),
+   {reply, SchedList, State};
+
+handle_call({get_schedules, ServiceName}, _From, State) ->
+   Res = case mnesia:dirty_read(m_service, ServiceName) of
+      [] ->
+         no_such_service;
+      [#m_service{service = ServiceName, schedule = SchedList}] ->
+         SchedList
+   end,
    {reply, Res, State};
 
 handle_call(Msg, From, State) ->
@@ -78,7 +97,7 @@ terminate(Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
    {ok, State}.
 
-%% ========= private ============}
+%% ========= private ============
 
 insert_commodity(#new_instrument{
          exchange = Exch,

@@ -19,7 +19,7 @@
                          ref          :: pos_integer()}).
 
 -record(trade, {price, qty}).
--record(service, {service, enabled, settings = [], schedule = []}).
+-record(service, {service, settings = [], schedule = []}).
 -record(setting, {name, value, description, validator = undef}).
 
 -record(m_commodity, {key             :: commodity_key(),
@@ -38,7 +38,6 @@
 
 -record(m_service, {service       :: tuple(),
                     description   :: string(),
-                    enabled       :: boolean(),
                     settings = [] :: list(),
                     schedule = [] :: list()}).
 

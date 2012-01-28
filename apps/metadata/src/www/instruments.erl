@@ -138,10 +138,7 @@ replace_to_link(Alpha, AlphaList) ->
 
 is_in_filter(SelectedExchs, EnabledOnly, Exch, Enabled) ->
    (EnabledOnly == false orelse (EnabledOnly == true andalso Enabled == true)) andalso
-   lists:member(Exch, SelectedExchs);
-
-is_in_filter(_, _, _, _) ->
-   false.
+   lists:member(Exch, SelectedExchs).
 
 invert_color(?white) ->
    ?gray;

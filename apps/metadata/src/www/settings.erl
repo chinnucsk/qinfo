@@ -38,19 +38,14 @@ layout() ->
 build(Body, '$end_of_table') ->
    Body;
 build(Body, Key) ->
-   [#m_service{service = ServerName, description = Descr, enabled = Enabled, settings = Settings}] = mnesia:dirty_read(m_service, Key),
-   Id = create_id(ServerName, "checkbox_enabled"),
+   [#m_service{service = ServerName, description = Descr, settings = Settings}] = mnesia:dirty_read(m_service, Key),
    build(
       [
          #p{},
          #h3{ text = Descr },
-         #table{ rows = [
-            #tablerow{ cells = [
-               #tablecell{ text = "Enabled"},
-               #tablecell{ body = #checkbox{ id = Id, checked = Enabled}}]},
-            build_settings(ServerName, Settings) ]}|
-         Body
-      ], mnesia:dirty_next(m_service, Key)
+         #table{ rows = [ build_settings(ServerName, Settings)]} | Body
+      ],
+      mnesia:dirty_next(m_service, Key)
    ).
 
 build_settings(_ServerName, []) ->
@@ -113,8 +108,7 @@ save('$end_of_table') ->
 save(Key) ->
    [Service = #m_service{service = ServerName, settings = Settings}] = mnesia:dirty_read(m_service, Key),
    NewSettings = get_settings(ServerName, Settings),
-   Enabled = wf:q(create_id(ServerName, "checkbox_enabled")),
-   ok = mnesia:dirty_write(Service#m_service{enabled = if Enabled == "on" -> true; true -> false end, settings = NewSettings}),
+   ok = mnesia:dirty_write(Service#m_service{settings = NewSettings}),
    save(mnesia:dirty_next(m_service, Key)).
 
 get_settings(_ServerName, []) ->

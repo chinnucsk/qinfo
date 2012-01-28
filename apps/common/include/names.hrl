@@ -5,5 +5,6 @@
 -define(group_micex_instruments,   'micex.instruments').
 
 -define(qinfo_metadata,          'qinfo.metadata').
+-define(qinfo_scheduler,         'qinfo.scheduler').
 -define(qinfo_rts_plaza2,        'qinfo.rts.plaza2').
 -define(qinfo_micex_mtesrl_fond, 'qinfo.micex.mtesrl.fond').

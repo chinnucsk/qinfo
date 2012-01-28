@@ -24,17 +24,17 @@
 
 -define(def_schedule,
    [
-      {mon, {10, 0, 0}, {23, 00, 00}},
-      {tue, {10, 0, 0}, {23, 00, 00}},
-      {wed, all_day},
-      {thu, {10, 0, 0}, {23, 00, 00}},
-      {fri, all_day},
-      {sat, not_working},
-      {sun, not_working}
+      {mon, disabled, "09:55-18:45, 18:59-23:50"},
+      {tue, disabled, "09:55-18:45, 18:59-23:50"},
+      {wed, disabled, "09:55-18:45, 18:59-23:50"},
+      {thu, disabled, "09:55-18:45, 18:59-23:50"},
+      {fri, disabled, "09:55-18:45, 18:59-23:50"},
+      {sat, disabled, ""},
+      {sun, disabled, ""}
    ]).
 
--record(settings, {enabled, ini_file, host, port, app_name, passwd, log_level, streams}).
--record(state, {drv_port, settings}).
+-record(settings, {ini_file, host, port, app_name, passwd, log_level, streams}).
+-record(state, {status = offline, drv_port, settings}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
       isin, name, commodity, limit_up, limit_down, lot_size, expiration, signs}).
 
@@ -45,7 +45,7 @@ start() ->
 
 init(_Args) ->
    {ok, Service} = metadata:register_service(
-      ?server_name, "RTS Plaza2 market data", false, ?def_settings, ?def_schedule),
+      ?server_name, "RTS Plaza2 market data", ?def_settings, ?def_schedule),
    Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
    load_dll(),
@@ -56,7 +56,7 @@ handle_call(Msg, _From, State) ->
    error_logger:error_msg("Unexpected message: ~p~n", [Msg]),
    {reply, undef, State}.
 
-handle_cast(reconfigure, State = #state{drv_port = DrvPort, settings = OldSettings}) ->
+handle_cast(reconfigure, State = #state{status = Status, drv_port = DrvPort, settings = OldSettings}) ->
    {ok, Service} = metadata:get_settings(?server_name),
    NewSettings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, NewSettings]),
@@ -64,11 +64,26 @@ handle_cast(reconfigure, State = #state{drv_port = DrvPort, settings = OldSettin
       true ->
          error_logger:info_msg("New settings are the same as old one. Nothing to do."),
          {noreply, State};
-      false ->
+      false when Status == online ->
          close(DrvPort),
          NewDrvPort = open(NewSettings),
-         {noreply, State#state{drv_port = NewDrvPort, settings = NewSettings}}
+         {noreply, State#state{drv_port = NewDrvPort, settings = NewSettings}};
+      false ->
+         error_logger:info_msg("Settings are applied."),
+         {noreply, State#state{settings = NewSettings}}
    end;
+handle_cast(online, #state{status = online}) ->
+   error_logger:info_msg("Service ~p is already online.", [?qinfo_rts_plaza2]);
+handle_cast(offline, #state{status = offline}) ->
+   error_logger:info_msg("Service ~p is already offline.", [?qinfo_rts_plaza2]);
+handle_cast(online, State = #state{settings = Settings}) ->
+   NewDrvPort = open(Settings),
+   error_logger:info_msg("Service ~p is online.", [?qinfo_rts_plaza2]),
+   {noreply, State#state{status = online, drv_port = NewDrvPort}};
+handle_cast(offline, State = #state{drv_port = DrvPort}) ->
+   close(DrvPort),
+   error_logger:info_msg("Service ~p is offline.", [?qinfo_rts_plaza2]),
+   {noreply, State#state{status = offline, drv_port = undef}};
 handle_cast(Msg, State) ->
    error_logger:error_msg("Unexpected message: ~p~n", [Msg]),
    {noreply, State}.
@@ -99,9 +114,6 @@ load_dll() ->
         Res
    end.
 
-open(#settings{enabled = false}) ->
-   error_logger:info_msg("~p is not enabled.", [?qinfo_rts_plaza2]),
-   undef;
 open(Settings) ->
    DrvPort = erlang:open_port({spawn, ?plaza2_driver_dll}, [binary]),
    true = erlang:port_command(DrvPort, term_to_binary({init, Settings#settings.ini_file})),
@@ -166,10 +178,9 @@ format_datetime(DateTime) ->
    MSec = DateTime rem 1000,
    {{Year, Month, Day},{Hour, Min, Sec, MSec}}.
 
-extract_settings(#service{enabled = Enabled, settings = Settings}) ->
+extract_settings(#service{settings = Settings}) ->
    IniDir = code:lib_dir(rts_plaza2) ++ "/ini/",
    #settings{
-      enabled  = Enabled,
       ini_file = IniDir ++ "P2ClientGate.ini",
       host     = (lists:keyfind("Host", 2, Settings))#setting.value,
       port     = list_to_integer((lists:keyfind("Port", 2, Settings))#setting.value),
