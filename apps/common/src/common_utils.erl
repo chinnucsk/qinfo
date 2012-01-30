@@ -32,7 +32,7 @@ validate_time_intervals(TimeIntervals) ->
       {match, _} ->
          Intervals = format_time_intervals(TimeIntervals),
          try lists:map(fun(Interval) -> validate_interval(Interval) end, Intervals) of
-            ok -> ok
+            _ -> ok
          catch
             throw:Err -> {error, Err}
          end
@@ -81,6 +81,7 @@ validate_interval_test() ->
 
 validate_time_intervals_test() ->
    ?assertEqual({error, invalid_format}, validate_time_intervals("09;30-11:30, 11:55-14:20")),
-   ?assertEqual({error, invalid_interval}, validate_time_intervals("09:30-11:30, 14:55-14:20")).
+   ?assertEqual({error, invalid_interval}, validate_time_intervals("09:30-11:30, 14:55-14:20")),
+   ?assertEqual(ok, validate_time_intervals("09:30-11:30, 14:55-17:20")).
 
 -endif.

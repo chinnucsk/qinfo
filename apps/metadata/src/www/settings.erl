@@ -23,7 +23,6 @@ layout() ->
          #link{ class=a, text = "statistics", url = "statistics"}
       ]
    },
-   Body = build([], mnesia:dirty_first(m_service)),
    [
       TopPanel,
       #flash{},
@@ -31,22 +30,52 @@ layout() ->
       #button{ id = apply_button, text = "Apply", postback = click_apply },
       #literal{ text = " " },
       #button{ id = save_button, text = "Save", postback = click_save },
-      #p{}|
-      Body
+      #p{} |  build()
    ].
 
-build(Body, '$end_of_table') ->
-   Body;
-build(Body, Key) ->
-   [#m_service{service = ServerName, description = Descr, settings = Settings}] = mnesia:dirty_read(m_service, Key),
-   build(
+build() ->
+   {atomic, Body} = mnesia:transaction(
+      fun() ->
+         mnesia:foldr(
+            fun(#m_service{service = ServerName, description = Descr, settings = Settings, schedule = Schedules}, Acc) ->
+               [
+                  #p{},
+                  #h3{ text = Descr },
+                  #table{ rows = build_settings(ServerName, Settings)},
+                  #p{},
+                  #h3{ text = "Schedule:" },
+                  #table{ rows = build_schedule(ServerName, Schedules)} | Acc ]
+            end, [], m_service)
+      end
+   ),
+   Body.
+
+build_schedule(_, []) ->
+   [];
+build_schedule(ServerName, [{DayOfTheWeek, Status, TimeIntervals}|Tail]) ->
+   DoW = erlang:atom_to_list(DayOfTheWeek),
+   TextId = create_id(ServerName, "_textbox_" ++ DoW),
+   CheckId = create_id(ServerName, "_checkbox_" ++ DoW),
+   wf:wire(save_button,
+      TextId,
+      #validate{ validators = [ #custom{ text = "Invalid time intervals",
+               tag = CheckId,
+               function = fun validate_intervals/2}]}),
+   wf:wire(apply_button,
+      TextId,
+      #validate{ validators = [ #custom{ text = "Invalid time intervals",
+               tag = CheckId,
+               function = fun validate_intervals/2}]}),
+   [
+      #tablerow{ cells =
       [
-         #p{},
-         #h3{ text = Descr },
-         #table{ rows = [ build_settings(ServerName, Settings)]} | Body
-      ],
-      mnesia:dirty_next(m_service, Key)
-   ).
+         #tablecell{ body = [
+            #checkbox{ id = create_id(ServerName, "_checkbox_" ++ DoW),
+               text = DoW, checked = if Status == enabled -> true; true -> false end}]},
+         #tablecell{ body = [
+            #textbox{ id = TextId, text = TimeIntervals, style="width: 200px;"}]}
+      ]} | build_schedule(ServerName, Tail)
+   ].
 
 build_settings(_ServerName, []) ->
    [];
@@ -106,9 +135,10 @@ event(click_save) ->
 save('$end_of_table') ->
    ok;
 save(Key) ->
-   [Service = #m_service{service = ServerName, settings = Settings}] = mnesia:dirty_read(m_service, Key),
+   [Service = #m_service{service = ServerName, settings = Settings, schedule = Schedule}] = mnesia:dirty_read(m_service, Key),
    NewSettings = get_settings(ServerName, Settings),
-   ok = mnesia:dirty_write(Service#m_service{settings = NewSettings}),
+   NewSchedule = get_schedules(ServerName, Schedule),
+   ok = mnesia:dirty_write(Service#m_service{settings = NewSettings, schedule = NewSchedule}),
    save(mnesia:dirty_next(m_service, Key)).
 
 get_settings(_ServerName, []) ->
@@ -119,6 +149,21 @@ get_settings(ServerName, [S = #setting{name = Name, value = OldVal} | Rest]) whe
 get_settings(ServerName, [S = #setting{name = Name} | Rest]) ->
    Value = wf:q(create_id(ServerName, Name)),
    [ S#setting{value = Value} | get_settings(ServerName, Rest)].
+
+get_schedules(_ServerName, []) ->
+   [];
+get_schedules(ServerName, [{DayOfTheWeek, _, _}|Tail]) ->
+   DoW = atom_to_list(DayOfTheWeek),
+   CheckId = create_id(ServerName, "_checkbox_" ++ DoW),
+   Status = case wf:q(CheckId) of
+      undefined ->
+         disabled;
+      "on" ->
+         enabled
+   end,
+   TextId = create_id(ServerName, "_textbox_" ++ DoW),
+   TimeIntervals = wf:q(TextId),
+   [{DayOfTheWeek, Status, TimeIntervals} | get_schedules(ServerName, Tail)].
 
 notify('$end_of_table') ->
    ok;
@@ -142,3 +187,19 @@ val_is_log_level(Val) when Val == "error" orelse Val == "info" orelse Val == "de
    true;
 val_is_log_level(_) ->
    false.
+
+validate_intervals(CheckId, TimeIntervals) ->
+   Status = case wf:q(CheckId) of
+      undefined ->
+         disabled;
+      "on" ->
+         enabled
+   end,
+   case common_utils:validate_time_intervals(TimeIntervals) of
+     {error, _} when Status == enabled ->
+        false;
+     {error, _} ->
+        true;
+     ok ->
+        true
+   end.
