@@ -47,7 +47,7 @@ init(_Args) ->
    Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl_fond, Settings]),
    ok = load_dll(),
-   {ok, #state{drv_port = DrvPort, settings = Settings}}.
+   {ok, #state{settings = Settings}}.
 
 handle_call(Msg, _From, State) ->
    error_logger:warning_msg("Unexpected message: ~p", [Msg]),
@@ -72,7 +72,7 @@ handle_cast(reconfigure, State = #state{status = Status, drv_port = DrvPort, set
 handle_cast(online, State = #state{status = online}) ->
    error_logger:info_msg("Service ~p is already online.", [?qinfo_micex_mtesrl_fond]),
    {noreply, State};
-handle_cast(offline, State = q#state{status = offline}) ->
+handle_cast(offline, State = #state{status = offline}) ->
    error_logger:info_msg("Service ~p is already offline.", [?qinfo_micex_mtesrl_fond]),
    {noreply, State};
 handle_cast(online, State = #state{settings = Settings}) ->

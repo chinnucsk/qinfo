@@ -17,6 +17,9 @@
 reload() ->
    gen_server:call(?qinfo_scheduler, reload).
 
+schedule(ServiceName) ->
+   gen_server:call(?qinfo_scheduler, {schedule, ServiceName}).
+
 start() ->
    gen_server:start_link({local, ?qinfo_scheduler}, ?MODULE, [], []).
 
@@ -42,7 +45,7 @@ handle_cast({schedule, ServiceName}, State = #state{services = Services}) ->
    end,
    {noreply, State#state{services = NewServices}};
 
-handle_cast(reload, State = #state{services = OldServices}) ->
+handle_cast(reload, State) ->
    Schedules = metadata:get_schedules(),
    Now = calender:local_time(),
    NewServices = lists:foldl(

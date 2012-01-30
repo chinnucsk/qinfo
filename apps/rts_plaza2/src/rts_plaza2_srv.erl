@@ -49,7 +49,7 @@ init(_Args) ->
    Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
    load_dll(),
-   {ok, #state{drv_port = DrvPort, settings = Settings}}.
+   {ok, #state{settings = Settings}}.
 
 handle_call(Msg, _From, State) ->
    error_logger:error_msg("Unexpected message: ~p~n", [Msg]),
