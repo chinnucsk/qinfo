@@ -34,7 +34,7 @@
    ]).
 
 -record(settings, {lib_full_path, log_level, conn_params, tables}).
--record(state, {status = offline, drv_port, settings}).
+-record(state, {status = offline, drv_port = undef, settings}).
 -record(data_row, {table, sec_board, sec_code, sec_name, lot_size, decimals, sec_type}).
 
 %% ========= public ============
@@ -47,7 +47,6 @@ init(_Args) ->
    Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p~n", [?qinfo_micex_mtesrl_fond, Settings]),
    ok = load_dll(),
-   DrvPort = open(Settings),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.
 
 handle_call(Msg, _From, State) ->
@@ -70,10 +69,12 @@ handle_cast(reconfigure, State = #state{status = Status, drv_port = DrvPort, set
          error_logger:info_msg("Settings are applied."),
          {noreply, State#state{settings = NewSettings}}
    end;
-handle_cast(online, #state{status = online}) ->
-   error_logger:info_msg("Service ~p is already online.", [?qinfo_micex_mtesrl_fond]);
-handle_cast(offline, #state{status = offline}) ->
-   error_logger:info_msg("Service ~p is already offline.", [?qinfo_micex_mtesrl_fond]);
+handle_cast(online, State = #state{status = online}) ->
+   error_logger:info_msg("Service ~p is already online.", [?qinfo_micex_mtesrl_fond]),
+   {noreply, State};
+handle_cast(offline, State = q#state{status = offline}) ->
+   error_logger:info_msg("Service ~p is already offline.", [?qinfo_micex_mtesrl_fond]),
+   {noreply, State};
 handle_cast(online, State = #state{settings = Settings}) ->
    NewDrvPort = open(Settings),
    error_logger:info_msg("Service ~p is online.", [?qinfo_micex_mtesrl_fond]),
