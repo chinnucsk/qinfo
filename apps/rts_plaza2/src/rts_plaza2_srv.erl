@@ -34,7 +34,7 @@
    ]).
 
 -record(settings, {ini_file, host, port, app_name, passwd, log_level, streams}).
--record(state, {status = offline, drv_port, settings}).
+-record(state, {status = offline, drv_port = undef, settings}).
 -record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
       isin, name, commodity, limit_up, limit_down, lot_size, expiration, signs}).
 
@@ -49,7 +49,6 @@ init(_Args) ->
    Settings = extract_settings(Service),
    error_logger:info_msg("~p settings: ~p.~n", [?qinfo_rts_plaza2, Settings]),
    load_dll(),
-   DrvPort = open(Settings),
    {ok, #state{drv_port = DrvPort, settings = Settings}}.
 
 handle_call(Msg, _From, State) ->
@@ -72,10 +71,12 @@ handle_cast(reconfigure, State = #state{status = Status, drv_port = DrvPort, set
          error_logger:info_msg("Settings are applied."),
          {noreply, State#state{settings = NewSettings}}
    end;
-handle_cast(online, #state{status = online}) ->
-   error_logger:info_msg("Service ~p is already online.", [?qinfo_rts_plaza2]);
-handle_cast(offline, #state{status = offline}) ->
-   error_logger:info_msg("Service ~p is already offline.", [?qinfo_rts_plaza2]);
+handle_cast(online, State = #state{status = online}) ->
+   error_logger:info_msg("Service ~p is already online.", [?qinfo_rts_plaza2]),
+   {noreply, State};
+handle_cast(offline, State = #state{status = offline}) ->
+   error_logger:info_msg("Service ~p is already offline.", [?qinfo_rts_plaza2]),
+   {noreply, State};
 handle_cast(online, State = #state{settings = Settings}) ->
    NewDrvPort = open(Settings),
    error_logger:info_msg("Service ~p is online.", [?qinfo_rts_plaza2]),
