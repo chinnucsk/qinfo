@@ -2,30 +2,27 @@
 
 -behaviour(gen_server).
 
--export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, reload/0]).
+-export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, reload/0,
+         schedule/1]).
 
 -include_lib("common/include/names.hrl").
 
 -record(service, {name, status, schedule_list}).
 
--record(state, {services, timer_ref = undef}).
+-record(state, {services = [], timer_ref = undef}).
 
 %=======================================================================================================================
 % public
 %=======================================================================================================================
 reload() ->
-   gen_server:call({local, ?qinfo_scheduler}, reload).
+   gen_server:call(?qinfo_scheduler, reload).
 
 start() ->
    gen_server:start_link({local, ?qinfo_scheduler}, ?MODULE, [], []).
 
 init(_Args) ->
-   Schedules = metadata:get_schedules(),
-   Services = lists:foldl(fun({ServiceName, SchedList}, Acc) ->
-         [#service{name = ServiceName, status = offline, schedule_list = SchedList} | Acc]
-      end, [], Schedules),
    TRef = erlang:start_timer(1000, self(), check_schedule),
-   {ok, #state{services = Services, timer_ref = TRef}}.
+   {ok, #state{timer_ref = TRef}}.
 
 %=======================================================================================================================
 handle_call(_Msg, _From, State) ->
