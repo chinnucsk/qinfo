@@ -29,15 +29,29 @@ handle_call(_Msg, _From, State) ->
    {reply, ok, State}.
 
 %=======================================================================================================================
+handle_cast({schedule, ServiceName}, State = #state{services = Services}) ->
+   {ServiceName, SchedList} = metadata:get_schedules(ServiceName),
+   Now = calender:local_time(),
+   Status = get_status(Now, SchedList),
+   gen_server:cast(ServiceName, Status),
+   NewServices = case lists:keyfind(ServiceName, 2, Services) of
+      false ->
+         [#service{name = ServiceName, status = Status, schedule_list = SchedList} | Services];
+      Service ->
+         lists:keyreplace(ServiceName, 2, Services, Service#service{status = Status, schedule_list = SchedList})
+   end,
+   {noreply, State#state{services = NewServices}};
+
 handle_cast(reload, State = #state{services = OldServices}) ->
    Schedules = metadata:get_schedules(),
+   Now = calender:local_time(),
    NewServices = lists:foldl(
       fun({ServiceName, SchedList}, Acc) ->
-         #service{status = Status} = lists:keyfind(ServiceName, 2, OldServices),
+         Status = get_status(Now, SchedList),
+         gen_server:cast(ServiceName, Status),
          [#service{name = ServiceName, status = Status, schedule_list = SchedList} | Acc]
       end, [], Schedules),
-   NewServices2 = check(NewServices),
-   {noreply, State#state{services = NewServices2}};
+   {noreply, State#state{services = NewServices}};
 
 handle_cast(Msg, State) ->
    error_logger:warning_msg("Unexpected message: ~p.~n", [Msg]),
@@ -68,29 +82,29 @@ code_change(_OldVsn, State, _Extra) ->
 check(Services) ->
    Now = calendar:local_time(),
    lists:foldl(
-      fun(S = #service{name = ServiceName, status = Status, schedule_list = SchedList}, Acc) ->
-         InService = is_in_service(Now, SchedList),
-         if Status == offline andalso InService == true ->
-               ServiceName ! online,
-               [ S#service{status = online} | Acc];
-            Status == online andalso InService == false ->
-               ServiceName ! offline,
-               [ S#service{status = offline} | Acc];
+      fun(S = #service{name = ServiceName, status = OldStatus, schedule_list = SchedList}, Acc) ->
+         NewStatus = get_status(Now, SchedList),
+         if OldStatus =/= NewStatus ->
+               gen_server:cast(ServiceName, NewStatus),
+               [ S#service{status = NewStatus} | Acc];
             true ->
                [S | Acc]
          end
       end, [], Services).
 
-is_in_service({Date, {H, M, _}}, SchedList) ->
+get_status({Date, {H, M, _}}, SchedList) ->
    DayOfTheWeek = calendar:day_of_the_week(Date),
    Now = {H, M},
-   lists:foldl(
+   InService = lists:foldl(
       fun({DoW, enabled, TimeIntervals}, Res) when DayOfTheWeek == DoW ->
          Res bor lists:foldl(
             fun({{I1}, {I2}}, Res1) ->
                Res1 bor (I1 >= Now andalso Now =< I2)
-            end, false, TimeIntervals)
-      end, false, SchedList).
+            end, false, TimeIntervals);
+         (_, Res) ->
+            Res
+      end, false, SchedList),
+   if InService == true -> online; true -> offline end.
 
 %=======================================================================================================================
 %  unit testing

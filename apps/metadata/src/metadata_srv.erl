@@ -32,11 +32,11 @@ handle_call({register, ServiceName, Description, Settings, Schedule}, _From, Sta
                Schedule, fmt_schedule = FormattedSched}),
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
          Msg = #service{service = ServiceName, settings = Settings},
-         scheduler_srv:reload(),
+         scheduler_srv:schedule(ServiceName),
          {reply, {ok, Msg}, State};
       [#m_service{service = Service, settings = OldSettings}] ->
          Msg = #service{service = Service, settings = OldSettings},
-         scheduler_srv:reload(),
+         scheduler_srv:scheduler(ServiceName),
          {reply, {ok, Msg}, State}
    end;
 
@@ -59,21 +59,21 @@ handle_call({get_instruments, _Exchange, OnlyEnabled}, _From, State) ->
    {reply, Res, State};
 
 handle_call(get_schedules, _From, State) ->
-   {atomic, SchedList} = mnesia:transaction(
+   {atomic, Services} = mnesia:transaction(
    fun() ->
       mnesia:foldl(
          fun(#m_service{service = ServiceName, fmt_schedule = SchedList}, Acc) ->
             [{ServiceName, SchedList} | Acc]
          end, [], m_service)
    end),
-   {reply, SchedList, State};
+   {reply, Services, State};
 
 handle_call({get_schedules, ServiceName}, _From, State) ->
    Res = case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
          no_such_service;
       [#m_service{service = ServiceName, fmt_schedule = SchedList}] ->
-         SchedList
+         {ServiceName, SchedList}
    end,
    {reply, Res, State};
 
@@ -186,14 +186,14 @@ insert_exchange(#new_instrument{exchange = Exch}) ->
 create_db() ->
    case mnesia:create_schema([]) of
       ok ->
-         mnesia:start(),
+         ok = mnesia:start(),
          ?create_table(m_instrument, ordered_set),
          ?create_table(m_commodity, ordered_set),
          ?create_table(m_service, set),
          ?create_table(m_exchange, set),
-         mnesia:add_table_index(m_instrument, #m_instrument.commodity);
+         {atomic, ok} = mnesia:add_table_index(m_instrument, #m_instrument.commodity);
       {error, {_, {already_exists, _}}} ->
-         mnesia:start(),
+         ok = mnesia:start(),
          ok
    end.
 
