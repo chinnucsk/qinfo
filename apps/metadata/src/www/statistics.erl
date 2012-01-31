@@ -15,17 +15,14 @@ layout() ->
          #literal{ text = " | "},
          #link{ class=a, text = "settings", url = "settings"},
          #literal{ text = " | " },
+         #link{ class=a, text = "scheduler", url = "scheduler"},
+         #literal{ text = " | " },
          #link{ class=a, text = "instruments", url = "instruments"},
          #literal{ text = " | "},
          #literal{ text = "statistics"}
       ]
    },
-   [TopPanel, #table{ rows = [
-         #tablerow{ cells = [
-               #tablecell{ text = "sdfsdf"},
-               #tablecell{ body = [ #textbox{ text = "123", postback = a} ]}
-            ]}
-      ]}].
+   TopPanel.
 
-event(E) ->
-   io:format("~p~n", [E]).
+event(_E) ->
+   ok.

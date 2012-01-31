@@ -14,6 +14,8 @@ layout() ->
          #literal{ text = "main | "},
          #link{ class=a, text = "settings", url = "settings"},
          #literal{ text = " | " },
+         #link{ class=a, text = "scheduler", url = "scheduler"},
+         #literal{ text = " | " },
          #link{ class=a, text = "instruments", url = "instruments"},
          #literal{ text = " | "},
          #link{ class=a, text = "statistics", url = "statistics"}

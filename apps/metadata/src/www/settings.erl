@@ -3,7 +3,7 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--export([main/0, header/0, layout/0, event/1, val_is_integer/1, val_is_log_level/1, validate_intervals/1]).
+-export([main/0, header/0, layout/0, event/1, val_is_integer/1, val_is_log_level/1, validate_intervals/2]).
 
 main() ->
    #template{ file="./www/page.html"}.
@@ -18,6 +18,8 @@ layout() ->
          #literal{ text = " | "},
          #literal{ text = "settings"},
          #literal{ text = " | " },
+         #link{ text = "scheduler", url = "scheduler"},
+         #literal{ text = " | "},
          #link{ text = "instruments", url = "instruments"},
          #literal{ text = " | "},
          #link{ class=a, text = "statistics", url = "statistics"}
@@ -37,45 +39,15 @@ build() ->
    {atomic, Body} = mnesia:transaction(
       fun() ->
          mnesia:foldr(
-            fun(#m_service{service = ServerName, description = Descr, settings = Settings, schedule = Schedules}, Acc) ->
+            fun(#m_service{service = ServerName, description = Descr, settings = Settings}, Acc) ->
                [
                   #p{},
                   #h3{ text = Descr },
-                  #table{ rows = build_settings(ServerName, Settings)},
-                  #p{},
-                  #h3{ text = "Schedule:" },
-                  #table{ rows = build_schedule(ServerName, Schedules)} | Acc ]
+                  #table{ rows = build_settings(ServerName, Settings)} | Acc]
             end, [], m_service)
       end
    ),
    Body.
-
-build_schedule(_, []) ->
-   [];
-build_schedule(ServerName, [{DayOfTheWeek, Status, TimeIntervals}|Tail]) ->
-   DoW = erlang:atom_to_list(DayOfTheWeek),
-   TextId = create_id(ServerName, "_textbox_" ++ DoW),
-   CheckId = create_id(ServerName, "_checkbox_" ++ DoW),
-   wf:wire(save_button,
-      TextId,
-      #validate{ validators = [ #custom{ text = "Invalid time intervals",
-               tag = CheckId,
-               function = fun ?NODULE:validate_intervals/2}]}),
-   wf:wire(apply_button,
-      TextId,
-      #validate{ validators = [ #custom{ text = "Invalid time intervals",
-               tag = CheckId,
-               function = fun ?MODULE:validate_intervals/2}]}),
-   [
-      #tablerow{ cells =
-      [
-         #tablecell{ body = [
-            #checkbox{ id = create_id(ServerName, "_checkbox_" ++ DoW),
-               text = DoW, checked = if Status == enabled -> true; true -> false end}]},
-         #tablecell{ body = [
-            #textbox{ id = TextId, text = TimeIntervals, style="width: 200px;"}]}
-      ]} | build_schedule(ServerName, Tail)
-   ].
 
 build_settings(_ServerName, []) ->
    [];
@@ -125,23 +97,22 @@ create_validator(#setting{description = Descr, validator = Val}) ->
    [ #custom{ text = Descr, function = Fun} ].
 
 event(click_apply) ->
-   save(mnesia:dirty_first(m_service)),
-   notify(mnesia:dirty_first(m_service)),
-   scheduler_srv:reload(),
+   save(),
+   notify(),
    wf:flash("saved. Services will be reconfigured.");
 event(click_save) ->
-   save(mnesia:dirty_first(m_service)),
+   save(),
    wf:flash("saved").
 
-save('$end_of_table') ->
-   ok;
-save(Key) ->
-   [Service = #m_service{service = ServerName, settings = Settings, schedule = Schedule}] = mnesia:dirty_read(m_service, Key),
-   NewSettings = get_settings(ServerName, Settings),
-   NewSchedule = get_schedules(ServerName, Schedule),
-   ok = mnesia:dirty_write(Service#m_service{settings = NewSettings, schedule = NewSchedule,
-      fmt_schedule = metadata:format_schedule(NewSchedule)}),
-   save(mnesia:dirty_next(m_service, Key)).
+save() ->
+   {atomic, _} = mnesia:transaction(
+   fun() ->
+      mnesia:foldl(
+      fun(Service = #m_service{service = ServerName, settings = Settings}, _) ->
+         NewSettings = get_settings(ServerName, Settings),
+         ok = mnesia:dirty_write(Service#m_service{settings = NewSettings})
+      end, ok, m_service)
+   end).
 
 get_settings(_ServerName, []) ->
    [];
@@ -152,27 +123,14 @@ get_settings(ServerName, [S = #setting{name = Name} | Rest]) ->
    Value = wf:q(create_id(ServerName, Name)),
    [ S#setting{value = Value} | get_settings(ServerName, Rest)].
 
-get_schedules(_ServerName, []) ->
-   [];
-get_schedules(ServerName, [{DayOfTheWeek, _, _}|Tail]) ->
-   DoW = atom_to_list(DayOfTheWeek),
-   CheckId = create_id(ServerName, "_checkbox_" ++ DoW),
-   Status = case wf:q(CheckId) of
-      undefined ->
-         disabled;
-      "on" ->
-         enabled
-   end,
-   TextId = create_id(ServerName, "_textbox_" ++ DoW),
-   TimeIntervals = wf:q(TextId),
-   [{DayOfTheWeek, Status, TimeIntervals} | get_schedules(ServerName, Tail)].
-
-notify('$end_of_table') ->
-   ok;
-notify(Key) ->
-   [#m_service{service = ServerName}] = mnesia:dirty_read(m_service, Key),
-   gen_server:cast(ServerName, reconfigure),
-   notify(mnesia:dirty_next(m_service, Key)).
+notify() ->
+   {atomic, _} = mnesia:transaction(
+   fun() ->
+      mnesia:foldl(
+      fun(#m_service{service = ServerName}, _) ->
+         gen_server:cast(ServerName, reconfigure)
+      end, ok, m_service)
+   end).
 
 % ================== validators =========================================
 val_is_integer(Val) when length(Val) == 0 ->

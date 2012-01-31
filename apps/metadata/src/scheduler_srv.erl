@@ -35,13 +35,14 @@ handle_call(_Msg, _From, State) ->
 handle_cast({schedule, ServiceName}, State = #state{services = Services}) ->
    {ServiceName, SchedList} = metadata:get_schedules(ServiceName),
    Now = calendar:local_time(),
-   Status = get_status(Now, SchedList),
+   SchedListFmt = format_schedule(SchedList),
+   Status = get_status(Now, SchedListFmt),
    gen_server:cast(ServiceName, Status),
    NewServices = case lists:keyfind(ServiceName, 2, Services) of
       false ->
-         [#service{name = ServiceName, status = Status, schedule_list = SchedList} | Services];
+         [#service{name = ServiceName, status = Status, schedule_list = SchedListFmt} | Services];
       Service ->
-         lists:keyreplace(ServiceName, 2, Services, Service#service{status = Status, schedule_list = SchedList})
+         lists:keyreplace(ServiceName, 2, Services, Service#service{status = Status, schedule_list = SchedListFmt})
    end,
    {noreply, State#state{services = NewServices}};
 
@@ -50,9 +51,10 @@ handle_cast(reload, State) ->
    Now = calendar:local_time(),
    NewServices = lists:foldl(
       fun({ServiceName, SchedList}, Acc) ->
-         Status = get_status(Now, SchedList),
-         gen_server:cast(ServiceName, Status),
-         [#service{name = ServiceName, status = Status, schedule_list = SchedList} | Acc]
+            SchedListFmt = format_schedule(SchedList),
+            Status = get_status(Now, SchedListFmt),
+            gen_server:cast(ServiceName, Status),
+            [#service{name = ServiceName, status = Status, schedule_list = SchedListFmt} | Acc]
       end, [], Schedules),
    {noreply, State#state{services = NewServices}};
 
@@ -82,6 +84,7 @@ code_change(_OldVsn, State, _Extra) ->
 %=======================================================================================================================
 % private
 %=======================================================================================================================
+
 check(Services) ->
    Now = calendar:local_time(),
    lists:foldl(
@@ -108,6 +111,19 @@ get_status({Date, {H, M, _}}, SchedList) ->
             Res
       end, false, SchedList),
    if InService == true -> online; true -> offline end.
+
+format_schedule([]) ->
+   [];
+format_schedule([{DayOfWeek, Status, TimeIntervals}|Tail]) ->
+   [{day_to_num(DayOfWeek), Status, common_utils:format_time_intervals(TimeIntervals)} | format_schedule(Tail)].
+
+day_to_num(mon) -> 1;
+day_to_num(tue) -> 2;
+day_to_num(wed) -> 3;
+day_to_num(thu) -> 4;
+day_to_num(fri) -> 5;
+day_to_num(sat) -> 6;
+day_to_num(sun) -> 7.
 
 %=======================================================================================================================
 %  unit testing
