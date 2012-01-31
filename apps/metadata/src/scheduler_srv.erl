@@ -15,10 +15,10 @@
 % public
 %=======================================================================================================================
 reload() ->
-   gen_server:call(?qinfo_scheduler, reload).
+   gen_server:cast(?qinfo_scheduler, reload).
 
 schedule(ServiceName) ->
-   gen_server:call(?qinfo_scheduler, {schedule, ServiceName}).
+   gen_server:cast(?qinfo_scheduler, {schedule, ServiceName}).
 
 start() ->
    gen_server:start_link({local, ?qinfo_scheduler}, ?MODULE, [], []).
@@ -34,7 +34,7 @@ handle_call(_Msg, _From, State) ->
 %=======================================================================================================================
 handle_cast({schedule, ServiceName}, State = #state{services = Services}) ->
    {ServiceName, SchedList} = metadata:get_schedules(ServiceName),
-   Now = calender:local_time(),
+   Now = calendar:local_time(),
    Status = get_status(Now, SchedList),
    gen_server:cast(ServiceName, Status),
    NewServices = case lists:keyfind(ServiceName, 2, Services) of
@@ -47,7 +47,7 @@ handle_cast({schedule, ServiceName}, State = #state{services = Services}) ->
 
 handle_cast(reload, State) ->
    Schedules = metadata:get_schedules(),
-   Now = calender:local_time(),
+   Now = calendar:local_time(),
    NewServices = lists:foldl(
       fun({ServiceName, SchedList}, Acc) ->
          Status = get_status(Now, SchedList),
@@ -100,9 +100,9 @@ get_status({Date, {H, M, _}}, SchedList) ->
    Now = {H, M},
    InService = lists:foldl(
       fun({DoW, enabled, TimeIntervals}, Res) when DayOfTheWeek == DoW ->
-         Res bor lists:foldl(
-            fun({{I1}, {I2}}, Res1) ->
-               Res1 bor (I1 >= Now andalso Now =< I2)
+         Res or lists:foldl(
+            fun({I1, I2}, Res1) ->
+               Res1 or (I1 >= Now andalso Now =< I2)
             end, false, TimeIntervals);
          (_, Res) ->
             Res
