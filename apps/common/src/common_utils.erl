@@ -53,8 +53,8 @@ format_time_intervals(TimeIntervals) ->
 %=======================================================================================================================
 
 validate_interval({I1 = {HH1, MM1}, I2 = {HH2, MM2}})
-   when (HH1 > 0 andalso HH1 =< 23) andalso (MM1 >= 0 andalso MM1 =< 59) andalso
-        (HH2 > 0 andalso HH2 =< 23) andalso (MM2 >= 0 andalso MM2 =< 59) andalso
+   when (HH1 >= 0 andalso HH1 =< 23) andalso (MM1 >= 0 andalso MM1 =< 59) andalso
+        (HH2 >= 0 andalso HH2 =< 23) andalso (MM2 >= 0 andalso MM2 =< 59) andalso
          I1 < I2 ->
    ok;
 validate_interval(_I) ->
