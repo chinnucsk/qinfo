@@ -27,7 +27,7 @@ init(_Args) ->
 handle_call({register, ServiceName, Description, Settings, Schedule}, _From, State) ->
    case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
-         FormattedSched = format_schedule(Schedule),
+         FormattedSched = metadata:format_schedule(Schedule),
          mnesia:dirty_write(#m_service{service = ServiceName, description = Description, settings = Settings, schedule =
                Schedule, fmt_schedule = FormattedSched}),
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
@@ -36,7 +36,7 @@ handle_call({register, ServiceName, Description, Settings, Schedule}, _From, Sta
          {reply, {ok, Msg}, State};
       [#m_service{service = Service, settings = OldSettings}] ->
          Msg = #service{service = Service, settings = OldSettings},
-         scheduler_srv:scheduler(ServiceName),
+         scheduler_srv:schedule(ServiceName),
          {reply, {ok, Msg}, State}
    end;
 
@@ -196,25 +196,6 @@ create_db() ->
          ok = mnesia:start(),
          ok
    end.
-
-format_schedule([]) ->
-   [];
-format_schedule([{DayOfWeek, Status, TimeIntervals}|Tail]) ->
-   [{day_to_num(DayOfWeek), Status, common_utils:format_time_intervals(TimeIntervals)} | format_schedule(Tail)].
-
-day_to_num(mon) -> 1;
-day_to_num(tue) -> 2;
-day_to_num(wed) -> 3;
-day_to_num(thu) -> 4;
-day_to_num(fri) -> 5;
-day_to_num(sat) -> 6;
-day_to_num(sun) -> 7.
-
-type_to_symbol(future)    -> $F;
-type_to_symbol(standard)  -> $S;
-type_to_symbol(equity)    -> $E;
-type_to_symbol(bond)      -> $B;
-type_to_symbol(itf)       -> $I.
 
 month_to_symbol(1) -> $F;
 month_to_symbol(2) -> $G;
