@@ -148,6 +148,7 @@ insert_instrument(#new_instrument{
                   limit_up = LUp,
                   limit_down = LDown,
                   lot_size = LSize,
+                  updated = calendar:local_time(),
                   ref = Ref},
          ok = mnesia:write(NewInstr),
          NewInstr;
@@ -158,6 +159,7 @@ insert_instrument(#new_instrument{
             limit_up = LUp,
             limit_down = LDown,
             lot_size = LSize,
+            updated = calendar:local_time(),
             ref = Ref},
          ok = mnesia:write(UpdateInstr),
          UpdateInstr
