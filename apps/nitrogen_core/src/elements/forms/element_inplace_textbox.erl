@@ -47,7 +47,7 @@ render_element(Record) ->
                     #event { type=mouseout, target=MouseOverID, actions=#hide{} }
             ]},
             #panel { id=EditPanelID, class="edit", body=[
-                #textbox { id=TextBoxID, text=Text, next=OKButtonID },
+                #textbox { id=TextBoxID, text=Text, next=OKButtonID, style="width: 50px;" },
                 #button { id=OKButtonID, text="OK" },
                 #button { id=CancelButtonID, text="Cancel" }
             ]}
