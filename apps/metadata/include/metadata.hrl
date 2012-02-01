@@ -21,7 +21,7 @@
                          limit_up     :: float(),
                          limit_down   :: float(),
                          lot_size     :: pos_integer(),
-                         expiration   :: 'undef' | calender:datetime(),
+                         expiration   :: 'undef' | calendar:datetime(),
                          ref          :: pos_integer()}).
 
 -record(trade, {price :: float(),
@@ -41,10 +41,11 @@
 -record(m_instrument, {key                :: instrument_key(),
                        commodity          :: commodity_key(),
                        full_name          :: string(),
-                       expiration = undef :: 'undef' | calender:datetime(),
+                       expiration = undef :: 'undef' | calendar:datetime(),
                        limit_up           :: float(),
                        limit_down         :: float(),
                        lot_size           :: pos_integer(),
+                       updated            :: calendar:datetime(),
                        ref                :: pos_integer()}).
 
 -record(m_service, {service            :: tuple(),
