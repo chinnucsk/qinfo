@@ -1,6 +1,7 @@
 -module(common_utils).
 
--export([list_to_atom/1, cp1251_to_unicode/1, validate_time_intervals/1, format_time_intervals/1]).
+-export([list_to_atom/1, cp1251_to_unicode/1, validate_time_intervals/1, format_time_intervals/1, month_to_symbol/1,
+      type_to_symbol/1]).
 
 -compile({no_auto_import, [list_to_atom/1]}).
 
@@ -47,6 +48,25 @@ format_time_intervals(TimeIntervals) ->
      fun([_, H1, M1, H2, M2], Acc) ->
         [{{list_to_integer(H1), list_to_integer(M1)}, {list_to_integer(H2), list_to_integer(M2)}} | Acc]
      end, [], Res).
+
+month_to_symbol(1) -> $F;
+month_to_symbol(2) -> $G;
+month_to_symbol(3) -> $H;
+month_to_symbol(4) -> $J;
+month_to_symbol(5) -> $K;
+month_to_symbol(6) -> $M;
+month_to_symbol(7) -> $N;
+month_to_symbol(8) -> $Q;
+month_to_symbol(9) -> $U;
+month_to_symbol(10) -> $V;
+month_to_symbol(11) -> $X;
+month_to_symbol(12) -> $Z.
+
+type_to_symbol(future) -> $F;
+type_to_symbol(equity) -> $E;
+type_to_symbol(bond)   -> $B;
+type_to_symbol(itf)    -> $I;
+type_to_symbol(spot)   -> $S.
 
 %=======================================================================================================================
 %  private

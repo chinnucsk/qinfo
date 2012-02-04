@@ -192,56 +192,9 @@ create_db() ->
          ?create_table(m_commodity, ordered_set),
          ?create_table(m_service, set),
          ?create_table(m_exchange, set),
-         {atomic, ok} = mnesia:add_table_index(m_instrument, #m_instrument.commodity);
+         {atomic, ok} = mnesia:add_table_index(m_instrument, #m_instrument.commodity),
+         {atomic, ok} = mnesia:add_table_index(m_commodity, #m_commodity.alias);
       {error, {_, {already_exists, _}}} ->
          ok = mnesia:start(),
          ok
    end.
-
-month_to_symbol(1) -> $F;
-month_to_symbol(2) -> $G;
-month_to_symbol(3) -> $H;
-month_to_symbol(4) -> $J;
-month_to_symbol(5) -> $K;
-month_to_symbol(6) -> $M;
-month_to_symbol(7) -> $N;
-month_to_symbol(8) -> $Q;
-month_to_symbol(9) -> $U;
-month_to_symbol(10) -> $V;
-month_to_symbol(11) -> $X;
-month_to_symbol(12) -> $Z.
-
-get_expiration({{Year, Month, _Day}, _}) ->
-   Y = Year - (Year div 10 * 10),
-   [month_to_symbol(Month)] ++ integer_to_list(Y).
-
-%create_internal_symbol(#m_instrument{key = {_, future, Exchange}, expiration = Expiration},
-%   #m_commodity{alias = Alias}) ->
-%   lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, type_to_symbol(future), Alias, get_expiration(Expiration)]));
-
-%create_internal_symbol(#m_instrument{key = {_, Type, Exchange}},
-%   #m_commodity{alias = Alias}) ->
-%   lists:flatten(io_lib:format("~s.~c.~s", [Exchange, type_to_symbol(Type), Alias])).
-
-
-%======================================================================================================================
-%  unit testing
-%======================================================================================================================
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-%get_expiration_test() ->
-%   ?assertEqual("F2", get_expiration({{2012, 1, 0}, {10, 10, 0}})),
-%   ?assertEqual("M5", get_expiration({{2015, 6, 0}, {10, 10, 0}})).
-
-%create_internal_symbol_test() ->
-%   ?assertEqual("RTS.S.SBER",
-%      create_internal_symbol(
-%         #m_instrument{exchange = 'RTS', type = standard, expiration = {{2012, 1, 1}, {10, 0, 0}}},
-%         #m_commodity{alias = "SBER"})),
-%   ?assertEqual("RTS.F.LKOH.F2",
-%      create_internal_symbol(
-%         #m_instrument{exchange = 'RTS', type = future, expiration = {{2012, 1, 1}, {10, 0, 0}}},
-%         #m_commodity{alias = "LKOH"})).
-
--endif.

@@ -3,7 +3,7 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--export([main/0, layout/0, event/1]).
+-export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2]).
 
 -define(white, "#FFFFFF;").
 -define(gray,  "#EEEEEE;").
@@ -32,6 +32,7 @@ layout() ->
    {AlphaFilter, Instruments} = build_instr(Alpha, Exchanges, ?type_list),
    [
       TopPanel,
+      #flash{},
       #p{},
       Filter,
       AlphaFilter,
@@ -113,7 +114,7 @@ build_instr_impl(Alpha, AlphaList, TypeList, EnabledOnly, SelectedExchs, Key, Ba
          build_instr_impl(Alpha, AlphaList, TypeList, EnabledOnly, SelectedExchs, mnesia:dirty_next(m_commodity, Key), BackColor)
    end.
 
-build_by_commodity(#m_commodity{key = Key = {_, Type, Exch}, class_code = ClassCode, alias = Alias, enabled = Enabled}, BackColor) ->
+build_by_commodity(#m_commodity{key = Key = {Commodity, Type, Exch}, class_code = ClassCode, alias = Alias, enabled = Enabled}, BackColor) ->
    Instruments = mnesia:dirty_index_read(m_instrument, Key, #m_instrument.commodity),
    SortedInstruments = lists:sort(
       fun(#m_instrument{expiration = Exp1}, #m_instrument{expiration = Exp2}) ->
@@ -126,21 +127,25 @@ build_by_commodity(#m_commodity{key = Key = {_, Type, Exch}, class_code = ClassC
             [#tablerow{ cells = [
                #tablecell{ text = ExchName },
                #tablecell{ text = unicode:characters_to_binary(FullName) },
-               #tablecell{ text = ExchName },
+               #tablecell{ text = create_internal_symbol(Exch, Commodity, Alias, Type, Expiration) },
                #tablecell{ text = ClassCode },
                #tablecell{ text = Exch },
                #tablecell{ text = Type },
                #tablecell{ text = LSize },
                #tablecell{ text = expiration_to_list(Expiration)},
                #tablecell{ text = date_to_list(Updated)},
-               #tablecell{ body = [ #checkbox{ id = CheckId, checked = Enabled, postback = {checkbox_enabled, CheckId, Key}}], rowspan = if (Size == 1) -> 0; true -> Size end},
-               #tablecell{ body = [ #inplace_textbox{ text = alias_to_list(Alias), style = "width: 160px;"}], rowspan = if (Size == 1) -> 0; true -> Size end}
+               #tablecell{ body = [ #checkbox{
+                        id = CheckId, checked = Enabled,
+                        postback = {checkbox_enabled, CheckId, Key}}], rowspan = if (Size == 1) -> 0; true -> Size end},
+               #tablecell{ body = [
+                     #inplace_textbox2{ tag = Key, text = alias_to_list(Alias), style = "width: 160px;"}
+                  ], rowspan = if (Size == 1) -> 0; true -> Size end}
             ], style = "background-color: " ++ BackColor}];
         (#m_instrument{key = {ExchName, _, _}, expiration = Expiration, updated = Updated, full_name = FullName, lot_size = LSize}, Acc) ->
              Acc ++ [#tablerow{ cells = [
                #tablecell{ text = ExchName },
                #tablecell{ text = unicode:characters_to_binary(FullName) },
-               #tablecell{ text = ExchName },
+               #tablecell{ text = create_internal_symbol(Exch, Commodity, Alias, Type, Expiration) },
                #tablecell{ text = ClassCode },
                #tablecell{ text = Exch },
                #tablecell{ text = Type },
@@ -167,6 +172,27 @@ get_type_list() ->
    TypeList = wf:qs(checkbox_type),
    lists:foldr(fun(Type, Acc) -> [common_utils:list_to_atom(Type) | Acc] end, [], TypeList).
 
+inplace_textbox_event(Key, []) ->
+   [Commodity] = mnesia:dirty_read(m_commodity, Key),
+   ok = mnesia:dirty_write(Commodity#m_commodity{alias = undef}),
+   {true, "-"};
+inplace_textbox_event(Key, "-") ->
+   [Commodity] = mnesia:dirty_read(m_commodity, Key),
+   ok = mnesia:dirty_write(Commodity#m_commodity{alias = undef}),
+   {true, "-"};
+inplace_textbox_event(Key, Value) ->
+   try valid_alias(Value), uniq_alias(Key, Value) of
+      true ->
+         [Commodity] = mnesia:dirty_read(m_commodity, Key),
+         ok = mnesia:dirty_write(Commodity#m_commodity{alias = Value}),
+         event(filter_changed),
+         {true, Value}
+   catch
+      throw:Err ->
+         wf:flash(Err),
+         false
+   end.
+
 event({alpha, A}) ->
    wf:state(alpha, A),
    {AlphaFilter, Instruments} = build_instr(A, wf:qs(checkbox_exchange), get_type_list()),
@@ -180,7 +206,10 @@ event(filter_changed) ->
 
 event({checkbox_enabled, CheckId, CommodityKey}) ->
    [Commodity] = mnesia:dirty_read(m_commodity, CommodityKey),
-   ok = mnesia:dirty_write(Commodity#m_commodity{ enabled = is_checked(CheckId) }).
+   ok = mnesia:dirty_write(Commodity#m_commodity{ enabled = is_checked(CheckId) });
+
+event(alias_changed) ->
+   event(filter_changed).
 
 is_checked(Checkbox) ->
    case wf:q(Checkbox) of
@@ -205,3 +234,60 @@ invert_color(?white) ->
    ?gray;
 invert_color(?gray) ->
    ?white.
+
+valid_alias(Value) ->
+   {ok, Re} = re:compile("^[A-Z0-9]+$"),
+   case re:run(Value, Re) of
+      nomatch ->
+         throw("ERROR: Only A..Z, 0..9 symbols are allowed.");
+      {match, _} ->
+         true
+   end.
+
+uniq_alias(Key, Value) ->
+   case mnesia:dirty_index_read(m_commodity, Value, #m_commodity.alias) of
+     [] ->
+        true;
+     [#m_commodity{key = Key}|_] ->
+        true;
+     [#m_commodity{key = Key1}|_] when Key1 =/= Key ->
+        throw("ERROR: alias already exists.")
+   end.
+
+get_expiration({{Year, Month, _Day}, _}) ->
+   Y = Year - (Year div 10 * 10),
+   [common_utils:month_to_symbol(Month)] ++ integer_to_list(Y).
+
+create_internal_symbol(Exchange, Commodity, undef, future, Expiration) ->
+   lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, common_utils:type_to_symbol(future), Commodity, get_expiration(Expiration)]));
+
+create_internal_symbol(_Exchange, _Commodity, Alias, future, Expiration) ->
+   lists:flatten(io_lib:format("~s.~s", [Alias, get_expiration(Expiration)]));
+
+create_internal_symbol(Exchange, Commodity, undef, Type, _Expiration) ->
+   lists:flatten(io_lib:format("~s.~c.~s", [Exchange, common_utils:type_to_symbol(Type), Commodity]));
+
+create_internal_symbol(_Exchange, _Commodity, Alias, _Type, _Expiration) ->
+   lists:flatten(io_lib:format("~s", [Alias])).
+
+%======================================================================================================================
+%  unit testing
+%======================================================================================================================
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+%get_expiration_test() ->
+%   ?assertEqual("F2", get_expiration({{2012, 1, 0}, {10, 10, 0}})),
+%   ?assertEqual("M5", get_expiration({{2015, 6, 0}, {10, 10, 0}})).
+
+%create_internal_symbol_test() ->
+%   ?assertEqual("RTS.S.SBER",
+%      create_internal_symbol(
+%         #m_instrument{exchange = 'RTS', type = standard, expiration = {{2012, 1, 1}, {10, 0, 0}}},
+%         #m_commodity{alias = "SBER"})),
+%   ?assertEqual("RTS.F.LKOH.F2",
+%      create_internal_symbol(
+%         #m_instrument{exchange = 'RTS', type = future, expiration = {{2012, 1, 1}, {10, 0, 0}}},
+%         #m_commodity{alias = "LKOH"})).
+
+-endif.
