@@ -11,6 +11,8 @@
 
 -record(state, {services = [], timer_ref = undef}).
 
+-define(TIMEOUT, 1000).
+
 %=======================================================================================================================
 % public
 %=======================================================================================================================
@@ -24,7 +26,7 @@ start() ->
    gen_server:start_link({local, ?qinfo_scheduler}, ?MODULE, [], []).
 
 init(_Args) ->
-   TRef = erlang:start_timer(1000, self(), check_schedule),
+   TRef = erlang:start_timer(?TIMEOUT, self(), check_schedule),
    {ok, #state{timer_ref = TRef}}.
 
 %=======================================================================================================================
@@ -63,9 +65,11 @@ handle_cast(Msg, State) ->
    {noreply, State}.
 
 %=======================================================================================================================
-handle_info({timeout, _, check_schedule}, State = #state{services = Services}) ->
+handle_info({timeout, _, check_schedule}, State = #state{services = Services, timer_ref = TRef}) ->
+   erlang:cancel_timer(TRef),
    NewServices = check(Services),
-   {noreply, State#state{services = NewServices}};
+   NewTRef = erlang:start_timer(?TIMEOUT, self(), check_schedule),
+   {noreply, State#state{services = NewServices, timer_ref = NewTRef}};
 
 handle_info(Msg, State) ->
    error_logger:error_msg("Unexpected message: ~p.~n", [Msg]),
@@ -105,7 +109,7 @@ get_status({Date, {H, M, _}}, SchedList) ->
       fun({DoW, enabled, TimeIntervals}, Res) when DayOfTheWeek == DoW ->
          Res or lists:foldl(
             fun({I1, I2}, Res1) ->
-               Res1 or (I1 >= Now andalso Now =< I2)
+               Res1 or (I1 =< Now andalso Now =< I2)
             end, false, TimeIntervals);
          (_, Res) ->
             Res
