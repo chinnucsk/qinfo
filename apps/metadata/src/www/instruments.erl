@@ -206,7 +206,13 @@ event(filter_changed) ->
 
 event({checkbox_enabled, CheckId, CommodityKey}) ->
    [Commodity] = mnesia:dirty_read(m_commodity, CommodityKey),
-   ok = mnesia:dirty_write(Commodity#m_commodity{ enabled = is_checked(CheckId) });
+   ok = mnesia:dirty_write(Commodity#m_commodity{ enabled = is_checked(CheckId) }),
+   case is_checked(checkbox_enabled) of
+      true ->
+         event(filter_changed);
+      false ->
+         ok
+   end;
 
 event(alias_changed) ->
    event(filter_changed).
@@ -275,19 +281,5 @@ create_internal_symbol(_Exchange, _Commodity, Alias, _Type, _Expiration) ->
 %======================================================================================================================
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-%get_expiration_test() ->
-%   ?assertEqual("F2", get_expiration({{2012, 1, 0}, {10, 10, 0}})),
-%   ?assertEqual("M5", get_expiration({{2015, 6, 0}, {10, 10, 0}})).
-
-%create_internal_symbol_test() ->
-%   ?assertEqual("RTS.S.SBER",
-%      create_internal_symbol(
-%         #m_instrument{exchange = 'RTS', type = standard, expiration = {{2012, 1, 1}, {10, 0, 0}}},
-%         #m_commodity{alias = "SBER"})),
-%   ?assertEqual("RTS.F.LKOH.F2",
-%      create_internal_symbol(
-%         #m_instrument{exchange = 'RTS', type = future, expiration = {{2012, 1, 1}, {10, 0, 0}}},
-%         #m_commodity{alias = "LKOH"})).
 
 -endif.
