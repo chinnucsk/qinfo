@@ -3,7 +3,7 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2]).
+-export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2, select_commodities/4]).
 
 -define(white, "#FFFFFF;").
 -define(gray,  "#EEEEEE;").
@@ -29,6 +29,7 @@ layout() ->
    {Filter, Exchanges} = build_filter(),
    Alpha = $0,
    wf:state(alpha, Alpha),
+   %Pages = build_pages(Alpha),
    {AlphaFilter, Instruments} = build_instr(Alpha, Exchanges, ?type_list),
    [
       TopPanel,
@@ -39,6 +40,38 @@ layout() ->
       #p{},
       Instruments
    ].
+
+%build_pages(Alpha) ->
+%   {atomic, {_, _, Pages}} = mnesia:transaction(
+%      fun() ->
+%         mnesia:foldr(
+%            fun(#m_commodity{ key = {[Alpha1|_], _, _}}, {0, PNum, Acc}) when Alpha == Alpha1 ->
+%                  {5, PNum + 1, [ #link{text = integer_to_list(PNum)}, #literal{ text = " " } | Acc ]};
+%               (#m_commodity{ key = {[Alpha1|_], _, _}}, {PSize, PNum, Acc}) when Alpha == Alpha1 ->
+%                  {PSize - 1, PNum, Acc};
+%               (_, Acc) ->
+%                  Acc
+%            end, {5, 1, []}, m_commodity)
+%      end),
+%   [#literal{ text = "Pages: "}, Pages].
+
+select_commodities(Alpha, Exchanges, Types, OnlyEnabled) ->
+   {atomic, Commodities} = mnesia:transaction(
+      fun() ->
+         mnesia:foldr(
+            fun(C = #m_commodity{ key = {[Alpha1|_], Type, Exchange}, enabled = Enabled}, Acc) ->
+               Res = Alpha == Alpha1 andalso lists:member(Type, Types) andalso
+               lists:member(Exchange, Exchanges) andalso (OnlyEnabled == false orelse Enabled == true),
+               if Res == true ->
+                  [C | Acc];
+               true ->
+                  Acc
+               end
+            end
+            , [], m_commodity)
+      end
+   ),
+   Commodities.
 
 build_filter() ->
    {Checkboxes, Exchanges} = build_exchanges(mnesia:dirty_first(m_exchange), []),
