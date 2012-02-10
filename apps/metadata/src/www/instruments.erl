@@ -115,13 +115,69 @@ build_alpha_filter(AlphaList) ->
       end, [], AllAlphas),
    InFilterAlphas.
 
+
+build_pages(Commodities, SelectedPage) ->
+   case build_pages_impl(Commodities, SelectedPage, 1) of
+      [] ->
+         #p{id = pages, text="Pages: 1"};
+      Res ->
+         #p{id = pages, text="Pages: ", body = Res}
+   end.
+
+build_pages_impl([], _, _) ->
+   [];
+build_pages_impl(Commodities, SelectedPage, PageNum) when length(Commodities) =< 5 ->
+   [
+      #literal{ text = " "},
+      if (SelectedPage == PageNum) ->
+         #literal{ text = integer_to_list(SelectedPage)};
+      true ->
+         #link{ text = integer_to_list(PageNum), postback = {page, PageNum}}
+      end
+   ];
+build_pages_impl(Commodities, SelectedPage, PageNum) ->
+   [#literal{ text = " "},
+      if (SelectedPage == PageNum) ->
+         #literal{ text = integer_to_list(SelectedPage)};
+      true ->
+         #link{ text = integer_to_list(PageNum), postback = {page, PageNum}}
+      end |
+    build_pages_impl(lists:nthtail(if length(Commodities) =< 5 -> length(Commodities); true -> 5 end, Commodities),
+       SelectedPage, PageNum + 1)].
+
 build_instr(Exchanges, Types, OnlyEnabled, Alpha, Page) ->
    {Commodities, AlphaList} = select_commodities(Exchanges, Types, OnlyEnabled, Alpha),
    {
       #p{id = alpha_filter, body = build_alpha_filter(AlphaList)},
-      #p{id = pages, body = [#literal{text = "Pages: "}]},
+      build_pages(Commodities, Page),
       #table{id = instruments, rows = build_instr_header()}
    }.
+
+event(filter_changed) ->
+   {AlphaFilter, Pages, Instruments} = build_instr(
+      wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), 1),
+   wf:replace(alpha_filter, AlphaFilter),
+   wf:replace(pages, Pages),
+   wf:replace(instruments, Instruments);
+
+event({alpha, A}) ->
+   wf:state(alpha, A),
+   {AlphaFilter, Pages, Instruments} = build_instr(
+      wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), A, 1),
+   wf:replace(alpha_filter, AlphaFilter),
+   wf:replace(pages, Pages),
+   wf:replace(instruments, Instruments);
+
+event({page, PageNum}) ->
+   {AlphaFilter, Pages, Instruments} = build_instr(
+      wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), PageNum),
+   wf:replace(alpha_filter, AlphaFilter),
+   wf:replace(pages, Pages),
+   wf:replace(instruments, Instruments);
+
+event(Event) ->
+   io:format("~p~n", [Event]),
+   ok.
 
 alias_to_list(undef) ->
    "-";
@@ -139,15 +195,6 @@ date_to_list({{Y,M,D},{H,MM,S}}) ->
 get_type_list() ->
    TypeList = wf:qs(checkbox_type),
    lists:foldr(fun(Type, Acc) -> [common_utils:list_to_atom(Type) | Acc] end, [], TypeList).
-
-event(filter_changed) ->
-   {AlphaFilter, Pages, Instruments} = build_instr(
-      wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), 1),
-   wf:replace(alpha_filter, AlphaFilter),
-   wf:replace(instruments, Instruments);
-
-event(_) ->
-   ok.
 
 is_checked(Checkbox) ->
    case wf:q(Checkbox) of
