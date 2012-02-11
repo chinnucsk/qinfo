@@ -5,7 +5,7 @@
 
 -export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2]).
 
--define(page_size, 5).
+-define(page_size, 15).
 -define(white, "#FFFFFF;").
 -define(gray,  "#EEEEEE;").
 -define(type_list, [equity, spot, bond, itf, future]).
