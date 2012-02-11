@@ -3,7 +3,7 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--export([main/0, layout/0, event/1]).
+-export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2]).
 
 -define(page_size, 5).
 -define(white, "#FFFFFF;").
@@ -226,6 +226,27 @@ build_instr(Exchanges, Types, OnlyEnabled, Alpha, Page) ->
       #table{id = instruments, rows = build_instr_table(CommodityKey, PageSize)}
    }.
 
+inplace_textbox_event(Key, []) ->
+   [Commodity] = mnesia:dirty_read(m_commodity, Key),
+   ok = mnesia:dirty_write(Commodity#m_commodity{alias = undef}),
+   {true, "-"};
+inplace_textbox_event(Key, "-") ->
+   [Commodity] = mnesia:dirty_read(m_commodity, Key),
+   ok = mnesia:dirty_write(Commodity#m_commodity{alias = undef}),
+   {true, "-"};
+inplace_textbox_event(Key, Value) ->
+   try valid_alias(Value), uniq_alias(Key, Value) of
+      true ->
+         [Commodity] = mnesia:dirty_read(m_commodity, Key),
+         ok = mnesia:dirty_write(Commodity#m_commodity{alias = Value}),
+         event(filter_changed),
+         {true, Value}
+   catch
+      throw:Err ->
+         wf:flash(Err),
+         false
+   end.
+
 event(filter_changed) ->
    {AlphaFilter, Pages, Instruments} = build_instr(
       wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), 1),
@@ -248,8 +269,21 @@ event({page, PageNum}) ->
    wf:replace(pages, Pages),
    wf:replace(instruments, Instruments);
 
+event({checkbox_enabled, CheckId, CommodityKey}) ->
+   [Commodity] = mnesia:dirty_read(m_commodity, CommodityKey),
+   ok = mnesia:dirty_write(Commodity#m_commodity{ enabled = is_checked(CheckId) }),
+   case is_checked(checkbox_enabled) of
+      true ->
+         event(filter_changed);
+      false ->
+         ok
+   end;
+
+event(alias_changed) ->
+   event(filter_changed);
+
 event(Event) ->
-   io:format("~p~n", [Event]),
+   error_logger:error_msg("Unknown event: ~p", [Event]),
    ok.
 
 alias_to_list(undef) ->
@@ -281,6 +315,25 @@ invert_color(?white) ->
    ?gray;
 invert_color(?gray) ->
    ?white.
+
+valid_alias(Value) ->
+   {ok, Re} = re:compile("^[A-Z0-9]+$"),
+   case re:run(Value, Re) of
+      nomatch ->
+         throw("ERROR: Only A..Z, 0..9 symbols are allowed.");
+      {match, _} ->
+         true
+   end.
+
+uniq_alias(Key, Value) ->
+   case mnesia:dirty_index_read(m_commodity, Value, #m_commodity.alias) of
+     [] ->
+        true;
+     [#m_commodity{key = Key}|_] ->
+        true;
+     [#m_commodity{key = Key1}|_] when Key1 =/= Key ->
+        throw("ERROR: alias already exists.")
+   end.
 
 get_expiration({{Year, Month, _Day}, _}) ->
    Y = Year - (Year div 10 * 10),
