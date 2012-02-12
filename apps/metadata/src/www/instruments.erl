@@ -3,12 +3,15 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2]).
+-export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2, title/0]).
 
 -define(page_size, 15).
 -define(white, "#FFFFFF;").
 -define(gray,  "#EEEEEE;").
 -define(type_list, [equity, spot, bond, itf, future]).
+
+title() ->
+   "qinfo:instruments".
 
 main() ->
    #template{ file="./www/page.html"}.

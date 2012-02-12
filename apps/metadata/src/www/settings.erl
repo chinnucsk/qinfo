@@ -3,12 +3,13 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--export([main/0, header/0, layout/0, event/1, val_is_integer/1, val_is_log_level/1, validate_intervals/2]).
+-export([main/0, layout/0, event/1, val_is_integer/1, val_is_log_level/1, validate_intervals/2, title/0]).
+
+title() ->
+   "qinfo:settings".
 
 main() ->
    #template{ file="./www/page.html"}.
-
-header() -> "qinfo:settings".
 
 layout() ->
    TopPanel = #panel{

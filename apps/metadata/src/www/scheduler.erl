@@ -3,7 +3,10 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
--export([main/0, layout/0, event/1]).
+-export([main/0, layout/0, event/1, title/0]).
+
+title() ->
+   "qinfo:scheduler".
 
 main() ->
    #template{ file="./www/page.html"}.

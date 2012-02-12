@@ -2,7 +2,10 @@
 
 -include_lib("nitrogen_core/include/wf.hrl").
 
--export([main/0, layout/0]).
+-export([main/0, layout/0, title/0]).
+
+title() ->
+   "qinfo:main".
 
 main() ->
    #template{ file="./www/page.html"}.
