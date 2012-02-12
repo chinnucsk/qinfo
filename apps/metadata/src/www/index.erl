@@ -11,7 +11,7 @@ main() ->
    #template{ file="./www/page.html"}.
 
 layout() ->
-   #panel{
+   TopPanel = #panel{
       body =
       [
          #literal{ text = "main | "},
@@ -23,4 +23,31 @@ layout() ->
          #literal{ text = " | "},
          #link{ class=a, text = "statistics", url = "statistics"}
       ]
-   }.
+   },
+   [
+      TopPanel,
+      #p{},
+      build_apps()
+   ].
+
+build_apps() ->
+   Apps = application:loaded_applications(),
+   Rows = lists:foldr(
+      fun({Name, _, Ver}, Acc) ->
+         [
+            #tablerow{cells =
+               [
+                  #tablecell{text = atom_to_list(Name)},
+                  #tablecell{text = Ver}
+               ]
+            } | Acc
+         ]
+      end, [], Apps),
+   #table{ rows =
+      [
+         #tablerow{ cells =
+            [
+               #tableheader{ text = "Loaded apps", style = "width: 100px;"},
+               #tableheader{ text = "Version", style = "width: 100px;"}
+            ]} | Rows
+      ]}.
