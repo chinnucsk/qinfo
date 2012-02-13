@@ -5,7 +5,7 @@
 
 -export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2, title/0]).
 
--define(page_size, 15).
+-define(page_size, 3).
 -define(white, "#FFFFFF;").
 -define(gray,  "#EEEEEE;").
 -define(type_list, [equity, spot, bond, itf, future]).
@@ -121,60 +121,56 @@ build_alpha_filter(AlphaList) ->
 
 
 build_pages(Commodities, SelectedPage) ->
-   case build_pages_impl(Commodities, SelectedPage, 1, undef, 0) of
-      {Res, CommodityKey, PageSize} when length(Res) =< 2 ->
-         {#p{id = pages, text="Pages:", style="color: #FFFFFF;"}, CommodityKey, PageSize};
-      {Res, CommodityKey, PageSize} ->
-         {#p{id = pages, text="Pages: ", body = Res}, CommodityKey, PageSize}
+   case build_pages_impl(Commodities, SelectedPage, 1, 0, []) of
+      {Res, PageSize, PageCommodities} when length(Res) =< 2 ->
+         {#p{id = pages, text="Pages:", style="color: #FFFFFF;"}, PageSize, PageCommodities};
+      {Res, PageSize, PageCommodities} ->
+         {#p{id = pages, text="Pages: ", body = Res}, PageSize, PageCommodities}
    end.
 
-build_pages_impl([], _, _, CommodityKey, PageSize) ->
-   {[], CommodityKey, PageSize};
-build_pages_impl(Commodities = [#m_commodity{key = NewCommodityKey}|_], SelectedPage, SelectedPage, _, _)
+build_pages_impl([], _, _, PageSize, PageCommodities) ->
+   {[], PageSize, PageCommodities};
+build_pages_impl(Commodities, SelectedPage, SelectedPage, _, _)
 when length(Commodities) =< ?page_size ->
    {
       [#literal{ text = " "}, #literal{ text = integer_to_list(SelectedPage)}],
-      NewCommodityKey,
-      length(Commodities)
+      length(Commodities),
+      Commodities
    };
-build_pages_impl(Commodities, _SelectedPage, PageNum, CommodityKey, PageSize)
+build_pages_impl(Commodities, _SelectedPage, PageNum, PageSize, PageCommodities)
 when length(Commodities) =< ?page_size ->
    {
       [#literal{ text = " "}, #link{ text = integer_to_list(PageNum), postback = {page, PageNum}}],
-      CommodityKey,
-      PageSize
+      PageSize,
+      PageCommodities
    };
-build_pages_impl(Commodities = [#m_commodity{key = Key}|_], SelectedPage, SelectedPage, CommodityKey, PageSize) ->
+build_pages_impl(Commodities, SelectedPage, SelectedPage, PageSize, PageCommodities) ->
    {Res, _, _} =
-      build_pages_impl(lists:nthtail(?page_size, Commodities), SelectedPage, SelectedPage + 1, CommodityKey, PageSize),
+      build_pages_impl(lists:nthtail(?page_size, Commodities), SelectedPage, SelectedPage + 1, PageSize, PageCommodities),
    {
-      [#literal{ text = " "}, #literal{ text = integer_to_list(SelectedPage)} | Res], Key, ?page_size
+      [#literal{ text = " "}, #literal{ text = integer_to_list(SelectedPage)} | Res], ?page_size, Commodities
    };
-build_pages_impl(Commodities, SelectedPage, PageNum, CommodityKey, PageSize) ->
-   {Res, NewCommodityKey, NewPageSize} =
-      build_pages_impl(lists:nthtail(?page_size, Commodities), SelectedPage, PageNum + 1, CommodityKey, PageSize),
+build_pages_impl(Commodities, SelectedPage, PageNum, PageSize, PageCommodities) ->
+   {Res, NewPageSize, NewPageCommodities} =
+      build_pages_impl(lists:nthtail(?page_size, Commodities), SelectedPage, PageNum + 1, PageSize, PageCommodities),
    {
       [#literal{ text = " "}, #link{ text = integer_to_list(PageNum), postback = {page, PageNum}} | Res],
-       NewCommodityKey,
-       NewPageSize
+       NewPageSize,
+       NewPageCommodities
    }.
 
-build_instr_table_impl(undef, _, _) ->
-   [];
-build_instr_table_impl('$end_of_table', _, _) ->
+build_instr_table_impl([], _, _) ->
    [];
 build_instr_table_impl(_, 0, _) ->
    [];
-build_instr_table_impl(CommodityKey, PageSize, BackColor) ->
+build_instr_table_impl([Commodity|Rest], PageSize, BackColor) ->
    [
-      build_by_commodity(CommodityKey, BackColor) |
-      build_instr_table_impl(mnesia:dirty_next(m_commodity, CommodityKey), PageSize - 1, invert_color(BackColor))
+      build_by_commodity(Commodity, BackColor) |
+      build_instr_table_impl(Rest, PageSize - 1, invert_color(BackColor))
    ].
 
-build_by_commodity(CommodityKey = {Commodity, Type, Exch}, BackColor) ->
-   [#m_commodity{alias = Alias, class_code = ClassCode, enabled = Enabled}] =
-      mnesia:dirty_read(m_commodity, CommodityKey),
-   Instruments = mnesia:dirty_index_read(m_instrument, CommodityKey, #m_instrument.commodity),
+build_by_commodity(#m_commodity{key = Key = {Commodity, Type, Exch}, alias = Alias, class_code = ClassCode, enabled = Enabled}, BackColor) ->
+   Instruments = mnesia:dirty_index_read(m_instrument, Key, #m_instrument.commodity),
    SortedInstruments = lists:sort(
       fun(#m_instrument{expiration = Exp1}, #m_instrument{expiration = Exp2}) ->
          Exp1 < Exp2;
@@ -195,9 +191,9 @@ build_by_commodity(CommodityKey = {Commodity, Type, Exch}, BackColor) ->
                #tablecell{ text = date_to_list(Updated)},
                #tablecell{ body = [ #checkbox{
                         id = CheckId, checked = Enabled,
-                        postback = {checkbox_enabled, CheckId, CommodityKey}}], rowspan = if (Size == 1) -> 0; true -> Size end},
+                        postback = {checkbox_enabled, CheckId, Key}}], rowspan = if (Size == 1) -> 0; true -> Size end},
                #tablecell{ body = [
-                     #inplace_textbox2{ tag = CommodityKey, text = alias_to_list(Alias), style = "width: 160px;"}
+                     #inplace_textbox2{ tag = Key, text = alias_to_list(Alias), style = "width: 160px;"}
                   ], rowspan = if (Size == 1) -> 0; true -> Size end}
             ], style = "background-color: " ++ BackColor}];
         (#m_instrument{key = {ExchName, _, _}, expiration = Expiration, updated = Updated, full_name = FullName, lot_size = LSize}, Acc) ->
@@ -214,19 +210,19 @@ build_by_commodity(CommodityKey = {Commodity, Type, Exch}, BackColor) ->
             ], style = "background-color: " ++ BackColor}]
       end, [], SortedInstruments).
 
-build_instr_table(CommodityKey, PageSize) ->
+build_instr_table(Commodities, PageSize) ->
    [
       build_instr_header(),
-      build_instr_table_impl(CommodityKey, PageSize, ?white)
+      build_instr_table_impl(Commodities, PageSize, ?white)
    ].
 
 build_instr(Exchanges, Types, OnlyEnabled, Alpha, Page) ->
    {Commodities, AlphaList} = select_commodities(Exchanges, Types, OnlyEnabled, Alpha),
-   {Pages, CommodityKey, PageSize} = build_pages(Commodities, Page),
+   {Pages, PageSize, PageCommodities} = build_pages(Commodities, Page),
    {
       #p{id = alpha_filter, body = build_alpha_filter(AlphaList)},
       Pages,
-      #table{id = instruments, rows = build_instr_table(CommodityKey, PageSize)}
+      #table{id = instruments, rows = build_instr_table(PageCommodities, PageSize)}
    }.
 
 inplace_textbox_event(Key, []) ->
@@ -266,6 +262,7 @@ event({alpha, A}) ->
    wf:replace(instruments, Instruments);
 
 event({page, PageNum}) ->
+   wf:state(page, PageNum),
    {AlphaFilter, Pages, Instruments} = build_instr(
       wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), PageNum),
    wf:replace(alpha_filter, AlphaFilter),
