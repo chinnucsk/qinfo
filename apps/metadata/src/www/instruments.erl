@@ -5,7 +5,7 @@
 
 -export([main/0, layout/0, event/1, inplace_textbox_event/2, valid_alias/1, uniq_alias/2, title/0]).
 
--define(page_size, 3).
+-define(page_size, 15).
 -define(white, "#FFFFFF;").
 -define(gray,  "#EEEEEE;").
 -define(type_list, [equity, spot, bond, itf, future]).
@@ -141,8 +141,8 @@ build_pages_impl(Commodities, _SelectedPage, PageNum, PageSize, PageCommodities)
 when length(Commodities) =< ?page_size ->
    {
       [#literal{ text = " "}, #link{ text = integer_to_list(PageNum), postback = {page, PageNum}}],
-      PageSize,
-      PageCommodities
+      if PageSize == 0 -> length(Commodities); true -> PageSize end,
+      if length(PageCommodities) == 0 -> Commodities; true -> PageCommodities end
    };
 build_pages_impl(Commodities, SelectedPage, SelectedPage, PageSize, PageCommodities) ->
    {Res, _, _} =
@@ -248,7 +248,7 @@ inplace_textbox_event(Key, Value) ->
 
 event(filter_changed) ->
    {AlphaFilter, Pages, Instruments} = build_instr(
-      wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), 1),
+      wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), wf:state(page)),
    wf:replace(alpha_filter, AlphaFilter),
    wf:replace(pages, Pages),
    wf:replace(instruments, Instruments);
