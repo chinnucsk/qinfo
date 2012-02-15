@@ -94,12 +94,12 @@ build_exchanges(Key, Exchanges) ->
 build_instr_header() ->
    #tablerow{ cells = [
       #tableheader{ text = "Name",        style = "width: 110px;"},
-      #tableheader{ text = "Full name",   style = "width: 300px;"},
-      #tableheader{ text = "QinfoName",   style = "width: 100px;"},
-      #tableheader{ text = "ClassCode",   style = "width: 100px;"},
-      #tableheader{ text = "ExchName",    style = "width: 100px;"},
-      #tableheader{ text = "Type",        style = "width: 80px;"},
-      #tableheader{ text = "Lot size",    style = "width: 80px;"},
+      #tableheader{ text = "Full name",   style = "width: 340px;"},
+      #tableheader{ text = "QinfoName",   style = "width: 150px;"},
+      #tableheader{ text = "ClassCode",   style = "width:  70px;"},
+      #tableheader{ text = "ExchName",    style = "width:  70px;"},
+      #tableheader{ text = "Type",        style = "width:  60px;"},
+      #tableheader{ text = "Lot size",    style = "width:  60px;"},
       #tableheader{ text = "Expiration",  style = "width: 100px;"},
       #tableheader{ text = "LastUpdated", style = "width: 150px;"},
       #tableheader{ text = "Enabled",     style = "width: 80px;"},
