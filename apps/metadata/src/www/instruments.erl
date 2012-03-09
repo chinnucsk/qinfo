@@ -139,12 +139,19 @@ when length(Commodities) =< ?page_size ->
       length(Commodities),
       Commodities
    };
+build_pages_impl(Commodities, _SelectedPage, PageNum, 0, [])
+when length(Commodities) =< ?page_size ->
+   {
+      [#literal{ text = " "}, #link{ text = integer_to_list(PageNum), postback = {page, PageNum}}],
+      length(Commodities),
+      Commodities
+   };
 build_pages_impl(Commodities, _SelectedPage, PageNum, PageSize, PageCommodities)
 when length(Commodities) =< ?page_size ->
    {
       [#literal{ text = " "}, #link{ text = integer_to_list(PageNum), postback = {page, PageNum}}],
-      if PageSize == 0 -> length(Commodities); true -> PageSize end,
-      if length(PageCommodities) == 0 -> Commodities; true -> PageCommodities end
+      PageSize,
+      PageCommodities
    };
 build_pages_impl(Commodities, SelectedPage, SelectedPage, PageSize, PageCommodities) ->
    {Res, _, _} =
@@ -240,7 +247,7 @@ inplace_textbox_event(Key, Value) ->
       true ->
          [Commodity] = mnesia:dirty_read(m_commodity, Key),
          ok = mnesia:dirty_write(Commodity#m_commodity{alias = Value}),
-         event(filter_changed),
+         event(refresh),
          {true, Value}
    catch
       throw:Err ->
@@ -248,9 +255,16 @@ inplace_textbox_event(Key, Value) ->
          false
    end.
 
-event(filter_changed) ->
+event(refresh) ->
    {AlphaFilter, Pages, Instruments} = build_instr(
       wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), wf:state(page)),
+   wf:replace(alpha_filter, AlphaFilter),
+   wf:replace(pages, Pages),
+   wf:replace(instruments, Instruments);
+
+event(filter_changed) ->
+   {AlphaFilter, Pages, Instruments} = build_instr(
+      wf:qs(checkbox_exchange), get_type_list(), is_checked(checkbox_enabled), wf:state(alpha), 1),
    wf:replace(alpha_filter, AlphaFilter),
    wf:replace(pages, Pages),
    wf:replace(instruments, Instruments);
@@ -282,7 +296,7 @@ event({checkbox_enabled, CheckId, CommodityKey}) ->
    end;
 
 event(alias_changed) ->
-   event(filter_changed);
+   event(refresh);
 
 event(Event) ->
    error_logger:error_msg("Unknown event: ~p", [Event]),
