@@ -37,6 +37,8 @@ layout() ->
       TopPanel,
       #flash{},
       #p{},
+      #button{ id = apply_button, text = "Apply", postback = click_apply },
+      #p{},
       Filter,
       AlphaFilter,
       Pages,
