@@ -8,6 +8,7 @@
 
 -include_lib("metadata/include/metadata.hrl").
 -include_lib("common/include/names.hrl").
+-include_lib("stdlib/include/qlc.hrl").
 
 %=======================================================================================================================
 %  public
@@ -49,12 +50,13 @@ handle_call({get_settings, ServiceName}, _From, State) ->
    end;
 
 handle_call({get_instruments, _Exchange, OnlyEnabled}, _From, State) ->
-   {atomic, Res} = mnesia:transaction
-   (
-      fun() ->
-         mnesia:select(m_instrument, [{#m_instrument{key = {'_', '_', '$1'}, _='_'}, [{'==', '$1', 'RTS'}], ['$_']}])
-      end
-   ),
+   Q = qlc:q([ I ||
+         I <- mnesia:table(instrument),
+         C <- mnesia:table(commodity),
+         I#instrument.commodity == C#commodity.key andalso
+         C#commodity.enabled == OnlyEnabled andalso
+         C#instrument.key#instrument_key.exchange == Exchange]),
+   {atomic, Res} = mnesia:transaction(fun() -> qlc:e(Q) end),
    {reply, Res, State};
 
 handle_call(get_schedules, _From, State) ->
@@ -71,7 +73,7 @@ handle_call({get_schedules, ServiceName}, _From, State) ->
    Res = case mnesia:dirty_read(m_service, ServiceName) of
       [] ->
          no_such_service;
-      [#m_service{service = ServiceName, schedule = SchedList}] ->
+      [#service{service = ServiceName, schedule = SchedList}] ->
          {ServiceName, SchedList}
    end,
    {reply, Res, State};
@@ -119,7 +121,7 @@ insert_commodity(#new_instrument{
    Key = {Commodity, Type, Exch},
    case mnesia:read(m_commodity, Key) of
       [] ->
-         NewCommodity = #m_commodity{ key = Key, class_code = ClassCode},
+         NewCommodity = #commodity{ key = Key, class_code = ClassCode},
          ok = mnesia:write(NewCommodity),
          NewCommodity;
       [Comm] ->
@@ -140,7 +142,7 @@ insert_instrument(#new_instrument{
    Key = {Name, Type, Exch},
    case mnesia:read(m_instrument, Key) of
       [] ->
-         NewInstr = #m_instrument{
+         NewInstr = #instrument{
                   key = Key,
                   commodity = {Commodity, Type, Exch},
                   full_name = common_utils:cp1251_to_unicode(FullName),
@@ -153,7 +155,7 @@ insert_instrument(#new_instrument{
          ok = mnesia:write(NewInstr),
          NewInstr;
       [Instr] ->
-         UpdateInstr = Instr#m_instrument{
+         UpdateInstr = Instr#instrument{
             full_name = common_utils:cp1251_to_unicode(FullName),
             expiration = Expiration,
             limit_up = LUp,
@@ -168,7 +170,7 @@ insert_instrument(#new_instrument{
 insert_exchange(#new_instrument{exchange = Exch}) ->
    case mnesia:read(m_exchange, exch) of
       [] ->
-         NewExchange = #m_exchange{name = Exch},
+         NewExchange = #exchange{name = Exch},
          ok = mnesia:write(NewExchange),
          NewExchange;
       [Exch] ->
@@ -188,12 +190,12 @@ create_db() ->
    case mnesia:create_schema([]) of
       ok ->
          ok = mnesia:start(),
-         ?create_table(m_instrument, ordered_set),
-         ?create_table(m_commodity, ordered_set),
-         ?create_table(m_service, set),
-         ?create_table(m_exchange, set),
-         {atomic, ok} = mnesia:add_table_index(m_instrument, #m_instrument.commodity),
-         {atomic, ok} = mnesia:add_table_index(m_commodity, #m_commodity.alias);
+         ?create_table(instrument, ordered_set),
+         ?create_table(commodity, ordered_set),
+         ?create_table(service, set),
+         ?create_table(exchange, set),
+         {atomic, ok} = mnesia:add_table_index(instrument, #instrument.commodity),
+         {atomic, ok} = mnesia:add_table_index(commodity, #commodity.alias);
       {error, {_, {already_exists, _}}} ->
          ok = mnesia:start(),
          ok
