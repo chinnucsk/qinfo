@@ -26,30 +26,30 @@ init(_Args) ->
 
 %======================================================================================================================
 handle_call({register, ServiceName, Description, Settings, Schedule}, _From, State) ->
-   case mnesia:dirty_read(m_service, ServiceName) of
+   case mnesia:dirty_read(service, ServiceName) of
       [] ->
-         mnesia:dirty_write(#m_service{service = ServiceName,
+         mnesia:dirty_write(#service{service = ServiceName,
                description = Description, settings = Settings, schedule = Schedule}),
          error_logger:info_msg("Service ~p has been registered.~n", [ServiceName]),
          Msg = #service{service = ServiceName, settings = Settings},
          scheduler_srv:schedule(ServiceName),
          {reply, {ok, Msg}, State};
-      [#m_service{service = Service, settings = OldSettings}] ->
+      [#service{service = Service, settings = OldSettings}] ->
          Msg = #service{service = Service, settings = OldSettings},
          scheduler_srv:schedule(ServiceName),
          {reply, {ok, Msg}, State}
    end;
 
 handle_call({get_settings, ServiceName}, _From, State) ->
-   case mnesia:dirty_read(m_service, ServiceName) of
+   case mnesia:dirty_read(service, ServiceName) of
       [] ->
          {reply, {error, no_such_service}, State};
-      [#m_service{service = Service, settings = Settings}] ->
+      [#service{service = Service, settings = Settings}] ->
          Msg = #service{service = Service, settings = Settings},
          {reply, {ok, Msg}, State}
    end;
 
-handle_call({get_instruments, _Exchange, OnlyEnabled}, _From, State) ->
+handle_call({get_instruments, Exchange, OnlyEnabled}, _From, State) ->
    Q = qlc:q([ I ||
          I <- mnesia:table(instrument),
          C <- mnesia:table(commodity),
@@ -63,14 +63,14 @@ handle_call(get_schedules, _From, State) ->
    {atomic, Services} = mnesia:transaction(
    fun() ->
       mnesia:foldl(
-         fun(#m_service{service = ServiceName, schedule = SchedList}, Acc) ->
+         fun(#service{service = ServiceName, schedule = SchedList}, Acc) ->
             [{ServiceName, SchedList} | Acc]
-         end, [], m_service)
+         end, [], service)
    end),
    {reply, Services, State};
 
 handle_call({get_schedules, ServiceName}, _From, State) ->
-   Res = case mnesia:dirty_read(m_service, ServiceName) of
+   Res = case mnesia:dirty_read(service, ServiceName) of
       [] ->
          no_such_service;
       [#service{service = ServiceName, schedule = SchedList}] ->
@@ -118,10 +118,10 @@ insert_commodity(#new_instrument{
          class_code = ClassCode,
          commodity = Commodity,
          type = Type}) ->
-   Key = {Commodity, Type, Exch},
-   case mnesia:read(m_commodity, Key) of
+   Key = #commodity_key{commodity = Commodity, type = Type, exchange = Exch},
+   case mnesia:read(commodity, Key) of
       [] ->
-         NewCommodity = #commodity{ key = Key, class_code = ClassCode},
+         NewCommodity = #commodity{key = Key, class_code = ClassCode},
          ok = mnesia:write(NewCommodity),
          NewCommodity;
       [Comm] ->
@@ -139,12 +139,12 @@ insert_instrument(#new_instrument{
          lot_size = LSize,
          type = Type,
          ref = Ref}) ->
-   Key = {Name, Type, Exch},
-   case mnesia:read(m_instrument, Key) of
+   Key = #instrument_key{exch_symbol = Name, type = Type, exchange = Exch},
+   case mnesia:read(instrument, Key) of
       [] ->
          NewInstr = #instrument{
                   key = Key,
-                  commodity = {Commodity, Type, Exch},
+                  commodity = #commodity_key{commodity = Commodity, type = Type, exchange = Exch},
                   full_name = common_utils:cp1251_to_unicode(FullName),
                   expiration = Expiration,
                   limit_up = LUp,
@@ -168,7 +168,7 @@ insert_instrument(#new_instrument{
    end.
 
 insert_exchange(#new_instrument{exchange = Exch}) ->
-   case mnesia:read(m_exchange, exch) of
+   case mnesia:read(exchange, exch) of
       [] ->
          NewExchange = #exchange{name = Exch},
          ok = mnesia:write(NewExchange),

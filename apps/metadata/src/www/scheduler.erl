@@ -39,11 +39,11 @@ build() ->
    {atomic, Body} = mnesia:transaction(
       fun() ->
          mnesia:foldr(
-            fun(#m_service{service = ServerName, description = Descr, schedule = Schedules}, Acc) ->
+            fun(#service{service = ServerName, description = Descr, schedule = Schedules}, Acc) ->
                [
                   #h3{ text = Descr },
                   #table{ rows = build_schedule(ServerName, Schedules)} | Acc ]
-            end, [], m_service)
+            end, [], service)
       end
    ),
    Body.
@@ -113,8 +113,8 @@ save() ->
    {atomic, _} = mnesia:transaction(
    fun() ->
       mnesia:foldl(
-      fun(Service = #m_service{service = ServerName, schedule = Schedule}, _) ->
+      fun(Service = #service{service = ServerName, schedule = Schedule}, _) ->
          NewSchedule = get_schedules(ServerName, Schedule),
-         ok = mnesia:dirty_write(Service#m_service{schedule = NewSchedule})
-      end, ok, m_service)
+         ok = mnesia:dirty_write(Service#service{schedule = NewSchedule})
+      end, ok, service)
    end).

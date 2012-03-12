@@ -49,7 +49,7 @@ select_commodities(Exchanges, Types, OnlyEnabled, Alpha) ->
    {atomic, {Commodities, AlphaList}} = mnesia:transaction(
       fun() ->
          mnesia:foldr(
-            fun(C = #m_commodity{ key = {[Alpha1|_], Type, Exchange}, enabled = Enabled}, {CommAcc, AlphaAcc}) ->
+            fun(C = #commodity{key = #commodity_key{commodity = [Alpha1|_], type = Type, exchange = Exchange}, enabled = Enabled}, {CommAcc, AlphaAcc}) ->
                InFilter = lists:member(Type, Types) andalso lists:member(Exchange, Exchanges) andalso
                (OnlyEnabled == false orelse Enabled == true),
                case InFilter of
@@ -61,13 +61,13 @@ select_commodities(Exchanges, Types, OnlyEnabled, Alpha) ->
                      {CommAcc, AlphaAcc}
                end
             end
-            , {[], []}, m_commodity)
+            , {[], []}, commodity)
       end
    ),
    {Commodities, lists:usort(AlphaList)}.
 
 build_filter() ->
-   {Checkboxes, Exchanges} = build_exchanges(mnesia:dirty_first(m_exchange), []),
+   {Checkboxes, Exchanges} = build_exchanges(mnesia:dirty_first(exchange), []),
    {
       [#panel{ body = Checkboxes },
        #panel{ body = lists:foldr(fun(Type, Acc) ->
@@ -82,8 +82,8 @@ build_filter() ->
 build_exchanges('$end_of_table', Exchanges) ->
    {[], Exchanges};
 build_exchanges(Key, Exchanges) ->
-   [#m_exchange{ name = ExchName }] = mnesia:dirty_read(m_exchange, Key),
-   {Checkboxes, NewExchanges} = build_exchanges(mnesia:dirty_next(m_exchange, Key), [ExchName | Exchanges]),
+   [#exchange{ name = ExchName }] = mnesia:dirty_read(exchange, Key),
+   {Checkboxes, NewExchanges} = build_exchanges(mnesia:dirty_next(exchange, Key), [ExchName | Exchanges]),
    {[#checkbox{
          id        = checkbox_exchange,
          text      = ExchName,
@@ -178,18 +178,19 @@ build_instr_table_impl([Commodity|Rest], PageSize, BackColor) ->
       build_instr_table_impl(Rest, PageSize - 1, invert_color(BackColor))
    ].
 
-build_by_commodity(#m_commodity{key = Key = {Commodity, Type, Exch}, alias = Alias, class_code = ClassCode, enabled = Enabled}, BackColor) ->
-   Instruments = mnesia:dirty_index_read(m_instrument, Key, #m_instrument.commodity),
+build_by_commodity(#commodity{key = Key = #commodity_key{commodity = Commodity, type = Type, exchange = Exch},
+      alias = Alias, class_code = ClassCode, enabled = Enabled}, BackColor) ->
+   Instruments = mnesia:dirty_index_read(instrument, Key, #instrument.commodity),
    SortedInstruments = lists:sort(
-      fun(#m_instrument{expiration = Exp1}, #m_instrument{expiration = Exp2}) ->
+      fun(#instrument{expiration = Exp1}, #instrument{expiration = Exp2}) ->
          Exp1 < Exp2;
       (_,_) -> false end, Instruments),
    Size = length(SortedInstruments),
    lists:foldl(
-      fun(#m_instrument{key = {ExchName, _, _}, expiration = Expiration, updated = Updated, full_name = FullName, lot_size = LSize}, []) ->
+      fun(#instrument{key = #instrument_key{exch_symbol = ExchSymbol}, expiration = Expiration, updated = Updated, full_name = FullName, lot_size = LSize}, []) ->
             CheckId = wf:temp_id(),
             [#tablerow{ cells = [
-               #tablecell{ text = ExchName },
+               #tablecell{ text = ExchSymbol },
                #tablecell{ text = unicode:characters_to_binary(FullName) },
                #tablecell{ text = create_internal_symbol(Exch, Commodity, Alias, Type, Expiration) },
                #tablecell{ text = ClassCode },
@@ -205,9 +206,9 @@ build_by_commodity(#m_commodity{key = Key = {Commodity, Type, Exch}, alias = Ali
                      #inplace_textbox2{ tag = Key, text = alias_to_list(Alias), style = "width: 160px;"}
                   ], rowspan = if (Size == 1) -> 0; true -> Size end}
             ], style = "background-color: " ++ BackColor}];
-        (#m_instrument{key = {ExchName, _, _}, expiration = Expiration, updated = Updated, full_name = FullName, lot_size = LSize}, Acc) ->
+        (#instrument{key = #instrument_key{exch_symbol = ExchSymbol}, expiration = Expiration, updated = Updated, full_name = FullName, lot_size = LSize}, Acc) ->
              Acc ++ [#tablerow{ cells = [
-               #tablecell{ text = ExchName },
+               #tablecell{ text = ExchSymbol },
                #tablecell{ text = unicode:characters_to_binary(FullName) },
                #tablecell{ text = create_internal_symbol(Exch, Commodity, Alias, Type, Expiration) },
                #tablecell{ text = ClassCode },
@@ -235,18 +236,18 @@ build_instr(Exchanges, Types, OnlyEnabled, Alpha, Page) ->
    }.
 
 inplace_textbox_event(Key, []) ->
-   [Commodity] = mnesia:dirty_read(m_commodity, Key),
-   ok = mnesia:dirty_write(Commodity#m_commodity{alias = undef}),
+   [Commodity] = mnesia:dirty_read(commodity, Key),
+   ok = mnesia:dirty_write(Commodity#commodity{alias = undef}),
    {true, "-"};
 inplace_textbox_event(Key, "-") ->
-   [Commodity] = mnesia:dirty_read(m_commodity, Key),
-   ok = mnesia:dirty_write(Commodity#m_commodity{alias = undef}),
+   [Commodity] = mnesia:dirty_read(commodity, Key),
+   ok = mnesia:dirty_write(Commodity#commodity{alias = undef}),
    {true, "-"};
 inplace_textbox_event(Key, Value) ->
    try valid_alias(Value), uniq_alias(Key, Value) of
       true ->
-         [Commodity] = mnesia:dirty_read(m_commodity, Key),
-         ok = mnesia:dirty_write(Commodity#m_commodity{alias = Value}),
+         [Commodity] = mnesia:dirty_read(commodity, Key),
+         ok = mnesia:dirty_write(Commodity#commodity{alias = Value}),
          event(refresh),
          {true, Value}
    catch
@@ -286,8 +287,8 @@ event({page, PageNum}) ->
    wf:replace(instruments, Instruments);
 
 event({checkbox_enabled, CheckId, CommodityKey}) ->
-   [Commodity] = mnesia:dirty_read(m_commodity, CommodityKey),
-   ok = mnesia:dirty_write(Commodity#m_commodity{ enabled = is_checked(CheckId) }),
+   [Commodity] = mnesia:dirty_read(commodity, CommodityKey),
+   ok = mnesia:dirty_write(Commodity#commodity{ enabled = is_checked(CheckId) }),
    case is_checked(checkbox_enabled) of
       true ->
          event(filter_changed);
@@ -342,12 +343,12 @@ valid_alias(Value) ->
    end.
 
 uniq_alias(Key, Value) ->
-   case mnesia:dirty_index_read(m_commodity, Value, #m_commodity.alias) of
+   case mnesia:dirty_index_read(commodity, Value, #commodity.alias) of
      [] ->
         true;
-     [#m_commodity{key = Key}|_] ->
+     [#commodity{key = Key}|_] ->
         true;
-     [#m_commodity{key = Key1}|_] when Key1 =/= Key ->
+     [#commodity{key = Key1}|_] when Key1 =/= Key ->
         throw("ERROR: alias already exists.")
    end.
 

@@ -1,7 +1,7 @@
 -type commodity() :: string().
 -type type() :: 'equity' | 'future' | 'bond' | 'itf' | 'spot'.
 -type exchange() :: string().
--type exch_name() :: string(). % name of instrument on exchange
+-type exch_symbol() :: string(). % name of instrument on exchange
 -type hour() :: pos_integer().
 -type min()  :: pos_integer().
 -type time_interval() :: {{hour(), min()}, {hour(), min()}}.
@@ -30,14 +30,14 @@
                          expiration   :: 'undef' | calendar:datetime(),
                          ref          :: pos_integer()}).
 
+%-record(new_service, {service  :: {'global' | 'local', atom()},
+%                      settings :: list(),
+%                      schedule :: sched_of_day()}).
+
 -record(trade, {price :: float(),
                 qty   :: pos_integer()}).
 
 -record(setting, {name, value, description, validator = undef}).
-
--record(service, {service  :: {'global' | 'local', atom()},
-                  settings :: list(),
-                  schedule :: sched_of_day()}).
 
 -record(commodity, {key             :: #commodity_key{},
                     class_code      :: string(),

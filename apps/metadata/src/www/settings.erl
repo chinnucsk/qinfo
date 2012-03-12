@@ -40,12 +40,12 @@ build() ->
    {atomic, Body} = mnesia:transaction(
       fun() ->
          mnesia:foldr(
-            fun(#m_service{service = ServerName, description = Descr, settings = Settings}, Acc) ->
+            fun(#service{service = ServerName, description = Descr, settings = Settings}, Acc) ->
                [
                   #p{},
                   #h3{ text = Descr },
                   #table{ rows = build_settings(ServerName, Settings)} | Acc]
-            end, [], m_service)
+            end, [], service)
       end
    ),
    Body.
@@ -109,10 +109,10 @@ save() ->
    {atomic, _} = mnesia:transaction(
    fun() ->
       mnesia:foldl(
-      fun(Service = #m_service{service = ServerName, settings = Settings}, _) ->
+      fun(Service = #service{service = ServerName, settings = Settings}, _) ->
          NewSettings = get_settings(ServerName, Settings),
-         ok = mnesia:dirty_write(Service#m_service{settings = NewSettings})
-      end, ok, m_service)
+         ok = mnesia:dirty_write(Service#service{settings = NewSettings})
+      end, ok, service)
    end).
 
 get_settings(_ServerName, []) ->
@@ -128,9 +128,9 @@ notify() ->
    {atomic, _} = mnesia:transaction(
    fun() ->
       mnesia:foldl(
-      fun(#m_service{service = ServerName}, _) ->
+      fun(#service{service = ServerName}, _) ->
          gen_server:cast(ServerName, reconfigure)
-      end, ok, m_service)
+      end, ok, service)
    end).
 
 % ================== validators =========================================
