@@ -18,6 +18,7 @@ mkdir -p build/ebin/nprocreg/ebin
 mkdir -p build/ebin/simple_bridge/ebin
 mkdir -p build/ebin/metadata/ebin
 mkdir -p build/ebin/www
+mkdir -p build/ebin/log_viewer/ebin
 
 cp -r apps/common/ebin/*.beam build/ebin/common/ebin/
 cp -r apps/common/ebin/*.app build/ebin/
@@ -33,5 +34,7 @@ cp -r apps/simple_bridge/ebin/*.beam build/ebin/simple_bridge/ebin
 cp -r apps/simple_bridge/ebin/*.app build/ebin
 cp -r apps/metadata/ebin/*.beam build/ebin/metadata/ebin
 cp -r apps/metadata/ebin/*.app build/ebin
+cp -r apps/log_viewer/ebin/*.beam build/ebin/log_viewer/ebin
+cp -r apps/log_viewer/ebin/*.app build/ebin
 cp -r apps/metadata/src/www/static/* build/ebin/www
 cp    build/cpp/common_utils.so build/ebin/common/priv
