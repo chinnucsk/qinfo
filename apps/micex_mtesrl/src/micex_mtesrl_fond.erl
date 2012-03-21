@@ -16,7 +16,7 @@
       #setting{name = "LogLevel", value = "info", description = "possible values are info, debug, warning, error",
          validator = "fun(_, Val) -> settings:val_is_log_level(Val) end."},
       #setting{name = "ConnParams",
-           value = <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password>\r\nINTERFACE=<exchange_interface>">>,
+           value = <<"HOST=<server_host:port>\r\nSERVER=<server_name>\r\nUSERID=<user_id>\r\nPASSWORD=<you_password>\r\nINTERFACE=<exchange_interface>\r\nBOARDS=EQBR,EQNE,EQNL,EQBR,EQNE,EQNL,EQBS,EQDB,EQLV,EQDB,EQLI,EQNB,EQNO,EQOB,EQOS,EQOV">>,
            description = "connection parameters as decribed in mtesrl documentation",
            validator = "fun(_, Val) -> length(Val) > 0 end."}
    ]
