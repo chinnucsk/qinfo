@@ -30,7 +30,7 @@
 %% Interface functions.
 %%-----------------------------------------------------------------
 start_link(Options) ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, Options, []).
+    gen_server:start_link({local, log_viewer_srv}, ?MODULE, Options, []).
 
 init(Options) ->
     process_flag(priority, low),
@@ -40,7 +40,7 @@ init(Options) ->
     Type = get_option(Options, type, all),
     Abort = get_option(Options, abort_on_error, false),
     Data = scan_files(Dir ++ "/", Max, Type),
-    {ok, #state{dir = Dir ++ "/", data = Data, max = Max, type = Type, abort = Abort, log = Log}}.
+    {ok, #state{dir = Dir ++ "/", data = Data, max = Max, type = Type, abort = Abort}}.
 
 handle_call({rescan, Options}, _From, State) ->
     Max = get_option(Options, max, State#state.max),
@@ -54,45 +54,31 @@ handle_call(_, _From, #state{data = undefined}) ->
 handle_call({list, Type}, _From, State) ->
     Res = print_list(State#state.data, Type),
     {reply, Res, State};
-handle_call({start_log, FileName}, _From, State) ->
-    NewDevice = open_log_file(FileName),
-    {reply, ok, State#state{device = NewDevice}};
-handle_call(stop_log, _From, State) ->
-    close_device(State#state.device),
-    {reply, ok, State#state{device = standard_io}};
 handle_call({show_number, Number}, _From, State) ->
-    #state{dir = Dir, data = Data, device = Device, abort = Abort, log = Log} = State,
-    NewDevice = print_report_by_num(Dir, Data, Number, Device, Abort, Log),
-    {reply, ok, State#state{device = NewDevice}};
+    #state{dir = Dir, data = Data, abort = Abort} = State,
+    print_report_by_num(Dir, Data, Number, Abort),
+    {reply, ok, State};
 handle_call({show_type, Type}, _From, State) ->
-    #state{dir = Dir, data = Data, device = Device, abort = Abort, log = Log} = State,
-    NewDevice = print_typed_reports(Dir, Data, Type, Device, Abort, Log),
-    {reply, ok, State#state{device = NewDevice}};
-handle_call(show, _From, State) ->
-    #state{dir = Dir, data = Data, device = Device, abort = Abort, log = Log} = State,
-    NewDevice = print_all_reports(Dir, Data, Device, Abort, Log),
-    {reply, ok, State#state{device = NewDevice}};
+    #state{dir = Dir, data = Data, abort = Abort} = State,
+    print_typed_reports(Dir, Data, Type,Abort),
+    {reply, ok, State};
 handle_call({grep, RegExp}, _From, State) ->
-    #state{dir = Dir, data = Data, device = Device, abort = Abort, log = Log} = State,
-    try print_grep_reports(Dir, Data, RegExp, Device, Abort, Log) of
-	NewDevice ->
-	    {reply, ok, State#state{device = NewDevice}}
+    #state{dir = Dir, data = Data, abort = Abort} = State,
+    try print_grep_reports(Dir, Data, RegExp, Abort)
     catch
 	error:Error ->
 	    {reply, {error, Error}, State}
     end;
 handle_call({filter, Filters}, _From, State) ->
-    #state{dir = Dir, data = Data, device = Device, abort = Abort, log = Log} = State,
-    try filter_all_reports(Dir, Data, Filters, Device, Abort, Log) of
-	NewDevice ->
-	    {reply, ok, State#state{device = NewDevice}}
-    catch
+   #state{dir = Dir, data = Data, abort = Abort} = State,
+   try filter_all_reports(Dir, Data, Filters, Abort)
+   catch
 	error:Error ->
-	    {reply, {error, Error}, State}
-    end.
+	   {reply, {error, Error}, State}
+   end.
 
-terminate(_Reason, #state{device = Device}) ->
-    close_device(Device).
+terminate(_Reason, #state{}) ->
+   ok.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -100,26 +86,6 @@ handle_info(_Info, State) ->
     {noreply, State}.
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
-
-%%-----------------------------------------------------------------
-%% Func: open_log_file/1
-%% Args: FileName | standard_io
-%% Returns: A Device for later use in call to io:format
-%%-----------------------------------------------------------------
-open_log_file(standard_io) -> standard_io;
-open_log_file(FileName) ->
-    case file:open(FileName, [write,append]) of
-	{ok, Fd} -> Fd;
-	Error -> 
-	    io:format("rb: Cannot open file '~s' (~w).~n",
-		      [FileName, Error]),
-	    io:format("rb: Using standard_io~n"),
-	    standard_io
-    end.
-
-close_device(Fd) when is_pid(Fd) ->
-    catch file:close(Fd);
-close_device(_) -> ok.
 
 get_option(Options, Key, Default) ->
     case lists:keysearch(Key, 1, Options) of
@@ -145,7 +111,7 @@ get_report_dir(Options) ->
 %5               to read.
 %%       Type ::= atom(), describing which reports to read.
 %% Purpose: Scan all report files one time, and build a list of
-%%          small elements 
+%%          small elements
 %% Returns: Data, where Data is a list of
 %%          {Number, Type, ShortDescr, Date, Fname, FilePosition}.
 %%-----------------------------------------------------------------
@@ -153,10 +119,10 @@ scan_files(RptDir, Max, Type) ->
     case file:open(RptDir ++ "/index", [raw, read]) of
 	{ok, Fd} ->
 	    case catch file:read(Fd, 1) of
-		{ok, [LastWritten]} -> 
+		{ok, [LastWritten]} ->
 		    file:close(Fd),
 		    Files = make_file_list(RptDir, LastWritten),
-		    scan_files(RptDir, Files, Max, Type);		
+		    scan_files(RptDir, Files, Max, Type);
 		_X ->
 		    file:close(Fd),
 		    exit("cannot read the index file")
@@ -179,8 +145,8 @@ make_file_list(Dir, FirstFileNo) ->
 	    shift(lists:sort(FileNumbers), FirstFileNo);
 	_ -> exit({bad_directory, Dir})
     end.
-					  
-shift(List, First) -> 
+
+shift(List, First) ->
     shift(List, First, []).
 
 shift([H | T], H, Res) ->
@@ -211,7 +177,7 @@ scan_files(Dir, No, [H|T], Res, Max, Type) ->
 dec_max(all, _) -> all;
 dec_max(X,Y) -> X-Y.
 
-get_report_data_from_file(Dir, No, FileNr, Max, Type) ->	
+get_report_data_from_file(Dir, No, FileNr, Max, Type) ->
     Fname = integer_to_list(FileNr),
     FileName = lists:concat([Dir, Fname]),
     case file:open(FileName, [read]) of
@@ -230,10 +196,10 @@ get_report_data_from_file(Dir, No, FileNr, Max, Type) ->
 read_reports(No, Fd, Fname, Max, Type) ->
     io:format("rb: reading report..."),
     case catch read_reports(Fd, [], Type) of
-	{ok, Res} -> 
+	{ok, Res} ->
 	    file:close(Fd),
 	    io:format("done.~n"),
-	    NewRes = 
+	    NewRes =
 		if
 		    length(Res) > Max ->
 			lists:sublist(Res, 1, Max);
@@ -246,7 +212,7 @@ read_reports(No, Fd, Fname, Max, Type) ->
 	    io:format("Error: ~p~n",[Problem]),
 	    io:format("Salvaged ~p entries from corrupt report file ~s...~n",
 		      [length(Res),Fname]),
-	    NewRes = 
+	    NewRes =
 		if
 		    length([Problem|Res]) > Max ->
 			lists:sublist([Problem|Res], 1, Max);
@@ -277,7 +243,7 @@ add_report_data([], _No, _FName, Res) -> Res.
 read_reports(Fd, Res, Type) ->
     {ok, FilePos} = file:position(Fd, cur),
     case catch read_report(Fd) of
-	{ok, Report} -> 
+	{ok, Report} ->
 	    RealType = get_type(Report),
 	    {ShortDescr, Date} = get_short_descr(Report),
 	    Rep = {RealType, ShortDescr, Date, FilePos},
@@ -324,7 +290,7 @@ read_report(Fd) ->
         eof ->
             eof
     end.
- 
+
 get_int16(Hi,Lo) ->
     ((Hi bsl 8) band 16#ff00) bor (Lo band 16#ff).
 
@@ -344,7 +310,7 @@ get_type(_) -> unknown.
 
 get_short_descr({{Date, Time}, {error_report, Pid, {_, crash_report, Rep}}}) ->
     [OwnRep | _] = Rep,
-    Name = 
+    Name =
 	case lists:keysearch(registered_name, 1, OwnRep) of
 	    {value, {_Key, []}} ->
 		case lists:keysearch(initial_call, 1, OwnRep) of
@@ -369,18 +335,18 @@ get_short_descr({{Date, Time}, {_Type, Pid, _}}) ->
     {NameStr, date_str(Date,Time)};
 get_short_descr(_) ->
     {"???", "???"}.
-    
+
 date_str({Y,Mo,D}=Date,{H,Mi,S}=Time) ->
-    case application:get_env(sasl,utc_log) of 
+    case application:get_env(sasl,utc_log) of
 	{ok,true} ->
-	    {{YY,MoMo,DD},{HH,MiMi,SS}} = 
+	    {{YY,MoMo,DD},{HH,MiMi,SS}} =
 		local_time_to_universal_time({Date,Time}),
 	    lists:flatten(io_lib:format("~w-~2.2.0w-~2.2.0w ~2.2.0w:"
-					"~2.2.0w:~2.2.0w UTC", 
+					"~2.2.0w:~2.2.0w UTC",
 					[YY,MoMo,DD,HH,MiMi,SS]));
 	_ ->
 	    lists:flatten(io_lib:format("~w-~2.2.0w-~2.2.0w ~2.2.0w:"
-					"~2.2.0w:~2.2.0w", 
+					"~2.2.0w:~2.2.0w",
 					[Y,Mo,D,H,Mi,S]))
     end.
 
@@ -394,151 +360,103 @@ local_time_to_universal_time({Date,Time}) ->
 	    {Date,Time}
     end.
 
+print_list([], _) -> [];
+print_list([Report | T], []) ->
+   [print_short_descr(Report) | print_list(T, [])];
+print_list([Report = {_, RealType, _, _, _, _} | T], Types) ->
+   case lists:member(RealType, Types) of
+      true ->
+         [print_short_descr(Report) | print_list(T, Types)];
+      false ->
+         print_list(T, Types)
+   end.
 
-print_list(Data, Type) ->
-    Header = {"No", "Type", "Process", "Date     Time"},
-    Width = find_width([Header | Data], 0)+1,
-    DateWidth = find_date_width([Header | Data], 0) +1,
-    Format = lists:concat(["~4s~20s ~", Width, "s~20s~n"]),
-    io:format(Format, tuple_to_list(Header)),
-    io:format(Format, ["==", "====", "=======", "====     ===="]),
-    print_list(Data, Type, Width, DateWidth).
-print_list([], _, _, _) -> true;
-print_list([H|T], Type, Width, DateWidth) ->
-    print_one_report(H, Type, Width, DateWidth),
-    print_list(T, Type, Width, DateWidth).
+print_short_descr({No, Type, ShortDescr, Date, _, _}) ->
+   {No, Type, ShortDescr, Date}.
 
-find_width([], Width) -> Width;
-find_width([H|T], Width) ->
-    Try = length(element(3, H)),
-    if
-	Try > Width -> find_width(T, Try);
-	true -> find_width(T, Width)
-    end.
-find_date_width([], Width) -> Width;
-find_date_width([H|T], Width) ->
-    Try = length(element(4, H)),
-    if
-	Try > Width -> find_date_width(T, Try);
-	true -> find_date_width(T, Width)
-    end.
+print_report_by_num(Dir, Data, Number, Abort) ->
+    print_report(Dir, Data, Number, Abort).
 
-print_one_report({No, RealType, ShortDescr, Date, _Fname, _FilePos},
-		 WantedType,
-		 Width, DateWidth) ->
-    if
-	WantedType == all ->
-	    print_short_descr(No, RealType, ShortDescr, Date, Width, 
-			      DateWidth);
-	WantedType == RealType ->
-	    print_short_descr(No, RealType, ShortDescr, Date, Width, 
-			      DateWidth);
-	true -> ok
-    end.
-
-print_short_descr(No, Type, ShortDescr, Date, Width, DateWidth) ->
-    Format = lists:concat(["~4w~20w ~", Width, "s~", DateWidth,"s~n"]),
-    io:format(Format, [No,
-		       Type, 
-		       io_lib:format("~s", [ShortDescr]),
-		       Date]).
-
-print_report_by_num(Dir, Data, Number, Device, Abort, Log) ->
-    {_,Device1} = print_report(Dir, Data, Number, Device, Abort, Log),
-    Device1.
-    
-print_typed_reports(_Dir, [], _Type, Device, _Abort, _Log) ->
-    Device;
-print_typed_reports(Dir, Data, Type, Device, Abort, Log) ->
-    {Next,Device1} = 
-	case element(2, hd(Data)) of
-	    Type -> 
-		print_report(Dir, Data, element(1, hd(Data)), Device, Abort, Log);
-	    _ -> 
-		{proceed,Device}
+print_typed_reports(_Dir, [], _Type, _Abort) ->
+   ok;
+print_typed_reports(Dir, Data, Type, Abort) ->
+   Next =
+   case element(2, hd(Data)) of
+	   Type ->
+		   print_report(Dir, Data, element(1, hd(Data)), Abort);
+	    _ ->
+		   proceed
 	end,
-    if Next == abort ->
-	    Device1;
-       true ->
-	    print_typed_reports(Dir, tl(Data), Type, Device1, Abort, Log)
-    end.
+   if Next == abort ->
+      ok;
+   true ->
+	   print_typed_reports(Dir, tl(Data), Type, Abort)
+   end.
 
-print_all_reports(_Dir, [], Device, _Abort, _Log) ->
-    Device;
-print_all_reports(Dir, Data, Device, Abort, Log) ->
-    {Next,Device1} = print_report(Dir, Data, element(1, hd(Data)), 
-				  Device, Abort, Log),
-    if Next == abort ->
-	    Device1;
-       true ->
-	    print_all_reports(Dir, tl(Data), Device1, Abort, Log)
-    end.
-
-print_report(Dir, Data, Number, Device, Abort, Log) ->
-    case find_report(Data, Number) of
-	{Fname, FilePosition} ->
-	    FileName = lists:concat([Dir, Fname]),
-	    case file:open(FileName, [read]) of
-		{ok, Fd} -> 
-		    read_rep(Fd, FilePosition, Device, Abort, Log);
-		_ -> 
-		    io:format("rb: can't open file ~p~n", [Fname]),
-		    {proceed,Device}
-	    end;
-	no_report ->
-	    {proceed,Device}
-    end.
+print_report(Dir, Data, Number, Abort) ->
+   case find_report(Data, Number) of
+	   {Fname, FilePosition} ->
+         FileName = lists:concat([Dir, Fname]),
+	      case file:open(FileName, [read]) of
+		      {ok, Fd} ->
+		      read_rep(Fd, FilePosition, Abort);
+		   _ ->
+		      io:format("rb: can't open file ~p~n", [Fname]),
+		      proceed
+         end;
+	   no_report ->
+	      proceed
+   end.
 
 find_report([{No, _Type, _Descr, _Date, Fname, FilePosition}|_T], No) ->
     {Fname, FilePosition};
-find_report([_H|T], No) -> 
+find_report([_H|T], No) ->
     find_report(T, No);
 find_report([], No) ->
     io:format("There is no report with number ~p.~n", [No]),
     no_report.
-    
-print_grep_reports(_Dir, [], _RegExp, Device, _Abort, _Log) ->
-    Device;
-print_grep_reports(Dir, Data, RegExp, Device, Abort, Log) ->
-    {Next,Device1} = print_grep_report(Dir, Data, element(1, hd(Data)), 
-				       Device, RegExp, Abort, Log),
-    if Next == abort ->
-	    Device1;
-       true ->
-	    print_grep_reports(Dir, tl(Data), RegExp, Device1, Abort, Log)
-    end.
 
-print_grep_report(Dir, Data, Number, Device, RegExp, Abort, Log) ->
-    {Fname, FilePosition} = find_report(Data, Number),
-    FileName = lists:concat([Dir, Fname]),
-    case file:open(FileName, [read]) of
-	{ok, Fd} when is_pid(Fd) -> 
-	    check_rep(Fd, FilePosition, Device, RegExp, Number, Abort, Log);
-	_ -> 
-	    io:format("rb: can't open file ~p~n", [Fname]),
-	    {proceed,Device}
-    end.
+print_grep_reports(_Dir, [], _RegExp, _Abort) ->
+    ok;
+print_grep_reports(Dir, Data, RegExp, Abort) ->
+   Next = print_grep_report(Dir, Data, element(1, hd(Data)), RegExp, Abort),
+   if Next == abort ->
+	   ok;
+   true ->
+	   print_grep_reports(Dir, tl(Data), RegExp, Abort)
+   end.
 
-check_rep(Fd, FilePosition, Device, RegExp, Number, Abort, Log) ->
-    case read_rep_msg(Fd, FilePosition) of
-	{Date, Msg} ->
-	    MsgStr = lists:flatten(io_lib:format("~p",[Msg])),
-	    case run_re(MsgStr, RegExp) of
-		match ->
-		    io:format("Found match in report number ~w~n", [Number]),
-		    case catch rb_format_supp:print(Date, Msg, Device) of
-			{'EXIT', _} ->
-			    handle_bad_form(Date, Msg, Device, Abort, Log);
-			_ ->
-			    {proceed,Device}
-		    end;
-		_ ->
-		    {proceed,Device}
-	    end;
-	_ ->
-	    io:format("rb: Cannot read from file~n"),
-	    {proceed,Device}
-    end.
+print_grep_report(Dir, Data, Number, RegExp, Abort) ->
+   {Fname, FilePosition} = find_report(Data, Number),
+   FileName = lists:concat([Dir, Fname]),
+   case file:open(FileName, [read]) of
+	   {ok, Fd} when is_pid(Fd) ->
+	      check_rep(Fd, FilePosition, RegExp, Number, Abort);
+	   _ ->
+	      io:format("rb: can't open file ~p~n", [Fname]),
+	      proceed
+   end.
+
+check_rep(Fd, FilePosition, RegExp, Number, Abort) ->
+   case read_rep_msg(Fd, FilePosition) of
+	   {Date, Msg} ->
+	      MsgStr = lists:flatten(io_lib:format("~p",[Msg])),
+	      case run_re(MsgStr, RegExp) of
+		      match ->
+		         io:format("Found match in report number ~w~n", [Number]),
+		         case catch rb_format_supp:print(Date, Msg) of
+			         {'EXIT', _} ->
+			            handle_bad_form(Date, Msg, Abort);
+			         _ ->
+			            proceed
+		         end;
+		      _ ->
+		         proceed
+	      end;
+	   _ ->
+	      io:format("rb: Cannot read from file~n"),
+	      proceed
+   end.
 
 run_re(Subject, {Regexp, Options}) ->
     run_re(Subject, Regexp, Options);
@@ -553,55 +471,54 @@ run_re(Subject, Regexp, Options) ->
             match
     end.
 
-filter_all_reports(_Dir, [], _Filters, Device, _Abort, _Log) ->
-    Device;
-filter_all_reports(Dir, Data, Filters, Device, Abort, Log) ->
-    {Next,Device1} = filter_report(Dir, Data, Filters, element(1, hd(Data)),
-				  Device, Abort, Log),
-    if Next == abort ->
-	    Device1;
-       true ->
-	    filter_all_reports(Dir, tl(Data), Filters, Device1, Abort, Log)
-    end.
+filter_all_reports(_Dir, [], _Filters, _Abort) ->
+    ok;
+filter_all_reports(Dir, Data, Filters, Abort) ->
+   Next = filter_report(Dir, Data, Filters, element(1, hd(Data)), Abort),
+   if Next == abort ->
+	   ok;
+   true ->
+	   filter_all_reports(Dir, tl(Data), Filters, Abort)
+   end.
 
-filter_report(Dir, Data, Filters, Number, Device, Abort, Log) ->
-    case find_report(Data, Number) of
-	{Fname, FilePosition} ->
-	    FileName = lists:concat([Dir, Fname]),
-	    case file:open(FileName, [read]) of
-		{ok, Fd} ->
-		    filter_rep(Filters, Fd, FilePosition, Device, Abort, Log);
-		_ ->
-		    io:format("rb: can't open file ~p~n", [Fname]),
-		    {proceed,Device}
-	    end;
-	no_report ->
-	    {proceed,Device}
-    end.
+filter_report(Dir, Data, Filters, Number, Abort) ->
+   case find_report(Data, Number) of
+	   {Fname, FilePosition} ->
+	      FileName = lists:concat([Dir, Fname]),
+	      case file:open(FileName, [read]) of
+		      {ok, Fd} ->
+		         filter_rep(Filters, Fd, FilePosition, Abort);
+		      _ ->
+		         io:format("rb: can't open file ~p~n", [Fname]),
+		         proceed
+	      end;
+	   no_report ->
+	      proceed
+   end.
 
-filter_rep({Filters, FDates}, Fd, FilePosition, Device, Abort, Log) ->
-    RepMsg = read_rep_msg(Fd, FilePosition),
-    case RepMsg of
-	{_DateStr, {Date, _Msg}} ->
-	    case compare_dates(Date, FDates) of
-		true ->
-		    print_filter_report(RepMsg, Filters, Device, Abort, Log);
-		_ ->
-		    {proceed,Device}
-	    end;
-	_ ->
-	    io:format("rb: Cannot read from file~n"),
-	    {proceed,Device}
+filter_rep({Filters, FDates}, Fd, FilePosition, Abort) ->
+   RepMsg = read_rep_msg(Fd, FilePosition),
+   case RepMsg of
+	   {_DateStr, {Date, _Msg}} ->
+	      case compare_dates(Date, FDates) of
+		      true ->
+		         print_filter_report(RepMsg, Filters, Abort);
+		      _ ->
+		         proceed
+	      end;
+	   _ ->
+	      io:format("rb: Cannot read from file~n"),
+	      proceed
     end;
-filter_rep(Filters, Fd, FilePosition, Device, Abort, Log) ->
-    RepMsg = read_rep_msg(Fd, FilePosition),
-    case RepMsg of
-	{Date, Msg} ->
-	    print_filter_report({Date, Msg}, Filters, Device, Abort, Log);
-	_ ->
-	    io:format("rb: Cannot read from file~n"),
-	    {proceed,Device}
-    end.
+filter_rep(Filters, Fd, FilePosition, Abort) ->
+   RepMsg = read_rep_msg(Fd, FilePosition),
+   case RepMsg of
+	   {Date, Msg} ->
+	      print_filter_report({Date, Msg}, Filters, Abort);
+	   _ ->
+	      io:format("rb: Cannot read from file~n"),
+	      proceed
+   end.
 
 filter_report([], _Msg) ->
     true;
@@ -677,74 +594,53 @@ compare_dates(Date, {From, To}) ->
     calendar:datetime_to_gregorian_seconds(Date2) =<
 	calendar:datetime_to_gregorian_seconds(DateTo).
 
-print_filter_report({Date, Msg}, Filters, Device, Abort, Log) ->
+print_filter_report({Date, Msg}, Filters, Abort) ->
     {_D, M} = Msg,
     {_, _, M2} = M,
     case M2 of
 	{_, _, Report} ->
 	    case filter_report(Filters, Report) of
 		true ->
-		    case catch rb_format_supp:print(Date, Msg, Device) of
+		    case catch rb_format_supp:print(Date, Msg) of
 			{'EXIT', _} ->
-			    handle_bad_form(Date, Msg, Device, Abort, Log);
+			    handle_bad_form(Date, Msg, Abort);
 			_ ->
-			    {proceed,Device}
+			    proceed
 		    end;
 		_ ->
-		    {proceed, Device}
+		    proceed
 	    end;
 	_ ->
-	    {proceed,Device}
+	    proceed
     end.
 
-read_rep(Fd, FilePosition, Device, Abort, Log) ->
-    case read_rep_msg(Fd, FilePosition) of
-	{Date, Msg} ->
-	    case catch rb_format_supp:print(Date, Msg, Device) of
-		{'EXIT', _} ->
-		    handle_bad_form(Date, Msg, Device, Abort, Log);
-		_ ->
-		    {proceed,Device}
-	    end;
-	_ -> 
-	    io:format("rb: Cannot read from file~n"),
-	    {proceed,Device}
-    end.
-    
-handle_bad_form(Date, Msg, Device, Abort, Log) ->
-    io:format("rb: ERROR! A report on bad form was encountered. " ++
+read_rep(Fd, FilePosition, Abort) ->
+   case read_rep_msg(Fd, FilePosition) of
+	   {Date, Msg} ->
+	      case catch rb_format_supp:print(Date, Msg) of
+		      {'EXIT', _} ->
+		         handle_bad_form(Date, Msg, Abort);
+		      _ ->
+		         proceed
+         end
+   end.
+
+handle_bad_form(Date, Msg, Abort) ->
+   io:format("rb: ERROR! A report on bad form was encountered. " ++
 	      "It can not be printed to the log.~n~n"),
-    io:format("Details:~n~p ~p~n~n", [Date,Msg]),
-    case {Abort,Device,open_log_file(Log)} of
-	{true,standard_io,standard_io} ->
-	    io:format("rb: Logging aborted.~n"),
-	    {abort,Device};
-	{false,standard_io,standard_io} ->
-	    io:format("rb: Logging resumed...~n~n"),
-	    {proceed,Device};
-	{_,_,standard_io} ->
-	    io:format("rb: Can not reopen ~p. Logging aborted.~n", [Log]),
-	    {abort,Device};
-	{true,_,NewDevice} ->
-	    io:format(NewDevice,
-		      "~n~n************************* RB ERROR ************************~n" ++
-		      "A report on bad form was encountered here and the logging~n" ++
-		      "process was aborted. Note that there may well be remaining~n" ++
-		      "reports that haven't yet been logged. Please see the rb~n" ++
-		      "manual for more info.~n" ++
-		      "***********************************************************~n", []),
-	    io:format("rb: Logging aborted.~n"),
-	    {abort,NewDevice};
-	{false,_,NewDevice} ->
-	    io:format(NewDevice, 
-		      "~n   ********* RB: UNPRINTABLE REPORT ********~n~n", []),
-	    io:format("rb: Logging resumed...~n~n"),	    
-	    {proceed,NewDevice}
-    end.
+   io:format("Details:~n~p ~p~n~n", [Date,Msg]),
+   case Abort of
+	   true ->
+         io:format("rb: Logging aborted.~n"),
+	      abort;
+	   false ->
+	      io:format("rb: Logging resumed...~n~n"),
+	      proceed
+   end.
 
 read_rep_msg(Fd, FilePosition) ->
     file:position(Fd, {bof, FilePosition}),
-    Res = 
+    Res =
 	case catch read_report(Fd) of
 	    {ok, Report} ->
 		{_ShortDescr, Date} = get_short_descr(Report),
