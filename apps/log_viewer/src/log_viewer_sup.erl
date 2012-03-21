@@ -1,4 +1,3 @@
-
 -module(log_viewer_sup).
 
 -behaviour(supervisor).
@@ -10,7 +9,7 @@
 -export([init/1]).
 
 %% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
+-define(CHILD(I, Type, Options), {I, {I, start_link, [Options]}, permanent, 5000, Type, [I]}).
 
 %% ===================================================================
 %% API functions
@@ -29,7 +28,7 @@ init([]) ->
        {
           {one_for_one, 5, 10},
           [
-             ?CHILD(log_viewer_srv, worker)
+             ?CHILD(log_viewer_srv, worker, [])
           ]
        }
     }.
