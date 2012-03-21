@@ -20,195 +20,40 @@
 
 -behaviour(gen_server).
 
-%% External exports
--export([start/0, start/1, stop/0, rescan/0, rescan/1]).
--export([list/0, list/1, show/0, show/1, grep/1, filter/1, filter/2, start_log/1, stop_log/0]).
--export([h/0, help/0]).
-
-%% Internal exports
--export([start_link/1]).
-
 %% gen_server callbacks
--export([init/1, terminate/2, handle_call/3,
+-export([start_link/1, init/1, terminate/2, handle_call/3,
 	 handle_cast/2, handle_info/2, code_change/3]).
-
-%%%-----------------------------------------------------------------
-%%% Report Browser Tool.
-%%% Formats Error reports written by log_mf_h
-%%%-----------------------------------------------------------------
 
 -record(state, {dir, data, device, max, type, abort, log}).
 
 %%-----------------------------------------------------------------
 %% Interface functions.
-%% For available options; see print_options().
 %%-----------------------------------------------------------------
-start() -> start([]).
-start(Options) ->
-    supervisor:start_child(sasl_sup, 
-			   {rb_server, {rb, start_link, [Options]},
-			    temporary, brutal_kill, worker, [rb]}).
-
 start_link(Options) ->
-    gen_server:start_link({local, rb_server}, rb, Options, []).
-
-stop() -> 
-    supervisor:terminate_child(sasl_sup, rb_server).
-
-rescan() -> rescan([]).
-rescan(Options) ->
-    call({rescan, Options}).
-
-list() -> list(all).
-list(Type) -> call({list, Type}).
-
-show() -> 
-    call(show).
-
-show(Number) when is_integer(Number) -> 
-    call({show_number, Number});
-show(Type) when is_atom(Type) ->
-    call({show_type, Type}).
-
-grep(RegExp) -> call({grep, RegExp}).
-
-filter(Filters) when is_list(Filters) ->
-    call({filter, Filters}).
-
-filter(Filters, FDates) when is_list(Filters) andalso is_tuple(FDates) ->
-    call({filter, {Filters, FDates}}).
-
-start_log(FileName) -> call({start_log, FileName}).
-
-stop_log() -> call(stop_log).
-
-h() -> help().
-help() ->
-    io:format("~nReport Browser Tool - usage~n"),
-    io:format("===========================~n"),
-    io:format("rb:start()         - start the rb_server with default options~n"),
-    io:format("rb:start(Options)  - where Options is a list of:~n"),
-    print_options(),
-    io:format("rb:h()             - print this help~n"),
-    io:format("rb:help()          - print this help~n"),
-    io:format("rb:list()          - list all reports~n"),
-    io:format("rb:list(Type)      - list all reports of type Type~n"),
-    io:format("      currently supported types are:~n"),
-    print_types(),
-    io:format("rb:grep(RegExp)      - print reports containing RegExp.~n"),
-    io:format("                     RegExp must be a valid argument for ~n"),
-    io:format("                     the function re:run/2 or re:run/3.~n"),
-    io:format("rb:filter(Filters) - print reports matching Filters.~n"),
-    io:format("                     reports must be proplists.~n"),
-    io:format("      Filters is a list of tuples of the following form:~n"),
-    print_filters(),
-    io:format("rb:filter(Filters, Dates)  -~n"),
-    io:format("      same as rb:filter/1 but accepts date ranges to filter reports.~n"),
-    io:format("      Dates must be of the following form:~n"),
-    print_dates(),
-    io:format("rb:rescan()        - rescans the report directory with same~n"),
-    io:format("                     options.~n"),
-    io:format("rb:rescan(Options) - rescans the report directory with new~n"),
-    io:format("                     options. Options is same as in start/1.~n"),
-    io:format("rb:show(Number)    - print report no Number~n"),
-    io:format("rb:show(Type)      - print all reports of type Type~n"),
-    io:format("rb:show()          - print all reports~n"),
-    io:format("rb:start_log(File) - redirect all reports to file~n"),
-    io:format("rb:stop_log()      - close the log file and redirect to~n"),
-    io:format("                     standard_io~n"),
-    io:format("rb:stop            - stop the rb_server~n").
-
-%%-----------------------------------------------------------------
-%% Internal functions.
-%%-----------------------------------------------------------------
-
-%%-----------------------------------------------------------------
-%% call(Request) -> Term
-%%-----------------------------------------------------------------
-call(Req) ->
-    gen_server:call(rb_server, Req, infinity).
-
-%%-----------------------------------------------------------------
-%% MAKE SURE THESE TWO FUNCTIONS ARE UPDATED!
-%%-----------------------------------------------------------------
-print_options() ->
-    io:format("      {start_log, FileName}~n"),
-    io:format("         - default: standard_io~n"),
-    io:format("      {max, MaxNoOfReports}~n"),
-    io:format("         - MaxNoOfReports should be an integer or 'all'~n"),
-    io:format("         - default: all~n"),
-    io:format("      {report_dir, DirString}~n"),
-    io:format("         - DirString should be a string without trailing~n"),
-    io:format("         - directory delimiter.~n"),
-    io:format("         - default: {sasl, error_logger_mf_dir}~n"),
-    io:format("      {type, ReportType}~n"),
-    io:format("         - ReportType should be a supported type, 'all'~n"),
-    io:format("         - or a list of supported types~n"),
-    io:format("         - default: all~n"),
-    io:format("      {abort_on_error, Bool}~n"),
-    io:format("         - Bool: true | false~n"),
-    io:format("         - default: false~n").
-
-print_types() ->
-    io:format("         - crash_report~n"),
-    io:format("         - supervisor_report~n"),
-    io:format("         - progress~n"),
-    io:format("         - error~n").
-
-print_filters() ->
-    io:format("      - {Key, Value}~n"),
-    io:format("        includes report containing {Key, Value}~n"),
-    io:format("      - {Key, Value, no}~n"),
-    io:format("        excludes report containing {Key, Value}~n"),
-    io:format("      - {Key, RegExp, re}~n"),
-    io:format("        RegExp must be a valid argument for ~n"),
-    io:format("        the function re:run/2 or re:run/3.~n"),
-    io:format("      - {Key, RegExp, re, no}~n"),
-    io:format("        excludes report containing {Key, RegExp}~n").
-
-print_dates() ->
-    io:format("      - {StartDate, EndDate}~n"),
-    io:format("        StartDate = EndDate = {{Y,M,D},{H,M,S}} ~n"),
-    io:format("        prints the reports with date between StartDate and EndDate~n"),
-    io:format("      - {StartDate, from}~n"),
-    io:format("        prints the reports with date greater than StartDate~n"),
-    io:format("      - {EndDate, to}~n"),
-    io:format("        prints the reports with date lesser than StartDate~n").
+    gen_server:start_link({local, ?MODULE}, ?MODULE, Options, []).
 
 init(Options) ->
     process_flag(priority, low),
     process_flag(trap_exit, true),
-    Log = get_option(Options, start_log, standard_io),
-    Device = open_log_file(Log),
     Dir = get_report_dir(Options),
     Max = get_option(Options, max, all),
     Type = get_option(Options, type, all),
     Abort = get_option(Options, abort_on_error, false),
     Data = scan_files(Dir ++ "/", Max, Type),
-    {ok, #state{dir = Dir ++ "/", data = Data, device = Device,
-		max = Max, type = Type, abort = Abort, log = Log}}.
+    {ok, #state{dir = Dir ++ "/", data = Data, max = Max, type = Type, abort = Abort, log = Log}}.
 
 handle_call({rescan, Options}, _From, State) ->
-    {Device,Log1} = 
-	case get_option(Options, start_log, {undefined}) of
-	    {undefined} -> 
-		{State#state.device,State#state.log};
-	    Log ->
-		close_device(State#state.device),
-		{open_log_file(Log),Log}
-	end,
     Max = get_option(Options, max, State#state.max),
     Type = get_option(Options, type, State#state.type),
     Abort = get_option(Options, abort_on_error, false),
     Data = scan_files(State#state.dir, Max, Type),
-    NewState = State#state{data = Data, max = Max, type = Type,
-			   device = Device, abort = Abort, log = Log1},
+    NewState = State#state{data = Data, max = Max, type = Type, abort = Abort},
     {reply, ok, NewState};
 handle_call(_, _From, #state{data = undefined}) ->
     {reply, {error, no_data}, #state{}};
 handle_call({list, Type}, _From, State) ->
-    print_list(State#state.data, Type),
-    {reply, ok, State};
+    Res = print_list(State#state.data, Type),
+    {reply, Res, State};
 handle_call({start_log, FileName}, _From, State) ->
     NewDevice = open_log_file(FileName),
     {reply, ok, State#state{device = NewDevice}};
