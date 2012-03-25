@@ -22,7 +22,9 @@ layout() ->
          #literal{ text = " | " },
          #link{ class=a, text = "instruments", url = "instruments"},
          #literal{ text = " | "},
-         #literal{ text = "statistics"}
+         #literal{ text = "statistics"},
+         #literal{ text = " | "},
+         #link{ class=a, text = "logs", url = "logs"}
       ]
    },
    TopPanel.

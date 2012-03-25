@@ -27,7 +27,9 @@ layout() ->
          #literal{ text = " | " },
          #literal{ class=a, text = "instruments"},
          #literal{ text = " | "},
-         #link{ class=a, text = "statistics", url = "statistics"}
+         %#link{ class=a, text = "statistics", url = "statistics"},
+         %#literal{ text = " | "},
+         #link{ class=a, text = "logs", url = "logs"}
       ]
    },
    {Filter, Exchanges} = build_filter(),
