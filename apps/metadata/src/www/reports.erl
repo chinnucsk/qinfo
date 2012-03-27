@@ -50,9 +50,16 @@ build_records([{No, Type,  ShortDescr, Date}|T]) ->
          #tablecell{text = Date},
          #tablecell{body = [#link{text = No, postback = {details, No}}]},
          #tablecell{text = Type},
-         #tablecell{text = ShortDescr}]} | build_records(T)
+         #tablecell{text = ShortDescr}], style=make_back_color(Type)} | build_records(T)
    ].
 
 event(M = {details, _No}) ->
    Pid = wf:session(rdetails),
    Pid ! M.
+
+make_back_color(error) ->
+   "background-color: #F19A9A;";
+make_back_color(error_report) ->
+   "background-color: #F19A9A;";
+make_back_color(_) ->
+   "background-color: #F4F8ED;".
