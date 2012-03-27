@@ -1,4 +1,4 @@
--module(rdetails).
+-module(rdisplay).
 
 -include_lib("nitrogen_core/include/wf.hrl").
 
