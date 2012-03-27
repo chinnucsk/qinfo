@@ -8,4 +8,5 @@ erl -boot start_sasl \
     -config start.config \
     -setcookie qinfo \
     -eval "application:start(nprocreg)" \
-    -eval "application:start(metadata)"
+    -eval "application:start(metadata)" \
+    -eval "application:start(log_viewer)"
