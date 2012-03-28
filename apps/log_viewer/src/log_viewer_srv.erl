@@ -22,7 +22,7 @@
 
 %% gen_server callbacks
 -export([start_link/1, init/1, terminate/2, handle_call/3,
-	 handle_cast/2, handle_info/2, code_change/3]).
+     handle_cast/2, handle_info/2, code_change/3]).
 
 -record(state, {dir, data, device, max, type, log}).
 
