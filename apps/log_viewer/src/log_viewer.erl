@@ -19,21 +19,17 @@
 -module(log_viewer).
 
 %% External exports
--export([rescan/0, rescan/1, list/0, list/1, show/1, grep/1]).
+-export([list/0, list/2, show/1, get_types/0]).
 
-rescan() -> rescan([]).
-rescan(Options) ->
-    call({rescan, Options}).
-
-list() -> list([]).
-list(Type) when is_list(Type) =/= true ->
-   {error, wrong_type_list};
-list(Type) -> call({list, Type}).
+list() -> list([], []).
+list(RegExp, Types) when is_list(Types) =/= true  orelse is_list(RegExp) =/= true ->
+   {error, wrong_args};
+list(RegExp, Types) -> call({list, RegExp, Types}).
 
 show(Number) when is_integer(Number) ->
     call({show_number, Number}).
 
-grep(RegExp) -> call({grep, RegExp}).
+get_types() -> call(get_types).
 
 %filter(Filters) when is_list(Filters) ->
 %    call({filter, Filters}).
