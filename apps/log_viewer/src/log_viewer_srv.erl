@@ -22,9 +22,9 @@
 
 %% gen_server callbacks
 -export([start_link/1, init/1, terminate/2, handle_call/3,
-     handle_cast/2, handle_info/2, code_change/3]).
+	 handle_cast/2, handle_info/2, code_change/3]).
 
--record(state, {dir, data, device, max, type, log}).
+-record(state, {dir, data, device, max, types, log}).
 
 %%-----------------------------------------------------------------
 %% Interface functions.
@@ -37,20 +37,15 @@ init(Options) ->
     process_flag(trap_exit, true),
     Dir = get_report_dir(Options),
     Max = get_option(Options, max, all),
-    Type = get_option(Options, type, all),
-    Data = scan_files(Dir ++ "/", Max, Type),
-    {ok, #state{dir = Dir ++ "/", data = Data, max = Max, type = Type}}.
+    {Data, Types} = scan_files(Dir ++ "/", Max),
+    {ok, #state{dir = Dir ++ "/", data = Data, types = Types, max = Max}}.
 
-handle_call({rescan, Options}, _From, State) ->
-    Max = get_option(Options, max, State#state.max),
-    Type = get_option(Options, type, State#state.type),
-    Data = scan_files(State#state.dir, Max, Type),
-    NewState = State#state{data = Data, max = Max, type = Type},
-    {reply, ok, NewState};
+handle_call(get_types, _From, State) ->
+    {reply, State#state.types, State};
 handle_call(_, _From, #state{data = undefined}) ->
     {reply, {error, no_data}, #state{}};
-handle_call({list, Type}, _From, State) ->
-   try print_list(State#state.data, Type) of
+handle_call({list, RegExp, Types}, _From, State) ->
+   try print_list(State#state.dir, State#state.data, Types, RegExp) of
        Res ->
          {reply, Res, State}
    catch
@@ -64,14 +59,6 @@ handle_call({show_number, Number}, _From, State = #state{dir = Dir, data = Data}
    catch
       throw:Error ->
          {reply, Error, State}
-   end;
-handle_call({grep, RegExp}, _From, State = #state{dir = Dir, data = Data}) ->
-   try print_grep_reports(Dir, Data, RegExp) of
-      Reps ->
-         {reply, Reps, State}
-   catch
-	   throw:Error ->
-	      {reply, {error, Error}, State}
    end.
 
 terminate(_Reason, #state{}) ->
@@ -105,24 +92,23 @@ get_report_dir(Options) ->
    end.
 
 %%-----------------------------------------------------------------
-%% Func: scan_files(RptDir, Max, Type)
+%% Func: scan_files(RptDir, Max)
 %% Args: RptDir ::= string().
 %%       Max ::= integer() | all, describing how many reports
 %5               to read.
-%%       Type ::= atom(), describing which reports to read.
 %% Purpose: Scan all report files one time, and build a list of
 %%          small elements
 %% Returns: Data, where Data is a list of
 %%          {Number, Type, ShortDescr, Date, Fname, FilePosition}.
 %%-----------------------------------------------------------------
-scan_files(RptDir, Max, Type) ->
+scan_files(RptDir, Max) ->
    case file:open(RptDir ++ "/index", [raw, read]) of
       {ok, Fd} ->
 	      case catch file:read(Fd, 1) of
 		      {ok, [LastWritten]} ->
 		         file:close(Fd),
 		         Files = make_file_list(RptDir, LastWritten),
-		         scan_files(RptDir, Files, Max, Type);
+		         scan_files(RptDir, Files, Max);
 		      _X ->
 		         file:close(Fd),
 		         exit("cannot read the index file")
@@ -159,68 +145,70 @@ shift([], _, Res) ->
    Res.
 
 %%-----------------------------------------------------------------
-%% Func: scan_files(Dir, Files, Max, Type)
+%% Func: scan_files(Dir, Files, Max)
 %% Args: Files is a list of FileName.
 %% Purpose: Scan the report files in the index variable.
 %% Returns: {Number, Type, ShortDescr, Date, FileName, FilePosition}
 %%-----------------------------------------------------------------
-scan_files(Dir, Files, Max, Type) ->
-    scan_files(Dir, 1, Files, [], Max, Type).
-scan_files(_Dir, _, [], Res, _Max, _Type) -> Res;
-scan_files(_Dir, _, _Files, Res, Max, _Type) when Max =< 0 -> Res;
-scan_files(Dir, No, [H|T], Res, Max, Type) ->
-   Data = get_report_data_from_file(Dir, No, H, Max, Type),
+scan_files(Dir, Files, Max) ->
+   scan_files(Dir, 1, Files, {[], []}, Max).
+scan_files(_Dir, _, [], {ResData, ResTypes}, _Max) ->
+   {ResData, lists:usort(ResTypes)};
+scan_files(_Dir, _, _Files, Res, Max) when Max =< 0 -> Res;
+scan_files(Dir, No, [H|T], {ResData, ResTypes}, Max) ->
+   {Data, Types} = get_report_data_from_file(Dir, No, H, Max),
    Len = length(Data),
    NewMax = dec_max(Max, Len),
    NewNo = No + Len,
-   NewData = Data ++ Res,
-   scan_files(Dir, NewNo, T, NewData, NewMax, Type).
+   NewData = Data ++ ResData,
+   NewTypes = Types ++ ResTypes,
+   scan_files(Dir, NewNo, T, {NewData, NewTypes}, NewMax).
 
 dec_max(all, _) -> all;
 dec_max(X,Y) -> X-Y.
 
-get_report_data_from_file(Dir, No, FileNr, Max, Type) ->
+get_report_data_from_file(Dir, No, FileNr, Max) ->
    Fname = integer_to_list(FileNr),
    FileName = lists:concat([Dir, Fname]),
    case file:open(FileName, [read]) of
 	   {ok, Fd} when is_pid(Fd) ->
-         read_reports(No, Fd, Fname, Max, Type);
+         read_reports(No, Fd, Fname, Max);
 	   _ ->
          [{No, unknown, "Can't open file " ++ Fname, "???", Fname, 0}]
    end.
 
 %%-----------------------------------------------------------------
-%% Func: read_reports(No, Fd, Fname, Max, Type)
+%% Func: read_reports(No, Fd, Fname, Max)
 %% Purpose: Read reports from one report file.
 %% Returns: A list of {No, Type, ShortDescr, Date, FileName, FilePosition}
 %% Note: We have to read all reports, and then check the max-
 %%       variable, because the reports are reversed on the file, and
 %%       we may need the last ones.
 %%-----------------------------------------------------------------
-read_reports(No, Fd, Fname, Max, Type) ->
-   case catch read_reports(Fd, [], Type) of
-	   {ok, Res} ->
+read_reports(No, Fd, Fname, Max) ->
+   case catch read_reports(Fd, {[], []}) of
+      {ok, {ResData, ResTypes}} ->
 	      file:close(Fd),
 	      NewRes =
 		   if
-		      length(Res) > Max ->
-			      lists:sublist(Res, 1, Max);
+		      length(ResData) > Max ->
+			      lists:sublist(ResData, 1, Max);
 		      true ->
-			      Res
+			      ResData
 		   end,
-	      add_report_data(NewRes, No, Fname);
-	   {error, [Problem | Res]} ->
+         {add_report_data(NewRes, No, Fname), ResTypes};
+      {error, {[Problem | ResData], ResTypes}} ->
 	      file:close(Fd),
 	      NewRes =
 		   if
-		      length([Problem|Res]) > Max ->
-			      lists:sublist([Problem|Res], 1, Max);
+		      length([Problem|ResData]) > Max ->
+			      lists:sublist([Problem|ResData], 1, Max);
 		      true ->
-			      [Problem|Res]
+			      [Problem|ResData]
 		   end,
-	      add_report_data(NewRes, No, Fname);
+         {add_report_data(NewRes, No, Fname), ResTypes};
 	   _Else ->
-	      [{No, unknown, "Can't read reports from file " ++ Fname, "???", Fname, 0}]
+         {[{No, unknown, "Can't read reports from file " ++ Fname, "???", Fname, 0}], [unknown]}
    end.
 
 %%-----------------------------------------------------------------
@@ -237,34 +225,20 @@ add_report_data([{Type, ShortDescr, Date, FilePos}|T], No, FName, Res) ->
 	   [{No, Type, ShortDescr, Date, FName, FilePos}|Res]);
 add_report_data([], _No, _FName, Res) -> Res.
 
-read_reports(Fd, Res, Type) ->
+read_reports(Fd, {ResData, ResTypes}) ->
    {ok, FilePos} = file:position(Fd, cur),
    case catch read_report(Fd) of
 	   {ok, Report} ->
          RealType = get_type(Report),
 	      {ShortDescr, Date} = get_short_descr(Report),
 	      Rep = {RealType, ShortDescr, Date, FilePos},
-	      if
-		      Type == all->
-		         read_reports(Fd, [Rep | Res], Type);
-		      RealType == Type ->
-		         read_reports(Fd, [Rep | Res], Type);
-		      is_list(Type) ->
-		         case lists:member(RealType, Type) of
-			         true ->
-			            read_reports(Fd, [Rep | Res], Type);
-			         _ ->
-			            read_reports(Fd, Res, Type)
-		         end;
-		      true ->
-		         read_reports(Fd, Res, Type)
-	      end;
+         read_reports(Fd, {[Rep | ResData], [RealType | ResTypes]});
 	   {error, Error} ->
-	      {error, [{unknown, Error, [], FilePos} | Res]};
+         {error, {[{unknown, Error, [], FilePos} | ResData], ResTypes}};
 	   eof ->
-	      {ok, Res};
+         {ok, {ResData, ResTypes}};
 	   {'EXIT', Reason} ->
-	      [{unknown, Reason, [], FilePos} | Res]
+         {[{unknown, Reason, [], FilePos} | ResData], ResTypes}
    end.
 
 read_report(Fd) ->
@@ -357,15 +331,18 @@ local_time_to_universal_time({Date,Time}) ->
 	    {Date,Time}
     end.
 
-print_list([], _) -> [];
-print_list([Report | T], []) ->
-   [print_short_descr(Report) | print_list(T, [])];
-print_list([Report = {_, RealType, _, _, _, _} | T], Types) ->
-   case lists:member(RealType, Types) of
+print_list(_, [], _, _) -> [];
+print_list(Dir, [Report = {_, RealType, _, _, _, _}|Tail], Types, RegExp) ->
+   case length(Types) == 0 orelse lists:member(RealType, Types) of
       true ->
-         [print_short_descr(Report) | print_list(T, Types)];
+         case check_grep_report(Dir, Report, RegExp) of
+            match ->
+               [print_short_descr(Report) | print_list(Dir, Tail, Types, RegExp)];
+            nomatch ->
+               print_list(Dir, Tail, Types, RegExp)
+         end;
       false ->
-         print_list(T, Types)
+         print_list(Dir, Tail, Types, RegExp)
    end.
 
 print_short_descr({No, Type, ShortDescr, Date, _, _}) ->
@@ -382,7 +359,7 @@ print_report(Dir, Data, Number) ->
 		      {ok, Fd} ->
 		         read_rep(Fd, FilePosition);
 		      _ ->
-               throw({error, list:flatten(io_lib:format("rb: can't open file ~p~n", [Fname]))})
+               throw({error, list:flatten(io_lib:format("can't open file ~p~n", [Fname]))})
          end;
 	   no_report ->
          {error, not_found}
@@ -395,18 +372,9 @@ find_report([_H|T], No) ->
 find_report([], No) ->
    throw({error, list:flatten(io_lib:format("there is no report with number ~p.~n", [No]))}).
 
-print_grep_reports(_Dir, [], _RegExp) ->
-   [];
-print_grep_reports(Dir, Data = [Head|Tail], RegExp) ->
-   case print_grep_report(Dir, Data, element(1, Head), RegExp) of
-      match ->
-         [print_short_descr(Head) | print_grep_reports(Dir, Tail, RegExp)];
-      _ ->
-         print_grep_reports(Dir, Tail, RegExp)
-   end.
-
-print_grep_report(Dir, Data, Number, RegExp) ->
-   {Fname, FilePosition} = find_report(Data, Number),
+check_grep_report(_Dir, _Report, []) ->
+   match;
+check_grep_report(Dir, {_No, _Type, _Descr, _Date, Fname, FilePosition}, RegExp) ->
    FileName = lists:concat([Dir, Fname]),
    case file:open(FileName, [read]) of
 	   {ok, Fd} when is_pid(Fd) ->
