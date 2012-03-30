@@ -19,23 +19,20 @@
 -module(log_viewer).
 
 %% External exports
--export([list/0, list/2, show/1, get_types/0]).
+-export([list/0, list/2, rescan/1, show/1, get_types/0]).
 
-list() -> list([], []).
-list(RegExp, Types) when is_list(Types) =/= true  orelse is_list(RegExp) =/= true ->
+list() -> list([], all).
+list(RegExp, Types) when is_list(RegExp) =/= true orelse (is_list(Types) =/= true andalso Types =/= all) ->
    {error, wrong_args};
 list(RegExp, Types) -> call({list, RegExp, Types}).
+
+rescan(Max) ->
+   call({rescan, Max}).
 
 show(Number) when is_integer(Number) ->
     call({show_number, Number}).
 
 get_types() -> call(get_types).
-
-%filter(Filters) when is_list(Filters) ->
-%    call({filter, Filters}).
-
-%filter(Filters, FDates) when is_list(Filters) andalso is_tuple(FDates) ->
-%    call({filter, {Filters, FDates}}).
 
 %%-----------------------------------------------------------------
 %% Internal functions.
