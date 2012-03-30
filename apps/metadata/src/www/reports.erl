@@ -5,6 +5,7 @@
 -export([main/0, layout/0, title/0, event/1]).
 
 -define(delimiter, #literal{text=" "}).
+-define(def_rec_on_page, 30).
 
 title() ->
    "qinfo:logs".
@@ -38,24 +39,26 @@ layout() ->
       ]}, #button{id = apply_button, text = "Rescan", postback = click_rescan}]},
    RecordFilter = #p{body = [#literal{text = "Grep"}, #textbox{id = reg_exp},
       ?delimiter,
-      #literal{text = "Records on page"}, #dropdown{id = max_reports, value = "30", options=
+      #literal{text = "Records on page"},
+      #dropdown{id = max_reports, value = erlang:integer_to_list(?def_rec_on_page), options=
       [
          #option{text = "30",  value = "30"},
          #option{text = "50",  value = "50"},
          #option{text = "100", value = "100"}
       ]}, #button{text = "Apply"}]},
    Types = build_types(),
-   Records = build_records([], all),
+   {Records, Pages} = build_records([], all, 1, ?def_rec_on_page),
    [
       TopPanel,
       #p{},
       RescanFilter,
       RecordFilter,
       Types,
+      Pages,
       Records
    ].
 
-build_records(RegExp, Types) ->
+build_records(RegExp, Types, _Page, _RecOnPage) ->
    Records = log_viewer:list(RegExp, Types),
    Header = #tablerow{ cells = [
       #tableheader{text = "Date",         style = "width: 150px;"},
@@ -63,7 +66,7 @@ build_records(RegExp, Types) ->
       #tableheader{text = "Type",         style = "width: 70px;" },
       #tableheader{text = "Process",      style = "width: 150px;"}
    ], style = "background-color: #999797;"},
-   #table{id = records, rows = [Header|build_records(Records)]}.
+   {#table{id = records, rows = [Header|build_records(Records)]}, []}.
 build_records([]) ->
    [];
 build_records([{No, Type,  ShortDescr, Date}|T]) ->
@@ -86,7 +89,7 @@ build_types([Type|Tail]) ->
 event(click_rescan) ->
    Types = lists:foldr(fun(Type, Acc) -> [common_utils:list_to_atom(Type)|Acc] end, [], wf:qs(checkbox_type)),
    RegExp = wf:q(reg_exp),
-   Records = build_records(RegExp, Types),
+   Records = build_records(RegExp, Types, 1, ?def_rec_on_page),
    wf:replace(records, Records);
 event(M = {details, _No}) ->
    Pid = wf:session(rdetails),
