@@ -29,30 +29,27 @@ layout() ->
          #literal{ text = "logs"}
       ]
    },
-   RecordFilter = #p{body = [#literal{text = "Grep"}, #textbox{id = reg_exp},
-      ?delimiter,
-      #literal{text = "Max records"}, #dropdown{id = max_reports, value = "100", options=
+   RescanFilter = #p{body = [#literal{text = "Max records"}, #dropdown{id = max_reports, value = "100", options=
       [
          #option{text = "100",  value = "100"},
          #option{text = "500",  value = "500"},
          #option{text = "1000", value = "1000"},
          #option{text = "all",  value = "all"}
-      ]},
+      ]}, #button{id = apply_button, text = "Rescan", postback = click_rescan}]},
+   RecordFilter = #p{body = [#literal{text = "Grep"}, #textbox{id = reg_exp},
       ?delimiter,
       #literal{text = "Records on page"}, #dropdown{id = max_reports, value = "30", options=
       [
          #option{text = "30",  value = "30"},
          #option{text = "50",  value = "50"},
          #option{text = "100", value = "100"}
-      ]},
-      ?delimiter,
-      #button{id = apply_button, text = "Rescan", postback = click_rescan}
-      ]},
+      ]}, #button{text = "Apply"}]},
    Types = build_types(),
-   Records = build_records([], []),
+   Records = build_records([], all),
    [
       TopPanel,
       #p{},
+      RescanFilter,
       RecordFilter,
       Types,
       Records
