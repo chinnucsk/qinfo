@@ -24,7 +24,9 @@
 -export([start_link/1, init/1, terminate/2, handle_call/3,
 	 handle_cast/2, handle_info/2, code_change/3]).
 
--record(state, {dir, data, device, max, types, log}).
+-define(def_max, 100).
+
+-record(state, {dir, data, device, max = ?def_max, types, log}).
 
 %%-----------------------------------------------------------------
 %% Interface functions.
@@ -33,17 +35,23 @@ start_link(Options) ->
     gen_server:start_link({local, log_viewer_srv}, ?MODULE, Options, []).
 
 init(Options) ->
-    process_flag(priority, low),
-    process_flag(trap_exit, true),
-    Dir = get_report_dir(Options),
-    Max = get_option(Options, max, all),
-    {Data, Types} = scan_files(Dir ++ "/", Max),
-    {ok, #state{dir = Dir ++ "/", data = Data, types = Types, max = Max}}.
+   process_flag(priority, low),
+   process_flag(trap_exit, true),
+   Dir = get_report_dir(Options),
+   {Data, Types} = scan_files(Dir ++ "/", ?def_max),
+   {ok, #state{dir = Dir ++ "/", data = Data, types = Types}}.
 
+handle_call({rescan, Max}, _From, State = #state{max = Max}) ->
+   {reply, ok, State};
+handle_call({rescan, Max}, _From, State) ->
+   {Data, Types} = scan_files(State#state.dir ++ "/", Max),
+   {reply, Types, State#state{data = Data, types = Types, max = Max}};
 handle_call(get_types, _From, State) ->
     {reply, State#state.types, State};
 handle_call(_, _From, #state{data = undefined}) ->
     {reply, {error, no_data}, #state{}};
+handle_call({list, RegExp, all}, From, State) ->
+   handle_call({list, RegExp, State#state.types}, From, State);
 handle_call({list, RegExp, Types}, _From, State) ->
    try print_list(State#state.dir, State#state.data, Types, RegExp) of
        Res ->
@@ -70,14 +78,6 @@ handle_info(_Info, State) ->
    {noreply, State}.
 code_change(_OldVsn, State, _Extra) ->
    {ok, State}.
-
-get_option(Options, Key, Default) ->
-   case lists:keysearch(Key, 1, Options) of
-	   {value, {_Key, Value}} ->
-         Value;
-	   _ ->
-         Default
-   end.
 
 get_report_dir(Options) ->
    case lists:keysearch(report_dir, 1, Options) of
@@ -154,7 +154,7 @@ scan_files(Dir, Files, Max) ->
    scan_files(Dir, 1, Files, {[], []}, Max).
 scan_files(_Dir, _, [], {ResData, ResTypes}, _Max) ->
    {ResData, lists:usort(ResTypes)};
-scan_files(_Dir, _, _Files, Res, Max) when Max =< 0 -> Res;
+scan_files(_Dir, _, _Files, {ResData, ResTypes}, Max) when Max =< 0 -> {ResData, lists:usort(ResTypes)};
 scan_files(Dir, No, [H|T], {ResData, ResTypes}, Max) ->
    {Data, Types} = get_report_data_from_file(Dir, No, H, Max),
    Len = length(Data),
@@ -333,7 +333,7 @@ local_time_to_universal_time({Date,Time}) ->
 
 print_list(_, [], _, _) -> [];
 print_list(Dir, [Report = {_, RealType, _, _, _, _}|Tail], Types, RegExp) ->
-   case length(Types) == 0 orelse lists:member(RealType, Types) of
+   case lists:member(RealType, Types) of
       true ->
          case check_grep_report(Dir, Report, RegExp) of
             match ->
