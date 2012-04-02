@@ -21,18 +21,22 @@
 %% External exports
 -export([list/0, list/2, rescan/1, show/1, get_types/0]).
 
-list() -> list([], all).
-list(RegExp, Types) when is_list(RegExp) =/= true orelse (is_list(Types) =/= true andalso Types =/= all) ->
+list() ->
+   list([], all).
+list(RegExp, Types)
+      when is_list(RegExp) =/= true orelse (is_list(Types) == false andalso Types =/= all) ->
    {error, wrong_args};
-list(RegExp, Types) -> call({list, RegExp, Types}).
+list(RegExp, Types) ->
+   call({list, RegExp, Types}).
 
 rescan(Max) ->
    call({rescan, Max}).
 
 show(Number) when is_integer(Number) ->
-    call({show_number, Number}).
+   call({show_number, Number}).
 
-get_types() -> call(get_types).
+get_types() ->
+   call(get_types).
 
 %%-----------------------------------------------------------------
 %% Internal functions.
