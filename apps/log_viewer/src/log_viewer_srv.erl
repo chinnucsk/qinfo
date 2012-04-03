@@ -45,6 +45,7 @@ handle_call({rescan, Max}, _From, State = #state{max = Max}) ->
    {reply, ok, State};
 handle_call({rescan, Max}, _From, State) ->
    {Data, Types} = scan_files(State#state.dir ++ "/", Max),
+   io:format("~p~n", [Types]),
    {reply, Types, State#state{data = Data, types = Types, max = Max}};
 handle_call(get_types, _From, State) ->
    {reply, State#state.types, State};
