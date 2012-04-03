@@ -76,11 +76,12 @@ build_records(_, 0) ->
    [];
 build_records([{No, Type,  ShortDescr, Date}|T], RecNum) ->
    [
-      #tablerow{cells = [
+      #tablerow{actions = #event{type = click, postback={details, No}},
+            cells = [
             #tablecell{text = Date},
-            #tablecell{body = [#link{text = No, postback = {details, No}}]},
+            #tablecell{text = No},
             #tablecell{text = Type},
-            #tablecell{text = ShortDescr}], style=make_back_color(Type)} | build_records(T, RecNum - 1)
+            #tablecell{text = ShortDescr}], class=get_class(Type)} | build_records(T, RecNum - 1)
       ].
 
 build_pages(Records, _Page, RecOnPage) when Records =< RecOnPage ->
@@ -101,7 +102,7 @@ build_pages(Records, Page, RecOnPage, CurrPage) ->
 
 build_types() ->
    Types = log_viewer:get_types(),
-   #panel{body = [#literal{text = "Types"}, build_types(Types)]}.
+   #panel{id = types, body = [#literal{text = "Types"}, build_types(Types)]}.
 build_types([]) ->
    [];
 build_types([Type|Tail]) ->
@@ -119,9 +120,10 @@ event(click_apply) ->
    {Records, Pages} = build_records(RegExp, Types, 1, RecOnPage),
    wf:replace(records, Records),
    wf:replace(pages, Pages);
-event(M = {details, _No}) ->
-   Pid = wf:session(rdetails),
-   Pid ! M;
+event(_M = {details, No}) ->
+   io:format("~p~n", [No]);
+   %Pid = wf:session(rdetails),
+   %Pid ! M;
 event(click_rescan) ->
    MaxReportsStr = wf:q(max_reports),
    MaxReports =
@@ -132,13 +134,13 @@ event(click_rescan) ->
          list_to_integer(N)
    end,
    log_viewer:rescan(MaxReports),
+   Types = build_types(),
+   wf:replace(types, Types),
    event(click_apply).
 
-make_back_color(Type) when Type == error orelse Type == error_report orelse Type == crash_report ->
-   "background-color: #FFDDDD;";
-make_back_color(Type) when Type == warning ->
-   "background-color: #F9F8D0";
-make_back_color(progress) ->
-   "background-color: #E6F1F6;";
-make_back_color(_) ->
-   "background-color: #DDFFDD;".
+get_class(Type) when Type == error orelse Type == error_report orelse Type == crash_report ->
+   "error";
+get_class(Type) when Type == warning ->
+   "warning";
+get_class(_) ->
+   "".
