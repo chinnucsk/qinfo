@@ -1,0 +1,26 @@
+table.header {
+   width: 500px;
+}
+
+th {
+   border: none;
+   /*font-style: bold;*/
+   text-align: left;
+   vertical-align: top;
+}
+
+td {
+   text-align: left;
+   vertical-align: top;
+}
+
+td.item_key {
+   text-align: left;
+   vertical-align: top;
+   color: blue;
+}
+
+td.item_value {
+   text-align: left;
+   vertical-align: top;
+}
