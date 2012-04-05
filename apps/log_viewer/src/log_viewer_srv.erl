@@ -41,11 +41,8 @@ init(Options) ->
    {Data, Types} = scan_files(Dir ++ "/", ?def_max),
    {ok, #state{dir = Dir ++ "/", data = Data, types = Types}}.
 
-handle_call({rescan, Max}, _From, State = #state{max = Max}) ->
-   {reply, ok, State};
 handle_call({rescan, Max}, _From, State) ->
    {Data, Types} = scan_files(State#state.dir ++ "/", Max),
-   io:format("~p~n", [Types]),
    {reply, Types, State#state{data = Data, types = Types, max = Max}};
 handle_call(get_types, _From, State) ->
    {reply, State#state.types, State};
@@ -280,7 +277,7 @@ get_type({_Time, {info_report, _Pid, {_, progress, _}}}) ->
 get_type({_Time, {Type, _, _}}) -> Type;
 get_type(_) -> unknown.
 
-get_short_descr({{Date, Time}, {error_report, Pid, {_, crash_report, Rep}}}) ->
+get_short_descr({Date, {error_report, Pid, {_, crash_report, Rep}}}) ->
    [OwnRep | _] = Rep,
    Name =
           case lists:keysearch(registered_name, 1, OwnRep) of
@@ -293,44 +290,20 @@ get_short_descr({{Date, Time}, {error_report, Pid, {_, crash_report, Rep}}}) ->
       _ -> Pid
    end,
    NameStr = lists:flatten(io_lib:format("~w", [Name])),
-   {NameStr, date_str(Date, Time)};
-get_short_descr({{Date, Time}, {error_report, Pid, {_, supervisor_report,Rep}}}) ->
+   {NameStr, common_utils:date_to_str(Date, true)};
+get_short_descr({Date, {error_report, Pid, {_, supervisor_report,Rep}}}) ->
    Name =
           case lists:keysearch(supervisor, 1, Rep) of
       {value, {_Key, N}} when is_atom(N) -> N;
       _ -> Pid
    end,
    NameStr = lists:flatten(io_lib:format("~w", [Name])),
-   {NameStr, date_str(Date,Time)};
-get_short_descr({{Date, Time}, {_Type, Pid, _}}) ->
+   {NameStr, common_utils:date_to_str(Date, true)};
+get_short_descr({Date, {_Type, Pid, _}}) ->
    NameStr = lists:flatten(io_lib:format("~w", [Pid])),
-   {NameStr, date_str(Date,Time)};
+   {NameStr, common_utils:date_to_str(Date, true)};
 get_short_descr(_) ->
    {"???", "???"}.
-
-date_str({Y,Mo,D}=Date,{H,Mi,S}=Time) ->
-   case application:get_env(sasl,utc_log) of
-      {ok,true} ->
-         {{YY,MoMo,DD},{HH,MiMi,SS}} =
-                                       local_time_to_universal_time({Date,Time}),
-         lists:flatten(io_lib:format("~w-~2.2.0w-~2.2.0w ~2.2.0w:"
-                                     "~2.2.0w:~2.2.0w UTC",
-                                     [YY,MoMo,DD,HH,MiMi,SS]));
-      _ ->
-         lists:flatten(io_lib:format("~w-~2.2.0w-~2.2.0w ~2.2.0w:"
-                                     "~2.2.0w:~2.2.0w",
-                                     [Y,Mo,D,H,Mi,S]))
-   end.
-
-local_time_to_universal_time({Date,Time}) ->
-   case calendar:local_time_to_universal_time_dst({Date,Time}) of
-      [UCT] ->
-         UCT;
-      [UCT1,_UCT2] ->
-         UCT1;
-      [] -> % should not happen
-         {Date,Time}
-   end.
 
 print_list(_, [], _, _) -> [];
 print_list(Dir, [Report = {_, RealType, _, _, _, _}|Tail], Types, RegExp) ->
