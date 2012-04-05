@@ -120,7 +120,7 @@ event(click_apply) ->
    {Records, Pages} = build_records(RegExp, Types, 1, RecOnPage),
    wf:replace(records, Records),
    wf:replace(pages, Pages);
-event(M = {details, No}) ->
+event(M = {details, _No}) ->
    Pid = wf:session(rdetails),
    Pid ! M;
 event(click_rescan) ->
