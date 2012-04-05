@@ -1,7 +1,7 @@
 -module(common_utils).
 
 -export([list_to_atom/1, cp1251_to_unicode/1, validate_time_intervals/1, format_time_intervals/1, month_to_symbol/1,
-      type_to_symbol/1]).
+      type_to_symbol/1, date_to_str/2]).
 
 -compile({no_auto_import, [list_to_atom/1]}).
 
@@ -68,6 +68,19 @@ type_to_symbol(bond)   -> $B;
 type_to_symbol(itf)    -> $I;
 type_to_symbol(spot)   -> $S.
 
+date_to_str({{Y,Mo,D}=Date,{H,Mi,S}=Time}, UseSaslUtc) ->
+   case application:get_env(sasl,utc_log) of
+      {ok,true} when UseSaslUtc == true ->
+         {{YY,MoMo,DD},{HH,MiMi,SS}} = local_time_to_universal_time({Date,Time}),
+         lists:flatten(io_lib:format("~w-~2.2.0w-~2.2.0w ~2.2.0w:"
+                                     "~2.2.0w:~2.2.0w UTC",
+                                     [YY,MoMo,DD,HH,MiMi,SS]));
+      _ ->
+         lists:flatten(io_lib:format("~w-~2.2.0w-~2.2.0w ~2.2.0w:"
+                                     "~2.2.0w:~2.2.0w",
+                                     [Y,Mo,D,H,Mi,S]))
+   end.
+
 %=======================================================================================================================
 %  private
 %=======================================================================================================================
@@ -79,6 +92,16 @@ validate_interval({I1 = {HH1, MM1}, I2 = {HH2, MM2}})
    ok;
 validate_interval(_I) ->
    throw(invalid_interval).
+
+local_time_to_universal_time({Date,Time}) ->
+   case calendar:local_time_to_universal_time_dst({Date,Time}) of
+      [UCT] ->
+         UCT;
+      [UCT1,_UCT2] ->
+         UCT1;
+      [] -> % should not happen
+         {Date,Time}
+   end.
 
 %=======================================================================================================================
 %  unit testing
