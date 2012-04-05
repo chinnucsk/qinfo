@@ -120,10 +120,9 @@ event(click_apply) ->
    {Records, Pages} = build_records(RegExp, Types, 1, RecOnPage),
    wf:replace(records, Records),
    wf:replace(pages, Pages);
-event(_M = {details, No}) ->
-   io:format("~p~n", [No]);
-   %Pid = wf:session(rdetails),
-   %Pid ! M;
+event(M = {details, No}) ->
+   Pid = wf:session(rdetails),
+   Pid ! M;
 event(click_rescan) ->
    MaxReportsStr = wf:q(max_reports),
    MaxReports =
