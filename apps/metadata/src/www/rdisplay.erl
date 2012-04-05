@@ -4,6 +4,8 @@
 
 -export([main/0, layout/0, title/0]).
 
+-define(line, 79).
+
 title() -> "".
 
 main() ->
@@ -12,17 +14,17 @@ main() ->
 layout() ->
    {ok, Pid} = wf:comet(fun() -> process_msg() end, rdetails),
    wf:session(rdetails, Pid),
-   #panel{id = field}.
+   #panel{id = rec_details, body = []}.
 
 
 process_msg() ->
    receive
       'INIT' ->
-         wf:insert_bottom(field, #literal{text = "First one!"}),
-         wf:flush(),
          process_msg();
       {details, No} ->
-         log_viewer:show(No),
+         Report = format_report:format(log_viewer:show(No)),
+         Res = #panel{id = rec_details, body = Report},
+         wf:replace(rec_details, Res),
          wf:flush(),
          process_msg()
    end.
