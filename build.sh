@@ -6,6 +6,7 @@ cmake ../../cpp
 make
 cd ../../
 
+./rebar get-deps
 ./rebar compile
 
 mkdir -p build/ebin/common/ebin
@@ -34,7 +35,7 @@ cp -r apps/simple_bridge/ebin/*.beam build/ebin/simple_bridge/ebin
 cp -r apps/simple_bridge/ebin/*.app build/ebin
 cp -r apps/metadata/ebin/*.beam build/ebin/metadata/ebin
 cp -r apps/metadata/ebin/*.app build/ebin
-cp -r apps/log_viewer/ebin/*.beam build/ebin/log_viewer/ebin
-cp -r apps/log_viewer/ebin/*.app build/ebin
+cp -r deps/log_viewer/ebin/*.beam build/ebin/log_viewer/ebin
+cp -r deps/log_viewer/ebin/*.app build/ebin
 cp -r apps/metadata/src/www/static/* build/ebin/www
 cp    build/cpp/common_utils.so build/ebin/common/priv
