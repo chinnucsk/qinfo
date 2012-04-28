@@ -48,7 +48,7 @@ layout() ->
                   #option{text = "100", value = "100"}
                   ]}, #button{id = apply_button, text = "Apply", postback = click_apply}]},
    Types = build_types(),
-   {Records, Pages} = build_records([], all, 1, ?def_rec_on_page),
+   {Records, Pages} = build_records([], 1, ?def_rec_on_page),
    [
       TopPanel,
       #p{},
@@ -59,8 +59,8 @@ layout() ->
       Records
       ].
 
-build_records(RegExp, Types, Page, RecOnPage) ->
-   Records = log_viewer:list(RegExp, Types),
+build_records(Filters, Page, RecOnPage) ->
+   Records = log_viewer:list(Filters),
    Pages = #p{id = pages, body = build_pages(length(Records), Page, RecOnPage)},
    Header = #tablerow{ cells = [
             #tableheader{text = "Date",         style = "width: 150px;"},
@@ -78,7 +78,7 @@ build_records([{No, Type,  ShortDescr, Date}|T], RecNum) ->
    [
       #tablerow{actions = #event{type = click, postback={details, No}},
             cells = [
-            #tablecell{text = Date},
+            #tablecell{text = common_utils:date_to_str(Date)},
             #tablecell{text = No},
             #tablecell{text = Type},
             #tablecell{text = ShortDescr}], class=get_class(Type)} | build_records(T, RecNum - 1)
@@ -108,16 +108,19 @@ build_types([]) ->
 build_types([Type|Tail]) ->
    [#checkbox{id = checkbox_type, text = Type, value = Type, checked = true} | build_types(Tail)].
 
+get_filter() ->
+   Types = lists:foldr(fun(Type, Acc) -> [common_utils:list_to_atom(Type)|Acc] end, [], wf:qs(checkbox_type)),
+   RegExp = wf:q(reg_exp),
+   [{types, Types}, {reg_exp, RegExp}].
+
 event({click_page, N}) ->
-   {Records, Pages} = build_records([], all, N, wf:session(rec_on_page)),
+   {Records, Pages} = build_records(get_filter(), N, wf:session(rec_on_page)),
    wf:replace(records, Records),
    wf:replace(pages, Pages);
 event(click_apply) ->
-   Types = lists:foldr(fun(Type, Acc) -> [common_utils:list_to_atom(Type)|Acc] end, [], wf:qs(checkbox_type)),
-   RegExp = wf:q(reg_exp),
    RecOnPage = list_to_integer(wf:q(rec_on_page)),
    wf:session(rec_on_page, RecOnPage),
-   {Records, Pages} = build_records(RegExp, Types, 1, RecOnPage),
+   {Records, Pages} = build_records(get_filters(), 1, RecOnPage),
    wf:replace(records, Records),
    wf:replace(pages, Pages);
 event(M = {details, _No}) ->
