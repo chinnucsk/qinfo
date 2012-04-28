@@ -22,7 +22,7 @@ process_msg() ->
       'INIT' ->
          process_msg();
       {details, No} ->
-         Report = format_report:format(log_viewer:show(No)),
+         Report = record_formatter_html:format(log_viewer:show(No)),
          Res = #panel{id = rec_details, body = Report},
          wf:replace(rec_details, Res),
          wf:flush(),
