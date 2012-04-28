@@ -78,7 +78,7 @@ build_records([{No, Type,  ShortDescr, Date}|T], RecNum) ->
    [
       #tablerow{actions = #event{type = click, postback={details, No}},
             cells = [
-            #tablecell{text = common_utils:date_to_str(Date)},
+            #tablecell{text = common_utils:date_to_str(Date, true)},
             #tablecell{text = No},
             #tablecell{text = Type},
             #tablecell{text = ShortDescr}], class=get_class(Type)} | build_records(T, RecNum - 1)
