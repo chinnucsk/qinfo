@@ -5,7 +5,7 @@
 -export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, reload/0,
          schedule/1]).
 
--include_lib("common/include/names.hrl").
+-include_lib("qinfo_common/include/names.hrl").
 
 -record(service, {name, status, schedule_list}).
 
@@ -119,7 +119,7 @@ get_status({Date, {H, M, _}}, SchedList) ->
 format_schedule([]) ->
    [];
 format_schedule([{DayOfWeek, Status, TimeIntervals}|Tail]) ->
-   [{day_to_num(DayOfWeek), Status, common_utils:format_time_intervals(TimeIntervals)} | format_schedule(Tail)].
+   [{day_to_num(DayOfWeek), Status, qinfo_common:format_time_intervals(TimeIntervals)} | format_schedule(Tail)].
 
 day_to_num(mon) -> 1;
 day_to_num(tue) -> 2;

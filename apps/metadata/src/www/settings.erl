@@ -158,7 +158,7 @@ validate_intervals(CheckId, TimeIntervals) ->
       "on" ->
          enabled
    end,
-   case common_utils:validate_time_intervals(TimeIntervals) of
+   case qinfo_common:validate_time_intervals(TimeIntervals) of
      {error, _} when Status == enabled ->
         false;
      {error, _} ->

@@ -78,7 +78,7 @@ build_records([{No, Type,  ShortDescr, Date}|T], RecNum) ->
    [
       #tablerow{actions = #event{type = click, postback={details, No}},
             cells = [
-            #tablecell{text = common_utils:date_to_str(Date, true)},
+            #tablecell{text = log_viewer_utils:date_to_str(Date, true)},
             #tablecell{text = No},
             #tablecell{text = Type},
             #tablecell{text = ShortDescr}], class=get_class(Type)} | build_records(T, RecNum - 1)
@@ -109,7 +109,7 @@ build_types([Type|Tail]) ->
    [#checkbox{id = checkbox_type, text = Type, value = Type, checked = true} | build_types(Tail)].
 
 get_filter() ->
-   Types = lists:foldr(fun(Type, Acc) -> [common_utils:list_to_atom(Type)|Acc] end, [], wf:qs(checkbox_type)),
+   Types = lists:foldr(fun(Type, Acc) -> [qinfo_common:list_to_atom(Type)|Acc] end, [], wf:qs(checkbox_type)),
    RegExp = wf:q(reg_exp),
    [{types, Types}, {reg_exp, RegExp}].
 
@@ -120,7 +120,7 @@ event({click_page, N}) ->
 event(click_apply) ->
    RecOnPage = list_to_integer(wf:q(rec_on_page)),
    wf:session(rec_on_page, RecOnPage),
-   {Records, Pages} = build_records(get_filters(), 1, RecOnPage),
+   {Records, Pages} = build_records(get_filter(), 1, RecOnPage),
    wf:replace(records, Records),
    wf:replace(pages, Pages);
 event(M = {details, _No}) ->
@@ -131,7 +131,7 @@ event(click_rescan) ->
    MaxReports =
    case MaxReportsStr of
       "all" ->
-         common_utils:list_to_atom(MaxReportsStr);
+         qinfo_common:list_to_atom(MaxReportsStr);
       N ->
          list_to_integer(N)
    end,

@@ -9,8 +9,8 @@ cd ../../
 ./rebar get-deps
 ./rebar compile
 
-mkdir -p build/ebin/common/ebin
-mkdir -p build/ebin/common/priv
+mkdir -p build/ebin/qinfo_common/ebin
+mkdir -p build/ebin/qinfo_common/priv
 mkdir -p build/ebin/micex_mtesrl/ebin
 mkdir -p build/ebin/rts_plaza2/ebin
 mkdir -p build/ebin/rts_plaza2/ini
@@ -21,8 +21,8 @@ mkdir -p build/ebin/metadata/ebin
 mkdir -p build/ebin/www
 mkdir -p build/ebin/log_viewer/ebin
 
-cp -r apps/common/ebin/*.beam build/ebin/common/ebin/
-cp -r apps/common/ebin/*.app build/ebin/
+cp -r apps/qinfo_common/ebin/*.beam build/ebin/qinfo_common/ebin/
+cp -r apps/qinfo_common/ebin/*.app build/ebin/
 cp -r apps/micex_mtesrl/ebin/*.beam build/ebin/micex_mtesrl/ebin
 cp -r apps/micex_mtesrl/ebin/*.app build/ebin
 cp -r apps/rts_plaza2/ebin/*.beam build/ebin/rts_plaza2/ebin
@@ -38,4 +38,4 @@ cp -r apps/metadata/ebin/*.app build/ebin
 cp -r deps/log_viewer/ebin/*.beam build/ebin/log_viewer/ebin
 cp -r deps/log_viewer/ebin/*.app build/ebin
 cp -r apps/metadata/src/www/static/* build/ebin/www
-cp    build/cpp/common_utils.so build/ebin/common/priv
+cp    build/cpp/common_utils.so build/ebin/qinfo_common/priv/qinfo_common.so

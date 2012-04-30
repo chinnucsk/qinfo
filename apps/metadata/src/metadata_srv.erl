@@ -7,7 +7,7 @@
 -compile([export_all]).
 
 -include_lib("metadata/include/metadata.hrl").
--include_lib("common/include/names.hrl").
+-include_lib("qinfo_common/include/names.hrl").
 -include_lib("stdlib/include/qlc.hrl").
 
 %=======================================================================================================================
@@ -145,7 +145,7 @@ insert_instrument(#new_instrument{
          NewInstr = #instrument{
                   key = Key,
                   commodity = #commodity_key{commodity = Commodity, type = Type, exchange = Exch},
-                  full_name = common_utils:cp1251_to_unicode(FullName),
+                  full_name = qinfo_common:cp1251_to_unicode(FullName),
                   expiration = Expiration,
                   limit_up = LUp,
                   limit_down = LDown,
@@ -156,7 +156,7 @@ insert_instrument(#new_instrument{
          NewInstr;
       [Instr] ->
          UpdateInstr = Instr#instrument{
-            full_name = common_utils:cp1251_to_unicode(FullName),
+            full_name = qinfo_common:cp1251_to_unicode(FullName),
             expiration = Expiration,
             limit_up = LUp,
             limit_down = LDown,
