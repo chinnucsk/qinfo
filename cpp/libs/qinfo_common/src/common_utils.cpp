@@ -2,8 +2,8 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/24/2012 05:01:24 PM
 
-#include "../include/common/common_utils.h"
-#include "../include/common/utf8_encode.h"
+#include "qinfo_common/common_utils.h"
+#include "qinfo_common/utf8_encode.h"
 
 #include <boost/scoped_array.hpp>
 
@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 
-COMMON_UTILS_API ERL_NIF_TERM cp1251_to_unicode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+QINFO_COMMON_UTILS_API ERL_NIF_TERM cp1251_to_unicode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
    unsigned int len = 0;
    if (!enif_get_list_length(env, argv[0], &len))
@@ -38,4 +38,4 @@ static ErlNifFunc nif_funcs[] =
    {"cp1251_to_unicode", 1, cp1251_to_unicode}
 };
 
-ERL_NIF_INIT(common_utils, nif_funcs, NULL, NULL, NULL, NULL);
+ERL_NIF_INIT(qinfo_common_utils, nif_funcs, NULL, NULL, NULL, NULL);

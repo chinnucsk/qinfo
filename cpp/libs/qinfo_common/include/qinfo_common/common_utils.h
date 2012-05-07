@@ -2,28 +2,28 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/24/2012 05:09:02 PM
 
-#ifndef COMMON_UTILS_H
-#define COMMON_UTILS_H
+#ifndef QINFO_COMMON_UTILS_H
+#define QINFO_COMMON_UTILS_H
 
 #include <erl_nif.h>
 
 #ifdef __WIN32__
-#   ifdef COMMON_UTILS_EXPORTS
-#      define COMMON_UTILS_API __declspec(dllexport)
+#   ifdef QINFO_COMMON_UTILS_EXPORTS
+#      define QINFO_COMMON_UTILS_API __declspec(dllexport)
 #   else
-#      define COMMON_UTILS_API __declspec(dllimport)
+#      define QINFO_COMMON_UTILS_API __declspec(dllimport)
 #   endif
 #else
-#   define COMMON_UTILS_API static
+#   define QINFO_COMMON_UTILS_API static
 #endif
 
 #ifdef __WIN32__
 extern "C"
 {
 
-extern COMMON_UTILS_API ErlNifFunc nif_funcs[];
+extern QINFO_COMMON_UTILS_API ErlNifFunc nif_funcs[];
 
 }
 #endif
 
-#endif // COMMON_UTILS_H
+#endif // QINFO_COMMON_UTILS_H

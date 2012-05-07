@@ -2,7 +2,7 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 06/24/2011 06:28:04 PM
 
-#include "../include/common/utf8_encode.h"
+#include "qinfo_common/utf8_encode.h"
 
 #include <string>
 #include <list>
