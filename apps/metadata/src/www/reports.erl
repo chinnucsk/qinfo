@@ -109,7 +109,7 @@ build_types([Type|Tail]) ->
    [#checkbox{id = checkbox_type, text = Type, value = Type, checked = true} | build_types(Tail)].
 
 get_filter() ->
-   Types = lists:foldr(fun(Type, Acc) -> [qinfo_common:list_to_atom(Type)|Acc] end, [], wf:qs(checkbox_type)),
+   Types = lists:foldr(fun(Type, Acc) -> [qinfo_common_utils:list_to_atom(Type)|Acc] end, [], wf:qs(checkbox_type)),
    RegExp = wf:q(reg_exp),
    [{types, Types}, {reg_exp, RegExp}].
 
@@ -131,7 +131,7 @@ event(click_rescan) ->
    MaxReports =
    case MaxReportsStr of
       "all" ->
-         qinfo_common:list_to_atom(MaxReportsStr);
+         qinfo_common_utils:list_to_atom(MaxReportsStr);
       N ->
          list_to_integer(N)
    end,
