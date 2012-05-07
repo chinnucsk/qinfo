@@ -38,4 +38,4 @@ cp -r apps/metadata/ebin/*.app build/ebin
 cp -r deps/log_viewer/ebin/*.beam build/ebin/log_viewer/ebin
 cp -r deps/log_viewer/ebin/*.app build/ebin
 cp -r apps/metadata/src/www/static/* build/ebin/www
-cp    build/cpp/common_utils.so build/ebin/qinfo_common/priv/qinfo_common.so
+cp    build/cpp/qinfo_common_utils.so build/ebin/qinfo_common/priv/qinfo_common_utils.so
