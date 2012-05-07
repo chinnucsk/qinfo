@@ -7,7 +7,7 @@
 -define(micex_driver_dll, "micex_driver").
 -define(server_name, {global, ?qinfo_micex_mtesrl_fond}).
 
--include_lib("common/include/names.hrl").
+-include_lib("qinfo_common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
 -define(def_settings, [
