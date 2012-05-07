@@ -5,5 +5,6 @@ werl -name qinfo@192.168.1.185 ^
      -metadata inets_port 8000 ^
      -config start.config ^
      -setcookie qinfo ^
+     -eval "application:start(log_viewer)" ^
      -eval "application:start(nprocreg)" ^
      -eval "application:start(metadata)"
