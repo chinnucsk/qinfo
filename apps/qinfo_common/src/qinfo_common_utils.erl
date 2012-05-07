@@ -1,4 +1,4 @@
--module(common_utils).
+-module(qinfo_common_utils).
 
 -export([list_to_atom/1, cp1251_to_unicode/1, validate_time_intervals/1, format_time_intervals/1, month_to_symbol/1,
       type_to_symbol/1, date_to_str/2]).
@@ -8,7 +8,7 @@
 -on_load(load_dll/0).
 
 load_dll() ->
-   erlang:load_nif(code:priv_dir(common) ++ "/common_utils", 0).
+   erlang:load_nif(code:priv_dir(qinfo_common) ++ "/qinfo_common_utils", 0).
 
 %=======================================================================================================================
 %  public
