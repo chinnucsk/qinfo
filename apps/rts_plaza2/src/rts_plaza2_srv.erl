@@ -7,7 +7,7 @@
 -define(plaza2_driver_dll, "plaza2_driver").
 -define(server_name, {global, ?qinfo_rts_plaza2}).
 
--include_lib("common/include/names.hrl").
+-include_lib("qinfo_common/include/names.hrl").
 -include_lib("metadata/include/metadata.hrl").
 
 -define(def_settings, [
