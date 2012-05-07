@@ -11,7 +11,7 @@
 #include <ei_cxx/port.h>
 #include <ei_cxx/atom.h>
 #include <ei_cxx/list.h>
-#include <common/log_wrapper.h>
+#include <qinfo_common/log_wrapper.h>
 
 #include <erl_driver.h>
 #include <ei.h>

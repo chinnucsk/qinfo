@@ -7,7 +7,7 @@
 #include <ei_cxx/port.h>
 #include <ei_cxx/atom.h>
 #include <ei_cxx/tuple.h>
-#include <common/exception.h>
+#include <qinfo_common/exception.h>
 
 #include <boost/cstdint.hpp>
 

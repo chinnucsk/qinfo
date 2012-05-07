@@ -17,7 +17,7 @@
 #include <sstream>
 #include <string>
 
-#include <common/log_wrapper.h>
+#include <qinfo_common/log_wrapper.h>
 
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN

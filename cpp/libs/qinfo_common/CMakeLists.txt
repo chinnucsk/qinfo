@@ -8,6 +8,7 @@ aux_source_directory(src SOURCES)
 
 add_definitions(-DQINFO_COMMON_UTILS_EXPORTS)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME}_utils SHARED ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+set_target_properties(${PROJECT_NAME}_utils PROPERTIES PREFIX "")

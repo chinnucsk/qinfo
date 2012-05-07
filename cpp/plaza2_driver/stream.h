@@ -7,7 +7,7 @@
 #define PLAZA2_DRIVER_STREAM_H
 
 #include <ei_cxx/port.h>
-#include <common/smart_enum.h>
+#include <qinfo_common/smart_enum.h>
 #include <boost/shared_ptr.hpp>
 
 #include <string>

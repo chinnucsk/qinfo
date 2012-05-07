@@ -1,6 +1,6 @@
 -module(metadata).
 
--include_lib("common/include/names.hrl").
+-include_lib("qinfo_common/include/names.hrl").
 
 -export([register_service/4, get_settings/1, get_instruments/2, get_schedules/0, get_schedules/1]).
 
