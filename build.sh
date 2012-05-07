@@ -1,8 +1,10 @@
 #!/bin/bash
 
+BUILD_TYPE=Debug
+
 mkdir -p build/cpp
 cd build/cpp
-cmake ../../cpp
+cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ../../cpp
 make
 cd ../../
 
