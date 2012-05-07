@@ -11,7 +11,7 @@
 
 #include <Windows.h>
 
-#include <common/log_wrapper.h>
+#include <qinfo_common/log_wrapper.h>
 
 #include <list>
 #include <map>

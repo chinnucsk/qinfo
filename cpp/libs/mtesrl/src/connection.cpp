@@ -2,13 +2,13 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/03/2012 05:26:41 PM
 
-#include "../include/mtesrl/precomp.h"
-#include "../include/mtesrl/mtesrl_lib.h"
-#include "../include/mtesrl/connection.h"
-#include "../include/mtesrl/connection_callback.h"
+#include "mtesrl/precomp.h"
+#include "mtesrl/mtesrl_lib.h"
+#include "mtesrl/connection.h"
+#include "mtesrl/connection_callback.h"
 
-#include <common/log_wrapper.h>
-#include <common/exception.h>
+#include <qinfo_common/log_wrapper.h>
+#include <qinfo_common/exception.h>
 
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/trim.hpp>

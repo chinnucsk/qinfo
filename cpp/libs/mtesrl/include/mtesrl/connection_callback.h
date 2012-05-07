@@ -7,8 +7,8 @@
 
 #include "field.h"
 
-#include <common/smart_enum.h>
-#include <common/log_wrapper.h>
+#include <qinfo_common/smart_enum.h>
+#include <qinfo_common/log_wrapper.h>
 
 #include <boost/optional.hpp>
 #include <boost/cstdint.hpp>

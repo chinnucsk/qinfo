@@ -2,12 +2,12 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/04/2012 08:38:11 AM
 
-#include "../include/mtesrl/precomp.h"
-#include "../include/mtesrl/table.h"
-#include "../include/mtesrl/connection_callback.h"
-#include "../include/mtesrl/mtesrl_lib.h"
+#include "mtesrl/precomp.h"
+#include "mtesrl/table.h"
+#include "mtesrl/connection_callback.h"
+#include "mtesrl/mtesrl_lib.h"
 
-#include <common/exception.h>
+#include <qinfo_common/exception.h>
 
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>

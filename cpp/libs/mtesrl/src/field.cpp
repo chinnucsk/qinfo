@@ -2,10 +2,10 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 01/05/2012 08:51:45 AM
 
-#include "../include/mtesrl/precomp.h"
-#include "../include/mtesrl/field.h"
+#include "mtesrl/precomp.h"
+#include "mtesrl/field.h"
 
-#include <common/exception.h>
+#include <qinfo_common/exception.h>
 
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/lambda/lambda.hpp>

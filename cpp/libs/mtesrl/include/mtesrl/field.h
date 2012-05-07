@@ -5,7 +5,7 @@
 #ifndef MTESRL_FIELD_H
 #define MTESRL_FIELD_H
 
-#include <common/smart_enum.h>
+#include <qinfo_common/smart_enum.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/optional.hpp>

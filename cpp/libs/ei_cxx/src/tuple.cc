@@ -2,7 +2,7 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 03/26/2011 11:57:00 AM
 
-#include "../include/ei_cxx/tuple.h"
+#include "ei_cxx/tuple.h"
 
 namespace ei_cxx
 {

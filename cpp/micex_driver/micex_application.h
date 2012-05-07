@@ -9,7 +9,7 @@
 #include <mtesrl/connection_callback.h>
 #include "instruments.h"
 
-#include <common/log_wrapper.h>
+#include <qinfo_common/log_wrapper.h>
 
 #include <string>
 #include <map>

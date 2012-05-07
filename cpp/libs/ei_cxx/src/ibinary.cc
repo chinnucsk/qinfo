@@ -2,11 +2,11 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 04/11/2011 09:59:06 PM
 
-#include "../include/ei_cxx/ibinary.h"
-#include "../include/ei_cxx/atom.h"
-#include "../include/ei_cxx/tuple.h"
-#include "../include/ei_cxx/list.h"
-#include <common/exception.h>
+#include "ei_cxx/ibinary.h"
+#include "ei_cxx/atom.h"
+#include "ei_cxx/tuple.h"
+#include "ei_cxx/list.h"
+#include <qinfo_common/exception.h>
 
 #include <boost/cstdint.hpp>
 

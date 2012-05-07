@@ -2,8 +2,8 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 03/26/2011 01:48:31 PM
 
-#include "../include/ei_cxx/port.h"
-#include <common/exception.h>
+#include "ei_cxx/port.h"
+#include <qinfo_common/exception.h>
 
 namespace ei_cxx
 {

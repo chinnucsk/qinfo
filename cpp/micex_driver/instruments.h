@@ -10,7 +10,7 @@
 #include <mtesrl/row.h>
 #include <mtesrl/table.h>
 
-#include <common/exception.h>
+#include <qinfo_common/exception.h>
 
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>

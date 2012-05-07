@@ -2,11 +2,11 @@
 /// @author Dmitry S. Melnikov, dmitryme@gmail.com
 /// @date   Created on: 04/11/2011 09:59:06 PM
 
-#include "../include/ei_cxx/obinary.h"
-#include "../include/ei_cxx/atom.h"
-#include "../include/ei_cxx/tuple.h"
-#include "../include/ei_cxx/port.h"
-#include "../include/ei_cxx/list.h"
+#include "ei_cxx/obinary.h"
+#include "ei_cxx/atom.h"
+#include "ei_cxx/tuple.h"
+#include "ei_cxx/port.h"
+#include "ei_cxx/list.h"
 
 namespace ei_cxx
 {
