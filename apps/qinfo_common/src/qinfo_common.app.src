@@ -1,4 +1,4 @@
-{application, common,
+{application, qinfo_common,
  [
   {description, ""},
   {vsn, "1"},
@@ -7,6 +7,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { common_app, []}},
+  {mod, {qinfo_common_app, []}},
   {env, []}
  ]}.
