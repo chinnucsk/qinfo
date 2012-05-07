@@ -119,7 +119,7 @@ get_status({Date, {H, M, _}}, SchedList) ->
 format_schedule([]) ->
    [];
 format_schedule([{DayOfWeek, Status, TimeIntervals}|Tail]) ->
-   [{day_to_num(DayOfWeek), Status, qinfo_common:format_time_intervals(TimeIntervals)} | format_schedule(Tail)].
+   [{day_to_num(DayOfWeek), Status, qinfo_common_utils:format_time_intervals(TimeIntervals)} | format_schedule(Tail)].
 
 day_to_num(mon) -> 1;
 day_to_num(tue) -> 2;
