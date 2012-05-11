@@ -356,10 +356,10 @@ uniq_alias(Key, Value) ->
 
 get_expiration({{Year, Month, _Day}, _}) ->
    Y = Year - (Year div 10 * 10),
-   [qinfo_common_qinfo:month_to_symbol(Month)] ++ integer_to_list(Y).
+   [qinfo_common_utils:month_to_symbol(Month)] ++ integer_to_list(Y).
 
 create_internal_symbol(Exchange, Commodity, undef, future, Expiration) ->
-   lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, qinfo_common_qinfo:type_to_symbol(future), Commodity, get_expiration(Expiration)]));
+   lists:flatten(io_lib:format("~s.~c.~s.~s", [Exchange, qinfo_common_utils:type_to_symbol(future), Commodity, get_expiration(Expiration)]));
 
 create_internal_symbol(_Exchange, _Commodity, Alias, future, Expiration) ->
    lists:flatten(io_lib:format("~s.~s", [Alias, get_expiration(Expiration)]));
