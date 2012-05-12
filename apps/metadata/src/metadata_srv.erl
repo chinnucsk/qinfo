@@ -54,8 +54,8 @@ handle_call({get_instruments, Exchange, OnlyEnabled}, _From, State) ->
          I <- mnesia:table(instrument),
          C <- mnesia:table(commodity),
          I#instrument.commodity == C#commodity.key andalso
-         C#commodity.enabled == OnlyEnabled andalso
-         C#instrument.key#instrument_key.exchange == Exchange]),
+         (OnlyEnabled == false orelse C#commodity.enabled == OnlyEnabled) andalso
+         I#instrument.key#instrument_key.exchange == Exchange]),
    {atomic, Res} = mnesia:transaction(fun() -> qlc:e(Q) end),
    {reply, Res, State};
 
