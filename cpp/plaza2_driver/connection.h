@@ -11,6 +11,9 @@
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
+#include <string>
+#include <map>
+
 namespace Plaza2
 {
 
@@ -28,6 +31,7 @@ public:
       std::string const& passwd);
    void disconnect();
    void addStream(std::string const& streamName, std::string const& iniFile, StreamType::type_t st);
+   void removeStream(std::string const& streamName);
    ~Connection();
    BEGIN_SINK_MAP(Connection)
       SINK_ENTRY_EX(0, IID_IP2ConnectionEvent, 1, ConnectionStatusChanged)
@@ -40,7 +44,7 @@ private:
    void closeStreams();
 private:
    typedef boost::mutex::scoped_lock ScopedLock;
-   typedef std::list<StreamPtr>  Streams;
+   typedef std::map<std::string, StreamPtr>  Streams;
    ei_cxx::Port&                 m_port;
    IP2ConnectionPtr              m_conn;
    bool                          m_stop;

@@ -167,10 +167,23 @@ void Connection::run()
 //------------------------------------------------------------------------------------------------------------------------//
 void Connection::addStream(std::string const& streamName, std::string const& iniFile, StreamType::type_t st)
 {
+   ScopedLock lk(m_lock);
    StreamPtr stream(new Stream(m_port, streamName, iniFile, st));
    m_streams.push_back(stream);
 }
 
+
+//------------------------------------------------------------------------------------------------------------------------//
+void Connection::removeStream(std::string const& streamName)
+{
+   ScopedLock lk(m_lock);
+   Streams::iterator it = m_streams.find(streamName);
+   if (it != m_streams.end())
+   {
+      it->second->close();
+      m_streams.erase(it);
+   }
+}
 
 //------------------------------------------------------------------------------------------------------------------------//
 Connection::operator bool () const
@@ -184,7 +197,7 @@ void Connection::reopenStreams()
    ScopedLock lk(m_lock);
    for(Streams::iterator it = m_streams.begin(); it != m_streams.end(); ++it)
    {
-      (*it)->open(m_conn);
+      it->second->open(m_conn);
    }
 }
 
@@ -194,7 +207,7 @@ void Connection::closeStreams()
    ScopedLock lk(m_lock);
    for(Streams::iterator it = m_streams.begin(); it != m_streams.end(); ++it)
    {
-      (*it)->close();
+      it->second->close();
    }
 }
 
