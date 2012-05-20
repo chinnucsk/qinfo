@@ -169,7 +169,7 @@ void Connection::addStream(std::string const& streamName, std::string const& ini
 {
    ScopedLock lk(m_lock);
    StreamPtr stream(new Stream(m_port, streamName, iniFile, st));
-   m_streams.push_back(stream);
+   m_streams.insert(std::make_pair(streamName, stream));
 }
 
 
