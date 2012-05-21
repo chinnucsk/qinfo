@@ -98,6 +98,16 @@ PLAZA2_DRIVER_DLL_API void received(ErlDrvData drv_data, ErlIOVec *ev)
                tuple >> llevel;
                log_level = LogLevel::fromString(llevel.get());
             }
+            else if (command_name.get() == "add_stream")
+            {
+               process_add_stream(pd, tuple);
+            }
+            else if (command_name.get() == "remove_stream")
+            {
+               std::string streamName;
+               tuple >> streamName;
+               process_remove_stream(pd, streamName);
+            }
             else
             {
                THROW(std::runtime_error, "Unknown command");
@@ -155,6 +165,22 @@ void process_connect(PortData* pd, ei_cxx::ITuple& t)
       stream >> streamName >> iniFile >> streamType;
       pd->conn->addStream(streamName, iniFile, StreamType::fromString(streamType.get()));
    }
+}
+
+void process_add_stream(PortData* pd, ei_cxx::ITuple& t)
+{
+   using namespace ei_cxx;
+   std::string streamName;
+   std::string iniFile;
+   Atom streamType;
+   stream >> streamName >> iniFile >> streamType;
+   pd->conn->addStream(streamName, iniFile, StreamType::fromString(streamType.get()));
+}
+
+// {remove_stream, StreamName}
+void process_remove_stream(PortData* pd, std::string const& streamName)
+{
+   pd->conn->removeStream(streamName);
 }
 
 // {disconnect}
