@@ -129,7 +129,7 @@ close(DrvPort) ->
    port_close(DrvPort).
 
 processInfo(
-   #'FORTS_FUTINFO_REPL.fut_sess_contents'{
+   #'fut_sess_contents@FORTS_FUTINFO_REPL'{
       event_name = 'StreamDataInserted',
       isin = Isin,
       name = FullName,
@@ -156,7 +156,7 @@ processInfo(
       ref = SessId * 1000000000 + IsinId},
    pg:send(?group_rts_instruments, Instr);
 
-processInfo(#'FORTS_FUTINFO_REPL.fut_sess_contents'{}) ->
+processInfo(#'fut_sess_contents@FORTS_FUTINFO_REPL'{}) ->
    ok;
 processInfo({log, info, Str}) ->
    error_logger:info_msg(Str);
@@ -166,6 +166,10 @@ processInfo({log, error, Str}) ->
    error_logger:error_msg(Str);
 processInfo({log, warn, Str}) ->
    error_logger:warning_msg(Str);
+processInfo({'StreamDataBegin', "FORTS_FUTINFO_REPL"}) ->
+   pg:send(?group_rts_instruments, begin_load);
+processInfo({'StreamDataEnd', "FORTS_FUTINFO_REPL"}) ->
+   pg:send(?group_rts_instruments, end_load);
 processInfo(Msg) ->
    error_logger:error_msg("Unexpected message: ~p", [Msg]).
 

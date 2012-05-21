@@ -95,11 +95,11 @@ void Stream::processStream(std::string const& eventName, IP2DataStreamPtr stream
       using namespace ei_cxx;
 
       std::ostringstream ost;
-      ost << (char*)stream->StreamName;
       if (tableName.length() > 0)
       {
-         ost << '.' << (char*)tableName;
+         ost << (char*)tableName << '@';
       }
+      ost << (char*)stream->StreamName;
 
       OTuple t(rec->Count + 2);
       t << Atom(ost.str())
@@ -147,7 +147,7 @@ void Stream::processStream(std::string const& eventName, IP2DataStreamPtr stream
       }
       else
       {
-         ERL_LOG_DEBUG(m_port, eventName << ": " <<  (char*)stream->StreamName << '.' << (char*)tableName);
+         ERL_LOG_DEBUG(m_port, eventName << ": " <<  (char*)tableName << '@' << (char*)stream->StreamName);
       }
    }
    catch(_com_error const& err)
