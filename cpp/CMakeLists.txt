@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 2.6)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH  ${CMAKE_BINARY_DIR})
 
-set(BOOST_HOME    /tmp)
+set(BOOST_HOME    C:/dev/qinfo/cpp/3rd_party/boost_1_48_0/)
 set(BOOST_INCLUDE ${BOOST_HOME})
 set(BOOST_LIB     ${BOOST_HOME}stage/lib)
 
-set(ERL_HOME      /opt/R15B01/lib/erlang/)
+set(ERL_HOME      C:/Program\ Files/erl5.9/)
 set(ERL_INCLUDE   ${ERL_HOME}usr/include)
 set(ERL_LIB       ${ERL_HOME}usr/lib)
 set(EI_INCLUDE    ${ERL_HOME}lib/erl_interface-3.7.7/include)

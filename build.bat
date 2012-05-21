@@ -10,6 +10,7 @@ cmake -G "Visual Studio 10" ..\..\cpp\
 devenv.exe Project.sln /build %BuildType% /Out %LogFile%
 popd
 
+escript.exe rebar get-deps
 escript.exe rebar compile
 
 xcopy deps\log_viewer\ebin\*.beam build\ebin\log_viewer\ebin\ /Y
