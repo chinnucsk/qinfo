@@ -23,6 +23,8 @@ struct PortData;
 void process_init(PortData*, ei_cxx::ITuple&);
 void process_connect(PortData*, ei_cxx::ITuple&);
 void process_disconnect(PortData*);
+void process_add_stream(PortData*, ei_cxx::ITuple&);
+void process_remove_stream(PortData*, std::string const&);
 
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  ul_reason_for_call,
@@ -173,7 +175,7 @@ void process_add_stream(PortData* pd, ei_cxx::ITuple& t)
    std::string streamName;
    std::string iniFile;
    Atom streamType;
-   stream >> streamName >> iniFile >> streamType;
+   t >> streamName >> iniFile >> streamType;
    pd->conn->addStream(streamName, iniFile, StreamType::fromString(streamType.get()));
 }
 
