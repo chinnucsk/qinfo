@@ -167,9 +167,9 @@ processInfo({log, error, Str}) ->
 processInfo({log, warn, Str}) ->
    error_logger:warning_msg(Str);
 processInfo({'StreamDataBegin', "FORTS_FUTINFO_REPL"}) ->
-   pg:send(?group_rts_instruments, begin_load);
+   pg:send(?group_rts_instruments, {begin_load, "RTS"});
 processInfo({'StreamDataEnd', "FORTS_FUTINFO_REPL"}) ->
-   pg:send(?group_rts_instruments, end_load);
+   pg:send(?group_rts_instruments, {end_load, "RTS"});
 processInfo(Msg) ->
    error_logger:error_msg("Unexpected message: ~p", [Msg]).
 

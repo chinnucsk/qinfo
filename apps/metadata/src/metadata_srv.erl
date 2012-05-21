@@ -88,6 +88,12 @@ handle_cast(Msg, State) ->
    {noreply, State}.
 
 %======================================================================================================================
+handle_info({pg_message, _, ?group_rts_instruments, {begin_load, Exchange}}, State) ->
+   error_logger:debug_msg("Begin load instruments for ~p~n", [Exchange]),
+   {ok, noreply, State};
+handle_info({pg_message, _, ?group_rts_instruments, {end_load, Exchange}}, State) ->
+   error_logger:debug_msg("Ent load instruments for ~p~n", [Exchange]),
+   {ok, noreply, State};
 handle_info({pg_message, _, _, I = #new_instrument{}}, State) ->
    {atomic, ok} = mnesia:transaction(
       fun() ->
