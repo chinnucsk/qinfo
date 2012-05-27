@@ -35,7 +35,7 @@
 
 -record(settings, {ini_file, host, port, app_name, passwd, log_level, streams}).
 -record(state, {status = offline, drv_port = undef, settings}).
--record('FORTS_FUTINFO_REPL.fut_sess_contents', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
+-record('fut_sess_contents@FORTS_FUTINFO_REPL', {event_name, replID, replRev, replAct, sess_id, isin_id, short_isin,
       isin, name, commodity, limit_up, limit_down, lot_size, expiration, signs}).
 
 %% ========= public ============

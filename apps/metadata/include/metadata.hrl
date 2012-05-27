@@ -52,8 +52,8 @@
                      limit_down         :: float(),
                      lot_size           :: pos_integer(),
                      updated            :: calendar:datetime(),
-                     ref                :: pos_integer()},
-                     active = true      :: boolean()).
+                     ref                :: pos_integer(),
+                     active = true      :: boolean()}).
 
 -record(service, {service            :: tuple(),
                   description        :: string(),
