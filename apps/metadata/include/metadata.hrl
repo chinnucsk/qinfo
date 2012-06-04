@@ -18,7 +18,6 @@
                         exchange      :: exchange()}).
 
 -record(new_instrument, {name         :: string(),
-                         exch_name    :: string(),
                          exchange     :: string(),
                          class_code   :: string(),
                          full_name    :: string(),
