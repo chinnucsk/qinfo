@@ -20,14 +20,11 @@
             lot_size = 100,
             ref = 1000000001}).
 
-%insert_test() ->
-   %?debugFmt("~p~n", metadata:get_instruments("RTS", false)).
-
 all() ->
    [insert_test].
 
 init_per_suite(Config) ->
-   metadata_srv:start(),
+   {ok, _Pid} = metadata_srv:test_start(),
    Config.
 
 end_per_unit(Config) ->
@@ -42,4 +39,6 @@ end_per_testcase(_TestCase, Config) ->
 insert_test(_Config) ->
    pg:send( ?group_rts_instruments, ?new_instrument("RTS", 'RTS_STD', "LKOH", "Lukoil", "LKOH", spot)),
    pg:send( ?group_rts_instruments, ?new_instrument("RTS", 'RTS_STD', "SBER", "Sberbank", "SBER", spot)),
+   timer:sleep(100),
+   io:format("~p~n", [metadata:get_instruments("RTS", false)]),
    ok.

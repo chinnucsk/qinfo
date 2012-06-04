@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--export([start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+-export([start/0, test_start/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -compile([export_all]).
 
@@ -15,6 +15,9 @@
 %=======================================================================================================================
 start() ->
    gen_server:start_link({global, ?qinfo_metadata}, ?MODULE, [], []).
+
+test_start() ->
+   gen_server:start({global, ?qinfo_metadata}, ?MODULE, [], []).
 
 init(_Args) ->
    create_db(),
@@ -110,6 +113,7 @@ handle_info(Msg, State) ->
 
 %======================================================================================================================
 terminate(Reason, _State) ->
+   io:format("~p~n", ["terminate..."]),
    error_logger:info_msg("Terminate. Reason = ~p.~n", [Reason]),
    ok.
 
